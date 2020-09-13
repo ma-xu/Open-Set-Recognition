@@ -12,8 +12,10 @@ import torchvision.transforms as transforms
 
 import os
 import argparse
+import sys
 
 #from models import *
+sys.path.append("../..")
 import backbones.cifar as models
 from Utils import adjust_learning_rate, AverageMeter, progress_bar
 
