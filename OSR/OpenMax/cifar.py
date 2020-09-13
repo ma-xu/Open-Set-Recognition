@@ -43,7 +43,7 @@ start_epoch = 0  # start from epoch 0 or last checkpoint epoch
 def main():
     # checkpoint
     args.checkpoint = './checkpoints/cifar/' + args.arch
-    if not os.path.isdir(args.checkpoint) == 0:
+    if not os.path.isdir(args.checkpoint):
         mkdir_p(args.checkpoint)
 
     # Data
