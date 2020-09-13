@@ -17,7 +17,7 @@ import sys
 #from models import *
 sys.path.append("../..")
 import backbones.cifar as models
-from Utils import adjust_learning_rate, AverageMeter, progress_bar
+from Utils import adjust_learning_rate, progress_bar, Logger, mkdir_p
 
 model_names = sorted(name for name in models.__dict__
     if not name.startswith("__")
@@ -29,17 +29,22 @@ print(model_names)
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
 parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
 parser.add_argument('--resume', '-r',default=False, action='store_true', help='resume from checkpoint')
-parser.add_argument('--netName', default='ResNet18', choices=model_names, type=str, help='choosing network')
-parser.add_argument('--bs', default=128, type=int, help='batch size')
+parser.add_argument('--arch', default='ResNet18', choices=model_names, type=str, help='choosing network')
+parser.add_argument('--bs', default=256, type=int, help='batch size')
 parser.add_argument('--es', default=100, type=int, help='epoch size')
 parser.add_argument('--cifar', default=100, type=int, help='dataset classes number')
 args = parser.parse_args()
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+print(device)
+best_acc = 0  # best test accuracy
+start_epoch = 0  # start from epoch 0 or last checkpoint epoch
+
 
 def main():
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    print(device)
-    best_acc = 0  # best test accuracy
-    start_epoch = 0  # start from epoch 0 or last checkpoint epoch
+    # checkpoint
+    args.checkpoint = 'checkpoints/cifar/' + args.arch
+    if not os.path.isdir(args.checkpoint) and args.local_rank == 0:
+        mkdir_p(args.checkpoint)
 
     # Data
     print('==> Preparing data..')
@@ -64,9 +69,9 @@ def main():
     # Model
     print('==> Building model..')
     try:
-        net = models.__dict__[args.netName](num_classes=100) # CIFAR 100
+        net = models.__dict__[args.arch](num_classes=100) # CIFAR 100
     except:
-        net = models.__dict__[args.netName]()
+        net = models.__dict__[args.arch]()
     net = net.to(device)
 
     if device == 'cuda':
@@ -77,12 +82,16 @@ def main():
         # Load checkpoint.
         print('==> Resuming from checkpoint..')
         assert os.path.isdir('checkpoint'), 'Error: no checkpoint directory found!'
-        checkpoint_path = './checkpoint/ckpt_cifar_'+str(args.cifar)+'_'+args.netName+'.t7'
+        checkpoint_path = './checkpoint/ckpt_cifar_'+str(args.cifar)+'_'+args.arch+'.t7'
         checkpoint = torch.load(checkpoint_path)
         net.load_state_dict(checkpoint['net'])
         best_acc = checkpoint['acc']
         print("BEST_ACCURACY: "+str(best_acc))
         start_epoch = checkpoint['epoch']
+        logger = Logger(os.path.join(args.checkpoint, 'log.txt'), resume=True)
+    else:
+        logger = Logger(os.path.join(args.checkpoint, 'log.txt'))
+        logger.set_names(['Epoch', 'Learning Rate', 'Train Loss','Train Acc.', 'Test Loss', 'Test Acc.'])
 
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
@@ -90,8 +99,13 @@ def main():
     for epoch in range(start_epoch, start_epoch + args.es):
         print('\nEpoch: %d   Learning rate: %f' % (epoch, optimizer.param_groups[0]['lr']))
         adjust_learning_rate(optimizer, epoch, args.lr)
-        train(net,trainloader,optimizer,criterion,device)
-        test(epoch,net,testloader,criterion)
+        train_loss, train_acc = train(net,trainloader,optimizer,criterion,device)
+        save_model(net, None, epoch, os.path.join(args.checkpoint,'last_model.pth'))
+        test_loss, test_acc = None
+        test(epoch, net, testloader, criterion)
+        logger.append([epoch+1, optimizer.param_groups[0]['lr'], train_loss, train_acc, train_acc, test_loss, test_acc])
+
+    logger.close()
 
 
 # Training
@@ -115,9 +129,10 @@ def train(net,trainloader,optimizer,criterion,device):
 
         progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
             % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
+    return train_loss/(batch_idx+1), correct/total
 
 
-def test(epoch,net,testloader,criterion):
+def test(epoch,net,testloader,criterion, device):
     global best_acc
     net.eval()
     test_loss = 0
@@ -138,21 +153,30 @@ def test(epoch,net,testloader,criterion):
                 % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
 
 
-    # Save checkpoint.
-    acc = 100.*correct/total
-    if acc > best_acc:
-        print('Saving..')
-        state = {
-            'net': net.state_dict(),
-            'acc': acc,
-            'epoch': epoch,
-        }
-        if not os.path.isdir('checkpoint'):
-            os.mkdir('checkpoint')
-        save_path = './checkpoint/ckpt_cifar_' + str(args.cifar) + '_' + args.netName + '.t7'
-        torch.save(state, save_path)
-        best_acc = acc
+    # # Save checkpoint.
+    # acc = 100.*correct/total
+    # if acc > best_acc:
+    #     print('Saving..')
+    #     state = {
+    #         'net': net.state_dict(),
+    #         'acc': acc,
+    #         'epoch': epoch,
+    #     }
+    #     if not os.path.isdir('checkpoint'):
+    #         os.mkdir('checkpoint')
+    #     save_path = './checkpoint/ckpt_cifar_' + str(args.cifar) + '_' + args.arch + '.t7'
+    #     torch.save(state, save_path)
+    #     best_acc = acc
 
+
+def save_model(net, acc, epoch, path):
+    print('Saving..')
+    state = {
+        'net': net.state_dict(),
+        'testacc': acc,
+        'epoch': epoch,
+    }
+    torch.save(state, path)
 
 if __name__ == '__main__':
     main()
