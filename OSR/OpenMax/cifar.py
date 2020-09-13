@@ -24,7 +24,7 @@ model_names = sorted(name for name in models.__dict__
     and callable(models.__dict__[name]))
 print(model_names)
 
-# os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
+os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
 parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
@@ -42,7 +42,7 @@ start_epoch = 0  # start from epoch 0 or last checkpoint epoch
 
 def main():
     # checkpoint
-    args.checkpoint = 'checkpoints/cifar/' + args.arch
+    args.checkpoint = './checkpoints/cifar/' + args.arch
     if not os.path.isdir(args.checkpoint) == 0:
         mkdir_p(args.checkpoint)
 
@@ -82,7 +82,7 @@ def main():
         # Load checkpoint.
         print('==> Resuming from checkpoint..')
         assert os.path.isdir('checkpoint'), 'Error: no checkpoint directory found!'
-        checkpoint_path = './checkpoint/ckpt_cifar_'+str(args.cifar)+'_'+args.arch+'.t7'
+        checkpoint_path = os.path.join(args.checkpoint,'last_model.pth')
         checkpoint = torch.load(checkpoint_path)
         net.load_state_dict(checkpoint['net'])
         best_acc = checkpoint['acc']
