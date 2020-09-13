@@ -22,7 +22,6 @@ from Utils import adjust_learning_rate, progress_bar, Logger, mkdir_p
 model_names = sorted(name for name in models.__dict__
     if not name.startswith("__")
     and callable(models.__dict__[name]))
-print(model_names)
 
 os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
@@ -34,13 +33,15 @@ parser.add_argument('--bs', default=256, type=int, help='batch size')
 parser.add_argument('--es', default=100, type=int, help='epoch size')
 parser.add_argument('--cifar', default=100, type=int, help='dataset classes number')
 args = parser.parse_args()
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
-print(device)
-best_acc = 0  # best test accuracy
-start_epoch = 0  # start from epoch 0 or last checkpoint epoch
+
 
 
 def main():
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    print(device)
+    best_acc = 0  # best test accuracy
+    start_epoch = 0  # start from epoch 0 or last checkpoint epoch
+
     # checkpoint
     args.checkpoint = './checkpoints/cifar/' + args.arch
     if not os.path.isdir(args.checkpoint):
