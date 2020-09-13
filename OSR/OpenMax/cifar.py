@@ -104,7 +104,7 @@ def main():
         save_model(net, None, epoch, os.path.join(args.checkpoint,'last_model.pth'))
         test_loss, test_acc = None, None
         test(epoch, net, testloader, criterion,device)
-        logger.append([epoch+1, optimizer.param_groups[0]['lr'], train_loss, train_acc, train_acc, test_loss, test_acc])
+        logger.append([epoch+1, optimizer.param_groups[0]['lr'], train_loss, train_acc, test_loss, test_acc])
 
     logger.close()
 
