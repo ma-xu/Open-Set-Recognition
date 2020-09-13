@@ -102,7 +102,7 @@ def main():
         adjust_learning_rate(optimizer, epoch, args.lr)
         train_loss, train_acc = train(net,trainloader,optimizer,criterion,device)
         save_model(net, None, epoch, os.path.join(args.checkpoint,'last_model.pth'))
-        test_loss, test_acc = None
+        test_loss, test_acc = None, None
         test(epoch, net, testloader, criterion)
         logger.append([epoch+1, optimizer.param_groups[0]['lr'], train_loss, train_acc, train_acc, test_loss, test_acc])
 
