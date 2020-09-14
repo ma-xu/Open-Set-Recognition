@@ -20,7 +20,7 @@ sys.path.append("../..")
 import backbones.cifar as models
 from datasets import CIFAR100
 from Utils import adjust_learning_rate, progress_bar, Logger, mkdir_p
-from openmax import compute_train_score_and_mavs
+from openmax import compute_train_score_and_mavs_and_dists,fit_weibull
 
 model_names = sorted(name for name in models.__dict__
     if not name.startswith("__")
@@ -115,7 +115,7 @@ def main():
         train_loss, train_acc = train(net,trainloader,optimizer,criterion,device)
         save_model(net, None, epoch, os.path.join(args.checkpoint,'last_model.pth'))
         test_loss, test_acc = 0, 0
-        if epoch>20:
+        if epoch>10:
             test(epoch, net,trainloader, testloader, criterion,device)
         logger.append([epoch+1, optimizer.param_groups[0]['lr'], train_loss, train_acc, test_loss, test_acc])
 
@@ -148,13 +148,14 @@ def train(net,trainloader,optimizer,criterion,device):
 
 def test(epoch, net,trainloader,  testloader,criterion, device):
     net.eval()
-    scores, mavs = compute_train_score_and_mavs(args.train_class_num,trainloader,device,net)
+    _, mavs,dists = compute_train_score_and_mavs_and_dists(args.train_class_num,trainloader,device,net)
+    categories = list(range(0,args.train_class_num))
+    weibull_model = fit_weibull(mavs, dists, categories, 80, "euclidean")
+    print(weibull_model)
 
     test_loss = 0
     correct = 0
     total = 0
-
-
 
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):

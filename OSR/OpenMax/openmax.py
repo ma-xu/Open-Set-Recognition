@@ -122,7 +122,7 @@ def compute_channel_distances(mavs, features, eu_weight=0.5):
     return {'eucos': np.array(eucos_dists), 'cosine': np.array(cos_dists), 'euclidean': np.array(eu_dists)}
 
 
-def compute_train_score_and_mavs(train_class_num,trainloader,device,net):
+def compute_train_score_and_mavs_and_dists(train_class_num,trainloader,device,net):
     scores = [[] for _ in range(train_class_num)]
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(trainloader):
@@ -133,5 +133,5 @@ def compute_train_score_and_mavs(train_class_num,trainloader,device,net):
                     scores[t].append(score.unsqueeze(dim=0).unsqueeze(dim=0))
     scores = [torch.cat(x).cpu().numpy() for x in scores]  # (N_c, 1, C) * C
     mavs = np.array([np.mean(x, axis=0) for x in scores])  # (C, 1, C)
-    print(f"scores length: {len(scores)} mavs len {len(mavs)}")
-    return scores, mavs
+    dists = [compute_channel_distances(mcv, score) for mcv, score in zip(mavs, scores)]
+    return scores, mavs, dists
