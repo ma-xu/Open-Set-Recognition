@@ -152,7 +152,7 @@ def test(epoch,net,trainloader,  testloader,criterion, device):
             inputs, targets = inputs.to(device), targets.to(device)
             outputs = net(inputs)
             for score, t in zip(outputs, targets):
-                if np.argmax(score) == t:
+                if torch.argmax(score) == t:
                     scores[t].append(score.unsqueeze(dim=0).unsqueeze(dim=0))
     scores = [torch.cat(x).cpu().numpy() for x in scores]  # (N_c, 1, C) * C
     mavs = np.array([np.mean(x, axis=0) for x in scores])  # (C, 1, C)
