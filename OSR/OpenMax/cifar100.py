@@ -20,6 +20,7 @@ sys.path.append("../..")
 import backbones.cifar as models
 from datasets import CIFAR100
 from Utils import adjust_learning_rate, progress_bar, Logger, mkdir_p
+from .openmax import compute_train_score_and_mavs
 
 model_names = sorted(name for name in models.__dict__
     if not name.startswith("__")
@@ -146,17 +147,7 @@ def train(net,trainloader,optimizer,criterion,device):
 
 def test(epoch, net,trainloader,  testloader,criterion, device):
     net.eval()
-    scores = [[] for _ in range(args.train_class_num)]
-    with torch.no_grad():
-        for batch_idx, (inputs, targets) in enumerate(trainloader):
-            inputs, targets = inputs.to(device), targets.to(device)
-            outputs = net(inputs)
-            for score, t in zip(outputs, targets):
-                if torch.argmax(score) == t:
-                    scores[t].append(score.unsqueeze(dim=0).unsqueeze(dim=0))
-    scores = [torch.cat(x).numpy() for x in scores]  # (N_c, 1, C) * C
-    mavs = np.array([np.mean(x, axis=0) for x in scores])  # (C, 1, C)
-
+    scores, mavs = compute_train_score_and_mavs(args.train_class_num,trainloader,device,net)
 
     test_loss = 0
     correct = 0

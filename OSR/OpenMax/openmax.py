@@ -1,5 +1,6 @@
 import numpy as np
 import scipy.spatial.distance as spd
+import torch
 
 import libmr
 
@@ -102,6 +103,7 @@ def openmax(weibull_model, categories, input_score, eu_weight, alpha=10, distanc
     softmax_prob = softmax(np.array(input_score.ravel()))
     return openmax_prob, softmax_prob
 
+
 def compute_channel_distances(mavs, features, eu_weight=0.5):
     """
     Input:
@@ -119,3 +121,16 @@ def compute_channel_distances(mavs, features, eu_weight=0.5):
 
     return {'eucos': np.array(eucos_dists), 'cosine': np.array(cos_dists), 'euclidean': np.array(eu_dists)}
 
+
+def compute_train_score_and_mavs(train_class_num,trainloader,device,net):
+    scores = [[] for _ in range(train_class_num)]
+    with torch.no_grad():
+        for batch_idx, (inputs, targets) in enumerate(trainloader):
+            inputs, targets = inputs.to(device), targets.to(device)
+            outputs = net(inputs)
+            for score, t in zip(outputs, targets):
+                if torch.argmax(score) == t:
+                    scores[t].append(score.unsqueeze(dim=0).unsqueeze(dim=0))
+    scores = [torch.cat(x).cpu.data.numpy() for x in scores]  # (N_c, 1, C) * C
+    mavs = np.array([np.mean(x, axis=0) for x in scores])  # (C, 1, C)
+    return scores, mavs
