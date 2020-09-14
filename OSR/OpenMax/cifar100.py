@@ -20,7 +20,7 @@ sys.path.append("../..")
 import backbones.cifar as models
 from datasets import CIFAR100
 from Utils import adjust_learning_rate, progress_bar, Logger, mkdir_p
-from .openmax import compute_train_score_and_mavs
+from openmax import compute_train_score_and_mavs
 
 model_names = sorted(name for name in models.__dict__
     if not name.startswith("__")
