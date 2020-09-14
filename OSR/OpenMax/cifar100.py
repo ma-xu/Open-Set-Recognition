@@ -8,6 +8,7 @@ import torch.nn.functional as F
 import torch.backends.cudnn as cudnn
 
 import torchvision
+import numpy as np
 import torchvision.transforms as transforms
 
 import os
@@ -113,7 +114,7 @@ def main():
         train_loss, train_acc = train(net,trainloader,optimizer,criterion,device)
         save_model(net, None, epoch, os.path.join(args.checkpoint,'last_model.pth'))
         test_loss, test_acc = 0, 0
-        test(epoch, net, testloader, criterion,device)
+        test(epoch, net,trainloader, testloader, criterion,device)
         logger.append([epoch+1, optimizer.param_groups[0]['lr'], train_loss, train_acc, test_loss, test_acc])
 
     logger.close()
@@ -143,12 +144,26 @@ def train(net,trainloader,optimizer,criterion,device):
     return train_loss/(batch_idx+1), correct/total
 
 
-def test(epoch,net,testloader,criterion, device):
-    global best_acc
+def test(epoch,net,trainloader,  testloader,criterion, device):
     net.eval()
+    scores = [[] for _ in range(args.train_class_num)]
+    with torch.no_grad():
+        for batch_idx, (inputs, targets) in enumerate(trainloader):
+            inputs, targets = inputs.to(device), targets.to(device)
+            outputs = net(inputs)
+            for score, t in zip(outputs, targets):
+                if np.argmax(score) == t:
+                    scores[t].append(score.unsqueeze(dim=0).unsqueeze(dim=0))
+    scores = [torch.cat(x).numpy() for x in scores]  # (N_c, 1, C) * C
+    mavs = np.array([np.mean(x, axis=0) for x in scores])  # (C, 1, C)
+
+
     test_loss = 0
     correct = 0
     total = 0
+
+
+
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
@@ -163,21 +178,6 @@ def test(epoch,net,testloader,criterion, device):
             progress_bar(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
                 % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
 
-
-    # # Save checkpoint.
-    # acc = 100.*correct/total
-    # if acc > best_acc:
-    #     print('Saving..')
-    #     state = {
-    #         'net': net.state_dict(),
-    #         'acc': acc,
-    #         'epoch': epoch,
-    #     }
-    #     if not os.path.isdir('checkpoint'):
-    #         os.mkdir('checkpoint')
-    #     save_path = './checkpoint/ckpt_cifar_' + str(args.cifar) + '_' + args.arch + '.t7'
-    #     torch.save(state, save_path)
-    #     best_acc = acc
 
 
 def save_model(net, acc, epoch, path):
