@@ -151,12 +151,12 @@ def test(epoch, net,trainloader,  testloader,criterion, device):
     _, mavs,dists = compute_train_score_and_mavs_and_dists(args.train_class_num,trainloader,device,net)
     categories = list(range(0,args.train_class_num))
     weibull_model = fit_weibull(mavs, dists, categories, 80, "euclidean")
-    print(weibull_model)
 
     test_loss = 0
     correct = 0
     total = 0
 
+    scores, labels = None, None
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
@@ -168,8 +168,7 @@ def test(epoch, net,trainloader,  testloader,criterion, device):
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
 
-            progress_bar(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
-                % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
+            progress_bar(batch_idx, len(testloader))
 
 
 
