@@ -133,4 +133,5 @@ def compute_train_score_and_mavs(train_class_num,trainloader,device,net):
                     scores[t].append(score.unsqueeze(dim=0).unsqueeze(dim=0))
     scores = [torch.cat(x).cpu().numpy() for x in scores]  # (N_c, 1, C) * C
     mavs = np.array([np.mean(x, axis=0) for x in scores])  # (C, 1, C)
+    print(f"scores length: {len(scores)} mavs len {len(mavs)}")
     return scores, mavs
