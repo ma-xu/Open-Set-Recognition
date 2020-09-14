@@ -145,7 +145,8 @@ class CIFAR10(VisionDataset):
             for i in range(0,len(self.targets)) :
                 if self.targets[i]>train_class_num:
                     self.targets[i] = train_class_num
-            print(f"Testing data includes {train_class_num+1} classes, {len(self.targets)} samples.")
+            print(f"Testing data includes {train_class_num+1} classes (Original {test_class_num} classes),"
+                  f" {len(self.targets)} samples.")
             self.openness= float(len(temp_test_classes))/float(train_class_num+len(temp_test_classes))
             print(f"During testing, openness is {self.openness}.")
 
