@@ -1,0 +1,1 @@
+Epoch	Learning Rate	Train Loss	Train Acc.	Test Loss	Test Acc.	
