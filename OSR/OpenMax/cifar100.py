@@ -67,11 +67,11 @@ def main():
         transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
     ])
 
-    trainset = CIFAR100(root='./data', train=True, download=True, transform=transform_train,
+    trainset = CIFAR100(root='../../data', train=True, download=True, transform=transform_train,
                         train_class_num=args.train_class_num, test_class_num=args.test_class_num,
                         includes_all_train_class=args.includes_all_train_class)
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.bs, shuffle=True, num_workers=4)
-    testset = CIFAR100(root='./data', train=False, download=True, transform=transform_test,
+    testset = CIFAR100(root='../../data', train=False, download=True, transform=transform_test,
                        train_class_num=args.train_class_num, test_class_num=args.test_class_num,
                        includes_all_train_class=args.includes_all_train_class)
     testloader = torch.utils.data.DataLoader(testset, batch_size=args.bs, shuffle=False, num_workers=4)
