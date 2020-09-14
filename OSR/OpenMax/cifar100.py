@@ -115,7 +115,8 @@ def main():
         train_loss, train_acc = train(net,trainloader,optimizer,criterion,device)
         save_model(net, None, epoch, os.path.join(args.checkpoint,'last_model.pth'))
         test_loss, test_acc = 0, 0
-        test(epoch, net,trainloader, testloader, criterion,device)
+        if epoch>20:
+            test(epoch, net,trainloader, testloader, criterion,device)
         logger.append([epoch+1, optimizer.param_groups[0]['lr'], train_loss, train_acc, test_loss, test_acc])
 
     logger.close()
