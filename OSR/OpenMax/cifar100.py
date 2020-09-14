@@ -144,7 +144,7 @@ def train(net,trainloader,optimizer,criterion,device):
     return train_loss/(batch_idx+1), correct/total
 
 
-def test(epoch,net,trainloader,  testloader,criterion, device):
+def test(epoch, net,trainloader,  testloader,criterion, device):
     net.eval()
     scores = [[] for _ in range(args.train_class_num)]
     with torch.no_grad():
@@ -154,7 +154,7 @@ def test(epoch,net,trainloader,  testloader,criterion, device):
             for score, t in zip(outputs, targets):
                 if torch.argmax(score) == t:
                     scores[t].append(score.unsqueeze(dim=0).unsqueeze(dim=0))
-    scores = [torch.cat(x).cpu().numpy() for x in scores]  # (N_c, 1, C) * C
+    scores = [torch.cat(x).numpy() for x in scores]  # (N_c, 1, C) * C
     mavs = np.array([np.mean(x, axis=0) for x in scores])  # (C, 1, C)
 
 
