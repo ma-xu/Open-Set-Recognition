@@ -176,8 +176,8 @@ def test(epoch, net,trainloader,  testloader,criterion, device):
 
     scores = torch.cat(scores,dim=0).cpu().numpy()
     labels = torch.cat(labels,dim=0).cpu().numpy()
-    print(scores.size())
-    print(labels.size())
+    print(scores.shape)
+    print(labels.shape)
 
 def save_model(net, acc, epoch, path):
     print('Saving..')
