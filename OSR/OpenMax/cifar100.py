@@ -120,6 +120,7 @@ def main():
     optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
 
     # test(0, net, trainloader, testloader, criterion, device)
+    epoch=0
     if not args.evaluate:
         for epoch in range(start_epoch, start_epoch + args.es):
             print('\nEpoch: %d   Learning rate: %f' % (epoch+1, optimizer.param_groups[0]['lr']))
