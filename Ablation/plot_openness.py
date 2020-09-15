@@ -14,7 +14,7 @@ Known = np.arange(0.0, 100.0, 1.0)
 Unknown = np.arange(0.0, 100.0, 1.0)
 for i in range(len(Known)):
     for j in range(len(Unknown)):
-        print(f"{Known[i]}\t{Unknown[j]}\t{(Known[i])/(Unknown[j]+1e-7)}")
+        print(f"{Known[i]}\t{Unknown[j]}\t{(Known[i])/(Known[i]+Unknown[j]+1e-7)}")
 Known, Unknown = np.meshgrid(Known, Unknown)
 Openness = (Unknown/(Known+Unknown+1e-7))
 
