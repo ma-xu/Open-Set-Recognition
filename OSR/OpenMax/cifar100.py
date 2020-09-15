@@ -109,6 +109,8 @@ def main():
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
 
+    test(0, net, trainloader, testloader, criterion, device)
+
     for epoch in range(start_epoch, start_epoch + args.es):
         print('\nEpoch: %d   Learning rate: %f' % (epoch+1, optimizer.param_groups[0]['lr']))
         adjust_learning_rate(optimizer, epoch, args.lr)
@@ -148,9 +150,9 @@ def train(net,trainloader,optimizer,criterion,device):
 
 def test(epoch, net,trainloader,  testloader,criterion, device):
     net.eval()
-    _, mavs,dists = compute_train_score_and_mavs_and_dists(args.train_class_num,trainloader,device,net)
-    categories = list(range(0,args.train_class_num))
-    weibull_model = fit_weibull(mavs, dists, categories, 80, "euclidean")
+    # _, mavs,dists = compute_train_score_and_mavs_and_dists(args.train_class_num,trainloader,device,net)
+    # categories = list(range(0,args.train_class_num))
+    # weibull_model = fit_weibull(mavs, dists, categories, 80, "euclidean")
 
     test_loss = 0
     correct = 0
@@ -165,6 +167,8 @@ def test(epoch, net,trainloader,  testloader,criterion, device):
 
             test_loss += loss.item()
             _, predicted = outputs.max(1)
+            print(outputs.shape)
+            print(predicted.shape)
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
 
