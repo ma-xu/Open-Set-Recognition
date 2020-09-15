@@ -34,7 +34,6 @@ parser.add_argument('--resume', default='', type=str, metavar='PATH', help='path
 parser.add_argument('--arch', default='ResNet18', choices=model_names, type=str, help='choosing network')
 parser.add_argument('--bs', default=256, type=int, help='batch size')
 parser.add_argument('--es', default=100, type=int, help='epoch size')
-parser.add_argument('--cifar', default=100, type=int, help='dataset classes number')
 parser.add_argument('--train_class_num', default=50, type=int, help='Classes used in training')
 parser.add_argument('--test_class_num', default=100, type=int, help='Classes used in testing')
 parser.add_argument('--includes_all_train_class', default=True,  action='store_true',
@@ -45,7 +44,7 @@ parser.add_argument('--evaluate', action='store_true',
 #Parameters for weibull distribution fitting.
 parser.add_argument('--weibull_tail', default=20, type=int, help='Classes used in testing')
 parser.add_argument('--weibull_alpha', default=3, type=int, help='Classes used in testing')
-parser.add_argument('--weibull_threshold', default=0.2, type=float, help='Classes used in testing')
+parser.add_argument('--weibull_threshold', default=0.9, type=float, help='Classes used in testing')
 
 
 
