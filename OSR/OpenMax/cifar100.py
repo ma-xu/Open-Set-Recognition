@@ -19,8 +19,8 @@ import sys
 sys.path.append("../..")
 import backbones.cifar as models
 from datasets import CIFAR100
-from Utils import adjust_learning_rate, progress_bar, Logger, mkdir_p
-from openmax import compute_train_score_and_mavs_and_dists,fit_weibull
+from Utils import adjust_learning_rate, progress_bar, Logger, mkdir_p, Evaluation
+from openmax import compute_train_score_and_mavs_and_dists,fit_weibull,openmax
 
 model_names = sorted(name for name in models.__dict__
     if not name.startswith("__")
@@ -39,6 +39,11 @@ parser.add_argument('--train_class_num', default=50, type=int, help='Classes use
 parser.add_argument('--test_class_num', default=70, type=int, help='Classes used in testing')
 parser.add_argument('--includes_all_train_class', default=True,  action='store_true',
                     help='If required all known classes included in testing')
+
+#Parameters for weibull distribution fitting.
+parser.add_argument('--weibull_tail', default=20, type=int, help='Classes used in testing')
+parser.add_argument('--weibull_alpha', default=3, type=int, help='Classes used in testing')
+parser.add_argument('--weibull_threshold', default=0.9, type=float, help='Classes used in testing')
 
 args = parser.parse_args()
 
@@ -109,7 +114,7 @@ def main():
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
 
-    test(0, net, trainloader, testloader, criterion, device)
+    # test(0, net, trainloader, testloader, criterion, device)
 
     for epoch in range(start_epoch, start_epoch + args.es):
         print('\nEpoch: %d   Learning rate: %f' % (epoch+1, optimizer.param_groups[0]['lr']))
@@ -117,7 +122,7 @@ def main():
         train_loss, train_acc = train(net,trainloader,optimizer,criterion,device)
         save_model(net, None, epoch, os.path.join(args.checkpoint,'last_model.pth'))
         test_loss, test_acc = 0, 0
-        if epoch>10:
+        if epoch>15:
             test(epoch, net,trainloader, testloader, criterion,device)
         logger.append([epoch+1, optimizer.param_groups[0]['lr'], train_loss, train_acc, test_loss, test_acc])
 
@@ -150,9 +155,6 @@ def train(net,trainloader,optimizer,criterion,device):
 
 def test(epoch, net,trainloader,  testloader,criterion, device):
     net.eval()
-    # _, mavs,dists = compute_train_score_and_mavs_and_dists(args.train_class_num,trainloader,device,net)
-    # categories = list(range(0,args.train_class_num))
-    # weibull_model = fit_weibull(mavs, dists, categories, 80, "euclidean")
 
     test_loss = 0
     correct = 0
@@ -165,19 +167,43 @@ def test(epoch, net,trainloader,  testloader,criterion, device):
             outputs = net(inputs)
             # loss = criterion(outputs, targets)
             # test_loss += loss.item()
-            _, predicted = outputs.max(1)
+            # _, predicted = outputs.max(1)
             scores.append(outputs)
-            labels.append(predicted)
+            labels.append(targets)
 
             # total += targets.size(0)
             # correct += predicted.eq(targets).sum().item()
 
             progress_bar(batch_idx, len(testloader))
 
+    # Get the prdict results.
     scores = torch.cat(scores,dim=0).cpu().numpy()
     labels = torch.cat(labels,dim=0).cpu().numpy()
-    print(scores.shape)
-    print(labels.shape)
+    scores = np.array(scores)[:, np.newaxis, :]
+    labels = np.array(labels)
+
+    # Fit the weibull distribution from training data.
+    _, mavs, dists = compute_train_score_and_mavs_and_dists(args.train_class_num, trainloader, device, net)
+    categories = list(range(0, args.train_class_num))
+    weibull_model = fit_weibull(mavs, dists, categories, args.weibull_tail, "euclidean")
+
+    pred_softmax, pred_softmax_threshold, pred_openmax = [], [], []
+    for score in scores:
+        so, ss = openmax(weibull_model, categories, score,
+                         0.5, args.weibull_alpha, "euclidean")  # openmax_prob, softmax_prob
+        pred_softmax.append(np.argmax(ss))
+        pred_softmax_threshold.append(np.argmax(ss) if np.max(ss) >= args.weibull_alpha else args.train_class_num)
+        pred_openmax.append(np.argmax(so) if np.max(so) >= args.weibull_alpha else args.train_class_num)
+
+    eval_softmax = Evaluation(pred_softmax, labels)
+    eval_softmax_threshold = Evaluation(pred_softmax_threshold, labels)
+    eval_openmax = Evaluation(pred_openmax, labels)
+
+
+
+    print(f"Softmax accuracy is {eval_softmax.accuracy}")
+    print(f"Softmax-with-threshold accuracy is {eval_softmax_threshold.accuracy}")
+    print(f"Openmax accuracy is {eval_openmax.accuracy}")
 
 def save_model(net, acc, epoch, path):
     print('Saving..')
