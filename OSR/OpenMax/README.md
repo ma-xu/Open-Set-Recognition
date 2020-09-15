@@ -36,7 +36,7 @@ python3 cifar100.py --resume $PATH-TO-ChECKPOINTS$ --evaluate
 - Checkpoint is named as last_model.pth
 
 ### CIFAR-100 preliminary results
-Under the default settings (e.g, ResNet18, train_class_num=50, test_class_num=100, *which means openness=0.5*), we got the preliminary results as follow:
+Under the default settings (e.g, ResNet18, train_class_num=50, test_class_num=100, *which means openness=0.5*), we got the preliminary results (ACCURACY) as follow:
 
 |          Method         | thr=0.1 | thr=0.2 | thr=0.3 | thr=0.5 | thr=0.7 | thr=0.9 |
 |:-----------------------:|---------|---------|---------|---------|---------|---------|
