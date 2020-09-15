@@ -14,7 +14,7 @@ class Evaluation(object):
 
 
 if __name__ == '__main__':
-    predict = [1, 2, 3, 4, 5, 3, 3, 2, 2, 5, 6, 6, 4, 3, 2, 4, 5, 6, 6, 3]
-    label =   [2, 5, 3, 4, 5, 3, 2, 2, 4, 6, 6, 6, 3, 3, 2, 5, 5, 6, 6, 3]
-    eval =Evaluation(predict,label)
-    print(eval.accuracy)
+    predict = [1, 2, 3, 4, 5, 3, 3, 2, 2, 5, 6, 6, 4, 3, 2, 4, 5, 6, 6, 3, 2]
+    label =   [2, 5, 3, 4, 5, 3, 2, 2, 4, 6, 6, 6, 3, 3, 2, 5, 5, 6, 6, 3, 3]
+    eval = Evaluation(predict,label)
+    print(f"%.3f"%(eval.accuracy))
