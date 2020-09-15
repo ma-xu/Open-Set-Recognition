@@ -174,8 +174,8 @@ def test(epoch, net,trainloader,  testloader,criterion, device):
 
             progress_bar(batch_idx, len(testloader))
 
-    scores = torch.cat(scores,dim=0).numpy()
-    labels = torch.cat(labels,dim=0).numpy()
+    scores = torch.cat(scores,dim=0).cpu().numpy()
+    labels = torch.cat(labels,dim=0).cpu().numpy()
     print(scores.size())
     print(labels.size())
 
