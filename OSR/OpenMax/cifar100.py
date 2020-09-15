@@ -173,11 +173,11 @@ def test(epoch, net,trainloader,  testloader,criterion, device):
             # correct += predicted.eq(targets).sum().item()
 
             progress_bar(batch_idx, len(testloader))
-            
-    scores = torch.cat(scores,dim=0)
-    labels = torch.cat(labels,dim=0)
-    print(scores.shape)
-    print(labels.shape)
+
+    scores = torch.cat(scores,dim=0).numpy()
+    labels = torch.cat(labels,dim=0).numpy()
+    print(scores.size())
+    print(labels.size())
 
 def save_model(net, acc, epoch, path):
     print('Saving..')
