@@ -2,7 +2,8 @@
 
 This folder reproduce the results of OpenMax: [Towards Open Set Deep Networks](https://www.cv-foundation.org/openaccess/content_cvpr_2016/papers/Bendale_Towards_Open_Set_CVPR_2016_paper.pdf)
 
-## CIFAR-100 Training  
+## CIFAR-100
+### CIFAR-100 Training  
 ``` shell
 python3 cifar100.py
 ```
@@ -21,17 +22,21 @@ Some other parameters:
 `--weibull_alpha`: parameters for weibull distribution, default 3.<br>
 `--weibull_threshold`: parameters for confidence threshold, default 0.9. (0.9 may be the best for CIFAR datasets)<br>
 
-## CIFAR-100 Testing
+### CIFAR-100 Testing
 ``` shell
 python3 cifar100.py --resume $PATH-TO-ChECKPOINTS$ --evaluate
 # e.g.,
 # python3 cifar100.py --weibull_threshold 0.9 --evaluate --resume /home/xuma/Open-Set-Reconigtion/OSR/OpenMax/checkpoints/cifar/ResNet18/last_model.pth
 ```
 
-## Tips
+### CIFAR-100 Tips
 - In our implementation, we save the lastest models for each epoch.
 - We test the model of last epoch after training.
-- Checkpoint and log file are saved to `././checkpoints/cifar/$args.arch$/` folder.
+- Checkpoint and log file are saved to `./checkpoints/cifar/$args.arch$/` folder.
 - Checkpoint is named as last_model.pth
+
+### CIFAR-100 preliminary results
+Under the default settings (e.g, train_class_num=50, test_class_num=100, *which means openness=0.5*), we got the preliminary results as follow:
+
 
 
