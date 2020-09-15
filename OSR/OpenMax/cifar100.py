@@ -39,6 +39,8 @@ parser.add_argument('--train_class_num', default=50, type=int, help='Classes use
 parser.add_argument('--test_class_num', default=100, type=int, help='Classes used in testing')
 parser.add_argument('--includes_all_train_class', default=True,  action='store_true',
                     help='If required all known classes included in testing')
+parser.add_argument('--evaluate', action='store_true',
+                    help='Evaluate without training')
 
 #Parameters for weibull distribution fitting.
 parser.add_argument('--weibull_tail', default=20, type=int, help='Classes used in testing')
