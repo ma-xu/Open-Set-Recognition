@@ -30,7 +30,7 @@ os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
 parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
-parser.add_argument('--resume', default='', type=str, metavar='PATH', help='path to latest checkpoint (default: none)')
+parser.add_argument('--resume', '-r',default=False, action='store_true', help='resume from checkpoint')
 parser.add_argument('--arch', default='ResNet18', choices=model_names, type=str, help='choosing network')
 parser.add_argument('--bs', default=256, type=int, help='batch size')
 parser.add_argument('--es', default=100, type=int, help='epoch size')
@@ -100,16 +100,15 @@ def main():
 
     if args.resume:
         # Load checkpoint.
-        if os.path.isfile(args.resume):
-            print('==> Resuming from checkpoint..')
-            checkpoint = torch.load(args.resume)
-            net.load_state_dict(checkpoint['net'])
-            # best_acc = checkpoint['acc']
-            # print("BEST_ACCURACY: "+str(best_acc))
-            start_epoch = checkpoint['epoch']
-            logger = Logger(os.path.join(args.checkpoint, 'log.txt'), resume=True)
-        else:
-            print("=> no checkpoint found at '{}'".format(args.resume))
+        print('==> Resuming from checkpoint..')
+        assert os.path.isdir('checkpoint'), 'Error: no checkpoint directory found!'
+        checkpoint_path = os.path.join(args.checkpoint,'last_model.pth')
+        checkpoint = torch.load(checkpoint_path)
+        net.load_state_dict(checkpoint['net'])
+        best_acc = checkpoint['acc']
+        print("BEST_ACCURACY: "+str(best_acc))
+        start_epoch = checkpoint['epoch']
+        logger = Logger(os.path.join(args.checkpoint, 'log.txt'), resume=True)
     else:
         logger = Logger(os.path.join(args.checkpoint, 'log.txt'))
         logger.set_names(['Epoch', 'Learning Rate', 'Train Loss','Train Acc.', 'Test Loss', 'Test Acc.'])
@@ -118,15 +117,15 @@ def main():
     optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
 
     # test(0, net, trainloader, testloader, criterion, device)
-    if not args.evaluate:
-        for epoch in range(start_epoch, start_epoch + args.es):
-            print('\nEpoch: %d   Learning rate: %f' % (epoch+1, optimizer.param_groups[0]['lr']))
-            adjust_learning_rate(optimizer, epoch, args.lr)
-            train_loss, train_acc = train(net,trainloader,optimizer,criterion,device)
-            save_model(net, None, epoch, os.path.join(args.checkpoint,'last_model.pth'))
-            test_loss, test_acc = 0, 0
-            #
-            logger.append([epoch+1, optimizer.param_groups[0]['lr'], train_loss, train_acc, test_loss, test_acc])
+
+    for epoch in range(start_epoch, start_epoch + args.es):
+        print('\nEpoch: %d   Learning rate: %f' % (epoch+1, optimizer.param_groups[0]['lr']))
+        adjust_learning_rate(optimizer, epoch, args.lr)
+        train_loss, train_acc = train(net,trainloader,optimizer,criterion,device)
+        save_model(net, None, epoch, os.path.join(args.checkpoint,'last_model.pth'))
+        test_loss, test_acc = 0, 0
+        #
+        logger.append([epoch+1, optimizer.param_groups[0]['lr'], train_loss, train_acc, test_loss, test_acc])
 
     test(epoch, net, trainloader, testloader, criterion, device)
     logger.close()
