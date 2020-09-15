@@ -158,23 +158,26 @@ def test(epoch, net,trainloader,  testloader,criterion, device):
     correct = 0
     total = 0
 
-    scores, labels = None, None
+    scores, labels = [], []
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
             outputs = net(inputs)
-            loss = criterion(outputs, targets)
-
-            test_loss += loss.item()
+            # loss = criterion(outputs, targets)
+            # test_loss += loss.item()
             _, predicted = outputs.max(1)
-            print(outputs.shape)
-            print(predicted.shape)
-            total += targets.size(0)
-            correct += predicted.eq(targets).sum().item()
+            scores.append(outputs)
+            labels.append(predicted)
+
+            # total += targets.size(0)
+            # correct += predicted.eq(targets).sum().item()
 
             progress_bar(batch_idx, len(testloader))
-
-
+            
+    scores = torch.cat(scores,dim=0)
+    labels = torch.cat(labels,dim=0)
+    print(scores.shape)
+    print(labels.shape)
 
 def save_model(net, acc, epoch, path):
     print('Saving..')
