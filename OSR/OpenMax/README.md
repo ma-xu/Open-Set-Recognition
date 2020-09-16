@@ -35,14 +35,14 @@ python3 cifar100.py --resume $PATH-TO-ChECKPOINTS$ --evaluate
 - Checkpoint and log file are saved to `./checkpoints/cifar/$args.arch$/` folder.
 - Checkpoint is named as last_model.pth
 
-### CIFAR-100 preliminary results
+### CIFAR-100 preliminary results (Updated)
 Under the default settings (e.g, ResNet18, train_class_num=50, test_class_num=100, *which means openness=0.5*), we got the preliminary results (ACCURACY) as follow:
 
 |          Method         | thr=0.1 | thr=0.2 | thr=0.3 | thr=0.5 | thr=0.7 | thr=0.9 |
 |:-----------------------:|---------|---------|---------|---------|---------|---------|
-|         SoftMax         | 0.379   | 0.379   | 0.379   | 0.379   | 0.379   | 0.379   |
-| SoftMax(with threshold) | 0.379   | 0.382   | 0.405   | 0.497   | 0.579   | 0.648   |
-|         OpenMax         | 0.524   | 0.521   | 0.526   | 0.559   | 0.597   | 0.636   |
+|         SoftMax         | 0.374   | 0.374   | 0.374   | 0.374   | 0.374   | 0.374   |
+| SoftMax(with threshold) | 0.374   | 0.377   | 0.396   | 0.485   | 0.570   | 0.646   |
+|         OpenMax         | 0.504   | 0.499   | 0.513   | 0.545   | 0.583   | 0.633   |
 
 (openmax may vary results slightly. Better weibull parameters may give better performance for openmax.)
 
