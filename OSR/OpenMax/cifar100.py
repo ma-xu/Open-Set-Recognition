@@ -89,10 +89,7 @@ def main():
 
     # Model
     print('==> Building model..')
-    try:
-        net = models.__dict__[args.arch](num_classes=100) # CIFAR 100
-    except:
-        net = models.__dict__[args.arch]()
+    net = models.__dict__[args.arch](num_classes=args.train_class_num) # CIFAR 100
     net = net.to(device)
 
     if device == 'cuda':
