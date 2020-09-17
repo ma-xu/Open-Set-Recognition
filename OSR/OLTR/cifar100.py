@@ -14,7 +14,6 @@ import torchvision.transforms as transforms
 import os
 import argparse
 import sys
-
 #from models import *
 sys.path.append("../..")
 import backbones.cifar as models
@@ -98,11 +97,11 @@ def main_stage1():
         net = torch.nn.DataParallel(net)
         cudnn.benchmark = True
 
-    if args.resume:
+    if args.stage1_resume:
         # Load checkpoint.
-        if os.path.isfile(args.resume):
+        if os.path.isfile(args.stage1_resume):
             print('==> Resuming from checkpoint..')
-            checkpoint = torch.load(args.resume)
+            checkpoint = torch.load(args.stage1_resume)
             net.load_state_dict(checkpoint['net'])
             # best_acc = checkpoint['acc']
             # print("BEST_ACCURACY: "+str(best_acc))
