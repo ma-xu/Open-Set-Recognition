@@ -30,6 +30,12 @@ os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
 
 # Dataset preperation
+parser.add_argument('--train_class_num', default=50, type=int, help='Classes used in training')
+parser.add_argument('--test_class_num', default=100, type=int, help='Classes used in testing')
+parser.add_argument('--includes_all_train_class', default=True,  action='store_true',
+                    help='If required all known classes included in testing')
+
+# Others
 parser.add_argument('--arch', default='ResNet18', choices=model_names, type=str, help='choosing network')
 parser.add_argument('--bs', default=256, type=int, help='batch size')
 parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
