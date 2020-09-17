@@ -83,6 +83,7 @@ def main():
 
 
 def main_stage1():
+    print(f"\nStart Stage-1 training...\n")
     start_epoch = 0  # start from epoch 0 or last checkpoint epoch
     # data loader
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.bs, shuffle=True, num_workers=4)
