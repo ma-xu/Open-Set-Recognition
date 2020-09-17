@@ -116,7 +116,7 @@ def main_stage1():
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
 
-    for epoch in range(start_epoch, start_epoch + args.es):
+    for epoch in range(start_epoch, start_epoch + args.stage1_es):
         print('\nStage_1 Epoch: %d   Learning rate: %f' % (epoch+1, optimizer.param_groups[0]['lr']))
         adjust_learning_rate(optimizer, epoch, args.lr,step=10)
         train_loss, train_acc = train(net,trainloader,optimizer,criterion,device)
