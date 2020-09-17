@@ -120,14 +120,15 @@ def main_stage1():
     for epoch in range(start_epoch, start_epoch + args.stage1_es):
         print('\nStage_1 Epoch: %d   Learning rate: %f' % (epoch+1, optimizer.param_groups[0]['lr']))
         adjust_learning_rate(optimizer, epoch, args.lr,step=10)
-        train_loss, train_acc = train(net,trainloader,optimizer,criterion,device)
+        train_loss, train_acc = stage1_train(net,trainloader,optimizer,criterion,device)
         save_model(net, None, epoch, os.path.join(args.checkpoint,'stahe_1_last_model.pth'))
         logger.append([epoch+1, optimizer.param_groups[0]['lr'], train_loss, train_acc])
     logger.close()
+    print(f"\nFinish Stage-1 training...\n")
 
 
 # Training
-def train(net,trainloader,optimizer,criterion,device):
+def stage1_train(net,trainloader,optimizer,criterion,device):
     net.train()
     train_loss = 0
     correct = 0
@@ -161,7 +162,6 @@ def test(epoch, net,trainloader,  testloader,criterion, device):
 
 
 def save_model(net, acc, epoch, path):
-    print('Saving..')
     state = {
         'net': net.state_dict(),
         'testacc': acc,
