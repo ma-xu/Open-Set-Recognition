@@ -19,7 +19,7 @@ class Network(nn.Module):
         feat_dim = self.get_backbone_last_layer_out_channel()
         # here for attmodule
         if attmodule:
-            self.att =ModulatedAttLayer(feat_dim,height=data_shape, width=data_shape)
+            self.att = ModulatedAttLayer(feat_dim, height=data_shape, width=data_shape)
 
         # here for use fc
         if self.use_fc: feat_dim = embed_dim
@@ -34,8 +34,8 @@ class Network(nn.Module):
     def get_backbone_last_layer_out_channel(self):
         last_layer = list(self.backbone.children())[-1]
         while (not isinstance(last_layer, nn.Conv2d)) and \
-                (not isinstance(last_layer,nn.Linear)) and \
-                (not isinstance(last_layer,nn.BatchNorm2d)):
+                (not isinstance(last_layer, nn.Linear)) and \
+                (not isinstance(last_layer, nn.BatchNorm2d)):
 
                 temp_layer = list(last_layer.children())[-1]
                 if isinstance(temp_layer, nn.Sequential) and len(list(temp_layer.children()))==0:
@@ -66,9 +66,9 @@ class Network(nn.Module):
 
 def demo():
     # this demo didn't test metaembedding, should works if defined the centroids.
-    x = torch.rand([1,3,32,32])
+    x = torch.rand([1, 3, 32, 32])
     net = Network('ResNet18', 512, 50, use_fc=False)
-    y,fea,fea =net(x)
+    y, fea, fea = net(x)
     print(y.shape)
 
 
