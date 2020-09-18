@@ -8,3 +8,10 @@ Open Set Recognition project using PyTorch.
   * CIFAR-10 (todo)
   * MNIST (todo)
   * ImageNet (todo)
+* Algorithms
+  * SoftMax (done)
+  * SoftMax with threshold (done)
+  * [OpenMax(CVPR2016)](https://www.cv-foundation.org/openaccess/content_cvpr_2016/papers/Bendale_Towards_Open_Set_CVPR_2016_paper.pdf) (done)
+  * OLTR (CVPR2019) (ongoing)
+  * Center Loss (ECCV2016) (to do)
+ 
