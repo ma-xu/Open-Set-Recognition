@@ -97,7 +97,9 @@ def main_stage1():
 
     # Model
     print('==> Building model..')
-    net = models.__dict__[args.arch](num_classes=args.train_class_num) # CIFAR 100
+    net = Network(backbone=args.arch, embed_dim=512, num_classes=args.train_class_num,
+                 use_fc=False, attmodule=False, classifier='dotproduct', backbone_fc=False, data_shape=4)
+    # net = models.__dict__[args.arch](num_classes=args.train_class_num) # CIFAR 100
     net = net.to(device)
 
     if device == 'cuda':
@@ -142,7 +144,7 @@ def stage1_train(net,trainloader,optimizer,criterion,device):
     for batch_idx, (inputs, targets) in enumerate(trainloader):
         inputs, targets = inputs.to(device), targets.to(device)
         optimizer.zero_grad()
-        outputs = net(inputs)
+        outputs, fea, featmaps = net(inputs)
         loss = criterion(outputs, targets)
         loss.backward()
         optimizer.step()
