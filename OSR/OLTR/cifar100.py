@@ -19,6 +19,7 @@ sys.path.append("../..")
 import backbones.cifar as models
 from datasets import CIFAR100
 from Utils import adjust_learning_rate, progress_bar, Logger, mkdir_p, Evaluation
+from netbuilder import Network
 
 model_names = sorted(name for name in models.__dict__
     if not name.startswith("__")
@@ -41,8 +42,13 @@ parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
 parser.add_argument('--evaluate', action='store_true', help='Evaluate without training')
 
 # Parameters for stage 1
-parser.add_argument('--stage1_resume', default='', type=str, metavar='PATH', help='path to latest checkpoint (default: none)')
+parser.add_argument('--stage1_resume', default='', type=str, metavar='PATH', help='path to latest checkpoint')
 parser.add_argument('--stage1_es', default=30, type=int, help='epoch size')
+parser.add_argument('--stage1_use_fc', default=False,  action='store_true',
+                    help='If to use the last FC/embedding layer in network, FC (whatever, stage1_feature_dim)')
+parser.add_argument('--stage1_feature_dim', default=512, type=int, help='embedding feature dimension')
+parser.add_argument('--stage1_classifier', default='dotproduct', type=str,choices=['dotproduct', 'cosnorm', 'metaembedding'],
+                    help='Select a classifier (default dotproduct)')
 
 
 

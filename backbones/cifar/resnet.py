@@ -66,7 +66,7 @@ class Bottleneck(nn.Module):
 
 
 class ResNet(nn.Module):
-    def __init__(self, block, num_blocks, num_classes=10, use_fc=True):
+    def __init__(self, block, num_blocks, num_classes=10, backbone_fc=True):
         super(ResNet, self).__init__()
         self.in_planes = 64
 
@@ -76,7 +76,7 @@ class ResNet(nn.Module):
         self.layer2 = self._make_layer(block, 128, num_blocks[1], stride=2)
         self.layer3 = self._make_layer(block, 256, num_blocks[2], stride=2)
         self.layer4 = self._make_layer(block, 512, num_blocks[3], stride=2)
-        if use_fc:
+        if backbone_fc:
             self.linear = nn.Linear(512*block.expansion, num_classes)
 
     def _make_layer(self, block, planes, num_blocks, stride):
@@ -93,27 +93,28 @@ class ResNet(nn.Module):
         out = self.layer2(out)
         out = self.layer3(out)
         out = self.layer4(out)
-        out = F.adaptive_avg_pool2d(out, 1)
-        out = out.view(out.size(0), -1)
+        # return the original feature map if no FC layers.
         if hasattr(self, 'linear'):
+            out = F.adaptive_avg_pool2d(out, 1)
+            out = out.view(out.size(0), -1)
             out = self.linear(out)
         return out
 
 
-def ResNet18(num_classes=10):
-    return ResNet(BasicBlock, [2,2,2,2],num_classes)
+def ResNet18(num_classes=10, backbone_fc=True):
+    return ResNet(BasicBlock, [2,2,2,2],num_classes, backbone_fc=backbone_fc)
 
-def ResNet34(num_classes=10):
-    return ResNet(BasicBlock, [3,4,6,3],num_classes)
+def ResNet34(num_classes=10, backbone_fc=True):
+    return ResNet(BasicBlock, [3,4,6,3],num_classes, backbone_fc=backbone_fc)
 
-def ResNet50(num_classes=10):
-    return ResNet(Bottleneck, [3,4,6,3],num_classes)
+def ResNet50(num_classes=10, backbone_fc=True):
+    return ResNet(Bottleneck, [3,4,6,3],num_classes, backbone_fc=backbone_fc)
 
-def ResNet101(num_classes=10):
-    return ResNet(Bottleneck, [3,4,23,3],num_classes)
+def ResNet101(num_classes=10, backbone_fc=True):
+    return ResNet(Bottleneck, [3,4,23,3],num_classes, backbone_fc=backbone_fc)
 
-def ResNet152(num_classes=10):
-    return ResNet(Bottleneck, [3,8,36,3],num_classes)
+def ResNet152(num_classes=10, backbone_fc=True):
+    return ResNet(Bottleneck, [3,8,36,3],num_classes, backbone_fc=backbone_fc)
 
 
 def demo():
