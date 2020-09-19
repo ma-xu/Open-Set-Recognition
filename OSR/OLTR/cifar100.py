@@ -173,7 +173,8 @@ def cal_centroids(net,device):
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(trainloader):
             inputs, targets = inputs.to(device), targets.to(device)
-            outputs, _, _ = net(inputs)
+            # outputs, _, _ = net(inputs)
+            outputs = net.backbone(inputs)
             print(f"targets.shape: {targets.shape}")
             print(f"outputs.shape: {outputs.shape}")
             for i in range(0,targets.size(0)):
