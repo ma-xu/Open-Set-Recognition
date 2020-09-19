@@ -85,7 +85,8 @@ testset = CIFAR100(root='../../data', train=False, download=True, transform=tran
 
 def main():
     print(device)
-    main_stage1()
+    net = main_stage1()
+    cal_centroids(net, device)
 
 
 def main_stage1():
@@ -133,6 +134,7 @@ def main_stage1():
         logger.append([epoch+1, optimizer.param_groups[0]['lr'], train_loss, train_acc])
     logger.close()
     print(f"\nFinish Stage-1 training...\n")
+    return net
 
 
 # Training
@@ -157,6 +159,23 @@ def stage1_train(net,trainloader,optimizer,criterion,device):
         progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
             % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
     return train_loss/(batch_idx+1), correct/total
+
+
+# calculate centroids
+def cal_centroids(net,device):
+    print(f"Calculating centroids ...")
+    # data loader
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.bs, shuffle=True, num_workers=4)
+
+    net.eval()
+    centroids = torch.zeros([args.train_class_num,args.stage1_feature_dim]).to(device)
+    with torch.no_grad():
+        for batch_idx, (inputs, targets) in enumerate(trainloader):
+            inputs, targets = inputs.to(device), targets.to(device)
+            outputs, _, _ = net(inputs)
+            print(f"targets.shape: {targets.shape}")
+            print(f"outputs.shape: {outputs.shape}")
+
 
 
 def test(epoch, net,trainloader,  testloader,criterion, device):
