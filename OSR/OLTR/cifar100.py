@@ -181,7 +181,8 @@ def cal_centroids(net,device):
                 label = targets[i]
                 class_count[label] += 1
                 centroids[label] += features[i, :]
-    print(f"class_count: {class_count}")
+    centroids = centroids/(class_count.expand_as(centroids))
+    print(centroids.shape)
 
 
 def test(epoch, net,trainloader,  testloader,criterion, device):
