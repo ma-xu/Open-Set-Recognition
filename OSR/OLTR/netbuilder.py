@@ -59,7 +59,7 @@ class Network(nn.Module):
 
         y,fea = self.classifier(x)
         # fea is especially for meta-embedding classifier: direct_feature, infused_feature;
-        # for other classifiers, fea is None
+        # for dotproduct classifier, fea is the input (to calculate the centroids)
         # feature_maps is for attention: [x, spatial_att, mask]
         return y,fea, feature_maps
 

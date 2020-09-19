@@ -174,13 +174,13 @@ def cal_centroids(net,device):
         for batch_idx, (inputs, targets) in enumerate(trainloader):
             inputs, targets = inputs.to(device), targets.to(device)
             # outputs, _, _ = net(inputs)
-            outputs = net.backbone(inputs)
+            _, features, _ = net(inputs)
             print(f"targets.shape: {targets.shape}")
-            print(f"outputs.shape: {outputs.shape}")
+            print(f"outputs.shape: {features.shape}")
             for i in range(0,targets.size(0)):
                 label = targets[i]
                 class_count[label] += 1
-                centroids[label] += outputs[i, :]
+                centroids[label] += features[i, :]
     print(f"class_count: {class_count}")
 
 

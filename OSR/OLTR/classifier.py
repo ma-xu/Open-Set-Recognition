@@ -30,9 +30,9 @@ class CosNorm_Classifier(nn.Module):
         return torch.mm(self.scale * ex, ew.t()),None
 
 
-def create_model(in_dims=512, out_dims=1000):
-    print('Loading Cosine Norm Classifier.')
-    return CosNorm_Classifier(in_dims=in_dims, out_dims=out_dims)
+# def create_model(in_dims=512, out_dims=1000):
+#     print('Loading Cosine Norm Classifier.')
+#     return CosNorm_Classifier(in_dims=in_dims, out_dims=out_dims)
 
 
 
@@ -49,25 +49,25 @@ class DotProduct_Classifier(nn.Module):
         self.fc = nn.Linear(feat_dim, num_classes)
 
     def forward(self, x, *args):
-        x = self.fc(x)
-        return x, None
+        y = self.fc(x)
+        return y, x
 
 
-def create_model(feat_dim, num_classes=1000, stage1_weights=False, dataset=None, test=False, *args):
-    print('Loading Dot Product Classifier.')
-    clf = DotProduct_Classifier(num_classes, feat_dim)
-
-    if not test:
-        if stage1_weights:
-            assert (dataset)
-            print('Loading %s Stage 1 Classifier Weights.' % dataset)
-            # clf.fc = init_weights(model=clf.fc,
-            #                       weights_path='./logs/%s/stage1/final_model_checkpoint.pth' % dataset,
-            #                       classifier=True)
-        else:
-            print('Random initialized classifier weights.')
-
-    return clf
+# def create_model(feat_dim, num_classes=1000, stage1_weights=False, dataset=None, test=False, *args):
+#     print('Loading Dot Product Classifier.')
+#     clf = DotProduct_Classifier(num_classes, feat_dim)
+#
+#     if not test:
+#         if stage1_weights:
+#             assert (dataset)
+#             print('Loading %s Stage 1 Classifier Weights.' % dataset)
+#             # clf.fc = init_weights(model=clf.fc,
+#             #                       weights_path='./logs/%s/stage1/final_model_checkpoint.pth' % dataset,
+#             #                       classifier=True)
+#         else:
+#             print('Random initialized classifier weights.')
+#
+#     return clf
 
 """
 Meta-embedding Classifier
@@ -119,18 +119,18 @@ class MetaEmbedding_Classifier(nn.Module):
         return logits, [direct_feature, infused_feature]
 
 
-def create_model(feat_dim=2048, num_classes=1000, stage1_weights=False, dataset=None, test=False, *args):
-    print('Loading Meta Embedding Classifier.')
-    clf = MetaEmbedding_Classifier(feat_dim, num_classes)
-
-    if not test:
-        if stage1_weights:
-            assert (dataset)
-            print('Loading %s Stage 1 Classifier Weights.' % dataset)
-            # clf.fc_hallucinator = init_weights(model=clf.fc_hallucinator,
-            #                                    weights_path='./logs/%s/stage1/final_model_checkpoint.pth' % dataset,
-            #                                    classifier=True)
-        else:
-            print('Random initialized classifier weights.')
-
-    return clf
+# def create_model(feat_dim=2048, num_classes=1000, stage1_weights=False, dataset=None, test=False, *args):
+#     print('Loading Meta Embedding Classifier.')
+#     clf = MetaEmbedding_Classifier(feat_dim, num_classes)
+#
+#     if not test:
+#         if stage1_weights:
+#             assert (dataset)
+#             print('Loading %s Stage 1 Classifier Weights.' % dataset)
+#             # clf.fc_hallucinator = init_weights(model=clf.fc_hallucinator,
+#             #                                    weights_path='./logs/%s/stage1/final_model_checkpoint.pth' % dataset,
+#             #                                    classifier=True)
+#         else:
+#             print('Random initialized classifier weights.')
+#
+#     return clf
