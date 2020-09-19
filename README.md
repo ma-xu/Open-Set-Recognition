@@ -32,4 +32,7 @@ pip3 install numpy
   * F1-measure
   * More ...
 
+## Have a try
+Click `go` link to the related method/dataset and have a try.
+
  
