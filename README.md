@@ -4,6 +4,14 @@ Open Set Recognition project using PyTorch.
 
 ## Requirements
 For different Algorithms and different datasets, the requirements varies. In general, the basic and must requirements are:
+```bash
+# pytorch 1.4+, torchvision
+pip3 install torch torchvision
+# sklearn
+pip3 install -U scikit-learn
+# numpy
+pip3 install numpy
+```
 
 
 ## Supporting
