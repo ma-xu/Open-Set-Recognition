@@ -1,6 +1,8 @@
 # Open Set Recognition Project
 
-Open Set Recognition project using PyTorch.
+Ongoing Open Set Recognition project using PyTorch.
+
+For any issue and question, please email [xuma@my.unt.edu](mailto:xuma@my.unt.edu)
 
 ## Requirements
 For different Algorithms and different datasets, the requirements varies. In general, the basic and must requirements are:
