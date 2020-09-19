@@ -3,7 +3,7 @@
 Open Set Recognition project using PyTorch.
 
 ## Requirements
-For different Algorithms and different datasets, the requirements varies. In general, the following libaries are always required:
+For different Algorithms and different datasets, the requirements varies. In general, the basic and must requirements are:
 
 
 ## Supporting
