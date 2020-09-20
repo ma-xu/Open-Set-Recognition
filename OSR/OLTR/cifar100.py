@@ -89,7 +89,9 @@ testset = CIFAR100(root='../../data', train=False, download=True, transform=tran
                    train_class_num=args.train_class_num, test_class_num=args.test_class_num,
                    includes_all_train_class=args.includes_all_train_class)
 
-
+# ensure load checkpoints for evaluation
+if args.evaluate:
+    assert os.path.isfile(args.stage2_resume)
 
 
 def main():
