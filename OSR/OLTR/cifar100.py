@@ -94,8 +94,10 @@ testset = CIFAR100(root='../../data', train=False, download=True, transform=tran
 
 def main():
     print(device)
-    net1 = main_stage1()
-    centroids = cal_centroids(net1, device)
+    net1,centroids = None,None
+    if not args.evaluate:
+        net1 = main_stage1()
+        centroids = cal_centroids(net1, device)
     main_stage2(net1, centroids)
 
 
@@ -227,7 +229,8 @@ def main_stage2(net1, centroids):
     net2 = Network(backbone=args.arch, embed_dim=512, num_classes=args.train_class_num,
                   use_fc=True, attmodule=True, classifier='metaembedding', backbone_fc=False, data_shape=4)
     net2 = net2.to(device)
-    init_stage2_model(net1, net2)
+    if not args.evaluate:
+        init_stage2_model(net1, net2)
 
     criterion = nn.CrossEntropyLoss()
     fea_criterion = DiscCentroidsLoss(args.train_class_num, args.stage1_feature_dim)
@@ -235,7 +238,8 @@ def main_stage2(net1, centroids):
     optimizer = optim.SGD(net2.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
 
     # passing centroids data.
-    pass_centroids(net2, fea_criterion, init_centroids=centroids)
+    if not args.evaluate:
+        pass_centroids(net2, fea_criterion, init_centroids=centroids)
 
     if device == 'cuda':
         net2 = torch.nn.DataParallel(net2)
@@ -243,7 +247,7 @@ def main_stage2(net1, centroids):
 
     if args.stage2_resume:
         # Load checkpoint.
-        if os.path.isfile(args.stage12_resume):
+        if os.path.isfile(args.stage2_resume):
             print('==> Resuming from checkpoint..')
             checkpoint = torch.load(args.stage2_resume)
             net2.load_state_dict(checkpoint['net'])
@@ -257,18 +261,19 @@ def main_stage2(net1, centroids):
         logger = Logger(os.path.join(args.checkpoint, 'log_stage2.txt'))
         logger.set_names(['Epoch', 'Learning Rate', 'Train Loss', 'Train Acc.'])
 
-
-
-    for epoch in range(start_epoch, start_epoch + args.stage2_es):
-        print('\nStage_2 Epoch: %d   Learning rate: %f' % (epoch + 1, optimizer.param_groups[0]['lr']))
-        # Here, I didn't set optimizers respectively, just for simplicity. Performance did not vary a lot.
-        adjust_learning_rate(optimizer, epoch, args.lr, step=10)
-        train_loss, train_acc = stage2_train(net2, trainloader, optimizer, criterion, fea_criterion, device)
-        save_model(net2, None, epoch, os.path.join(args.checkpoint, 'stage_2_last_model.pth'))
-        logger.append([epoch + 1, optimizer.param_groups[0]['lr'], train_loss, train_acc])
-        pass_centroids(net2, fea_criterion, init_centroids=None)
+    if not args.evaluate:
+        for epoch in range(start_epoch, start_epoch + args.stage2_es):
+            print('\nStage_2 Epoch: %d   Learning rate: %f' % (epoch + 1, optimizer.param_groups[0]['lr']))
+            # Here, I didn't set optimizers respectively, just for simplicity. Performance did not vary a lot.
+            adjust_learning_rate(optimizer, epoch, args.lr, step=10)
+            train_loss, train_acc = stage2_train(net2, trainloader, optimizer, criterion, fea_criterion, device)
+            save_model(net2, None, epoch, os.path.join(args.checkpoint, 'stage_2_last_model.pth'))
+            logger.append([epoch + 1, optimizer.param_groups[0]['lr'], train_loss, train_acc])
+            pass_centroids(net2, fea_criterion, init_centroids=None)
+        print(f"\nFinish Stage-2 training...\n")
     logger.close()
-    print(f"\nFinish Stage-2 training...\n")
+
+
 
     testloader = torch.utils.data.DataLoader(testset, batch_size=args.bs, shuffle=False, num_workers=4)
     test(net2, testloader, device)
