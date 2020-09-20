@@ -22,7 +22,11 @@ class Network(nn.Module):
             self.att = ModulatedAttLayer(feat_dim, height=data_shape, width=data_shape)
 
         # here for use fc
-        if self.use_fc: feat_dim = embed_dim
+        if self.use_fc:
+            self.fc_add = nn.Linear(feat_dim, 512)
+            feat_dim = embed_dim
+
+
         # here for classifier
         classifier_map = {
             "dotproduct": DotProduct_Classifier(feat_dim, num_classes),
@@ -67,7 +71,7 @@ class Network(nn.Module):
 def demo():
     # this demo didn't test metaembedding, should works if defined the centroids.
     x = torch.rand([1, 3, 32, 32])
-    net = Network('ResNet18', 512, 50, use_fc=False)
+    net = Network('ResNet18', 512, 50, use_fc=True, attmodule=True)
     y, fea, fea = net(x)
     print(y.shape)
 
