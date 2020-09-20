@@ -207,7 +207,7 @@ def cal_centroids(net,device):
         for batch_idx, (inputs, targets) in enumerate(trainloader):
             inputs, targets = inputs.to(device), targets.to(device)
             # outputs, _, _ = net(inputs)
-            _, features, _ = net(inputs)
+            _, features, _,_ = net(inputs)
             for i in range(0,targets.size(0)):
                 label = targets[i]
                 class_count[label] += 1
