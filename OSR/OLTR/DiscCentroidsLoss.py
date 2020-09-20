@@ -36,8 +36,9 @@ class DiscCentroidsLoss(nn.Module):
         distmat = torch.pow(feat.clone(), 2).sum(dim=1, keepdim=True).expand(batch_size, self.num_classes) + \
                   torch.pow(self.centroids.clone(), 2).sum(dim=1, keepdim=True).expand(self.num_classes, batch_size).t()
         # UserWarning: This overload of addmm_ is deprecated
-        distmat.addmm_(1, -2, feat.clone(), self.centroids.clone().t())
+        # distmat.addmm_(1, -2, feat.clone(), self.centroids.clone().t())
         # distmat.addmm_(feat.clone(), self.centroids.clone().t(), 1, -2)
+        distmat.addmm_(feat.clone(), self.centroids.clone().t(), beta= 1, alpha=-2)
 
         classes = torch.arange(self.num_classes).long().cuda()
         labels_expand = label.unsqueeze(1).expand(batch_size, self.num_classes)
