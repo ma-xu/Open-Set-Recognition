@@ -154,7 +154,7 @@ def stage1_train(net,trainloader,optimizer,criterion,device):
     for batch_idx, (inputs, targets) in enumerate(trainloader):
         inputs, targets = inputs.to(device), targets.to(device)
         optimizer.zero_grad()
-        outputs, fea, featmaps = net(inputs)
+        outputs, _, _, _ = net(inputs)
         loss = criterion(outputs, targets)
         loss.backward()
         optimizer.step()
@@ -177,10 +177,10 @@ def stage2_train(net,trainloader,optimizer,criterion, fea_criterion, device):
     for batch_idx, (inputs, targets) in enumerate(trainloader):
         inputs, targets = inputs.to(device), targets.to(device)
         optimizer.zero_grad()
-        outputs, fea, featmaps = net(inputs)
+        outputs, _, _, features = net(inputs)
         loss = criterion(outputs, targets)
-        loss_fea = fea_criterion(fea, targets)
-        loss +=loss_fea*0.01
+        loss_fea = fea_criterion(features, targets)
+        loss += loss_fea*0.01
         loss.backward()
         optimizer.step()
 
