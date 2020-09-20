@@ -50,7 +50,6 @@ class Network(nn.Module):
         else:
             return last_layer.out_channels
 
-
     def forward(self, x):
         x = self.backbone(x)
         feature_maps = None

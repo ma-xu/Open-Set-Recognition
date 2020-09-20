@@ -2,8 +2,6 @@ import torch
 import torch.nn as nn
 from torch.autograd.function import Function
 
-import pdb
-
 
 class DiscCentroidsLoss(nn.Module):
     def __init__(self, num_classes, feat_dim, size_average=True):
