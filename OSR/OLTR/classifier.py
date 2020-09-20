@@ -82,8 +82,9 @@ class MetaEmbedding_Classifier(nn.Module):
         self.fc_hallucinator = nn.Linear(feat_dim, num_classes)
         self.fc_selector = nn.Linear(feat_dim, feat_dim)
         self.cosnorm_classifier = CosNorm_Classifier(feat_dim, num_classes)
+        self.register_buffer("centroids", torch.randn(num_classes, feat_dim))
 
-    def forward(self, x, centroids, *args):
+    def forward(self, x, *args):
         # storing direct feature
         direct_feature = x.clone()
 
@@ -92,8 +93,8 @@ class MetaEmbedding_Classifier(nn.Module):
 
         # set up visual memory
         x_expand = x.clone().unsqueeze(1).expand(-1, self.num_classes, -1)
-        centroids_expand = centroids.clone().unsqueeze(0).expand(batch_size, -1, -1)
-        keys_memory = centroids.clone()
+        centroids_expand = self.centroids.unsqueeze(0).expand(batch_size, -1, -1)
+        keys_memory = self.centroids
 
         # computing reachability
         dist_cur = torch.norm(x_expand - centroids_expand, 2, 2)
