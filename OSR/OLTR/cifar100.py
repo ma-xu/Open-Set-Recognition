@@ -51,6 +51,13 @@ parser.add_argument('--stage1_classifier', default='dotproduct', type=str,choice
                     help='Select a classifier (default dotproduct)')
 
 
+# Parameters for stage 2
+parser.add_argument('--stage2_resume', default='', type=str, metavar='PATH', help='path to latest checkpoint')
+parser.add_argument('--stage2_es', default=70, type=int, help='epoch size')
+parser.add_argument('--stage2_use_fc', default=True,  action='store_true',
+                    help='If to use the last FC/embedding layer in network, FC (whatever, stage1_feature_dim)')
+
+
 
 
 args = parser.parse_args()
@@ -86,7 +93,7 @@ testset = CIFAR100(root='../../data', train=False, download=True, transform=tran
 def main():
     print(device)
     net = main_stage1()
-    cal_centroids(net, device)
+    centroids = cal_centroids(net, device)
 
 
 def main_stage1():
@@ -130,12 +137,11 @@ def main_stage1():
         print('\nStage_1 Epoch: %d   Learning rate: %f' % (epoch+1, optimizer.param_groups[0]['lr']))
         adjust_learning_rate(optimizer, epoch, args.lr,step=10)
         train_loss, train_acc = stage1_train(net,trainloader,optimizer,criterion,device)
-        save_model(net, None, epoch, os.path.join(args.checkpoint,'stahe_1_last_model.pth'))
+        save_model(net, None, epoch, os.path.join(args.checkpoint,'stage_1_last_model.pth'))
         logger.append([epoch+1, optimizer.param_groups[0]['lr'], train_loss, train_acc])
     logger.close()
     print(f"\nFinish Stage-1 training...\n")
     return net
-
 
 # Training
 def stage1_train(net,trainloader,optimizer,criterion,device):
@@ -182,7 +188,65 @@ def cal_centroids(net,device):
                 class_count[label] += 1
                 centroids[label] += features[i, :]
     centroids = centroids/(class_count.expand_as(centroids))
-    print(centroids.shape)
+    return centroids
+
+
+def main_stage2(net1, centroids):
+    print(f"\nStart Stage-2 training...\n")
+    start_epoch = 0  # start from epoch 0 or last checkpoint epoch
+    # Ignore the classAwareSampler since we are not focusing on long-tailed problem.
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.bs, shuffle=True,  num_workers=4)
+    print('==> Building model..')
+    net2 = Network(backbone=args.arch, embed_dim=512, num_classes=args.train_class_num,
+                  use_fc=True, attmodule=True, classifier='metaembedding', backbone_fc=False, data_shape=4)
+    net2 = net2.to(device)
+    init_stage2_model(net1, net2)
+    print("Initilize Net2 sccuess")
+
+    if device == 'cuda':
+        net2 = torch.nn.DataParallel(net2)
+        cudnn.benchmark = True
+
+    if args.stage2_resume:
+        # Load checkpoint.
+        if os.path.isfile(args.stage12_resume):
+            print('==> Resuming from checkpoint..')
+            checkpoint = torch.load(args.stage2_resume)
+            net2.load_state_dict(checkpoint['net'])
+            # best_acc = checkpoint['acc']
+            # print("BEST_ACCURACY: "+str(best_acc))
+            start_epoch = checkpoint['epoch']
+            logger = Logger(os.path.join(args.checkpoint, 'log_stage2.txt'), resume=True)
+        else:
+            print("=> no checkpoint found at '{}'".format(args.resume))
+    else:
+        logger = Logger(os.path.join(args.checkpoint, 'log_stage2.txt'))
+        logger.set_names(['Epoch', 'Learning Rate', 'Train Loss', 'Train Acc.'])
+
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.SGD(net2.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
+
+    for epoch in range(start_epoch, start_epoch + args.stage1_es):
+        print('\nStage_1 Epoch: %d   Learning rate: %f' % (epoch + 1, optimizer.param_groups[0]['lr']))
+        adjust_learning_rate(optimizer, epoch, args.lr, step=10)
+        train_loss, train_acc = stage1_train(net2, trainloader, optimizer, criterion, device)
+        save_model(net2, None, epoch, os.path.join(args.checkpoint, 'stage_2_last_model.pth'))
+        logger.append([epoch + 1, optimizer.param_groups[0]['lr'], train_loss, train_acc])
+    logger.close()
+    print(f"\nFinish Stage-2 training...\n")
+    return net2
+
+
+
+def init_stage2_model(net1, net2):
+    # net1: net from stage 1.
+    # net2: net from stage 2.
+    dict1 = net1.state_dict()
+    dict2 = net2.state_dict()
+    for k, v in dict1.items():
+        dict2[k]=v
+    net2.load_state_dict(dict2)
+
 
 
 def test(epoch, net,trainloader,  testloader,criterion, device):

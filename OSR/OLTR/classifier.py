@@ -27,7 +27,7 @@ class CosNorm_Classifier(nn.Module):
         norm_x = torch.norm(input.clone(), 2, 1, keepdim=True)
         ex = (norm_x / (1 + norm_x)) * (input / norm_x)
         ew = self.weight / torch.norm(self.weight, 2, 1, keepdim=True)
-        return torch.mm(self.scale * ex, ew.t()),None
+        return torch.mm(self.scale * ex, ew.t())
 
 
 # def create_model(in_dims=512, out_dims=1000):
