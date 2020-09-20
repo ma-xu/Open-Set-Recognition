@@ -92,8 +92,9 @@ testset = CIFAR100(root='../../data', train=False, download=True, transform=tran
 
 def main():
     print(device)
-    net = main_stage1()
-    centroids = cal_centroids(net, device)
+    net1 = main_stage1()
+    centroids = cal_centroids(net1, device)
+    main_stage2(net1, centroids)
 
 
 def main_stage1():
@@ -181,8 +182,6 @@ def cal_centroids(net,device):
             inputs, targets = inputs.to(device), targets.to(device)
             # outputs, _, _ = net(inputs)
             _, features, _ = net(inputs)
-            print(f"targets.shape: {targets.shape}")
-            print(f"outputs.shape: {features.shape}")
             for i in range(0,targets.size(0)):
                 label = targets[i]
                 class_count[label] += 1
