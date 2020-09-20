@@ -301,6 +301,9 @@ def pass_centroids(net2, fea_criterion, init_centroids=None):
         criterion_dict = fea_criterion.state_dict()
         centroids = criterion_dict['centroids']
     net2_dict = net2.state_dict()
+    for k,v in net2_dict.items():
+        if k.__contains__('classifier'):
+            print(k)
     net2_dict['classifier.centroids'] = centroids
     net2.load_state_dict(net2_dict)
 
