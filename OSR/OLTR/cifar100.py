@@ -250,6 +250,7 @@ def main_stage2(net1, centroids):
 
     criterion = nn.CrossEntropyLoss()
     fea_criterion = DiscCentroidsLoss(args.train_class_num,args.stage1_feature_dim )
+    fea_criterion = fea_criterion.to(device)
     optimizer = optim.SGD(net2.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
 
     for epoch in range(start_epoch, start_epoch + args.stage2_es):
