@@ -57,6 +57,7 @@ parser.add_argument('--stage2_resume', default='', type=str, metavar='PATH', hel
 parser.add_argument('--stage2_es', default=70, type=int, help='epoch size')
 parser.add_argument('--stage2_use_fc', default=True,  action='store_true',
                     help='If to use the last FC/embedding layer in network, FC (whatever, stage1_feature_dim)')
+parser.add_argument('--stage2_fea_loss_weight', default=0.01, type=float, help='The wegiht for feature loss')
 
 
 
@@ -180,7 +181,7 @@ def stage2_train(net,trainloader,optimizer,criterion, fea_criterion, device):
         outputs, _, _, features = net(inputs)
         loss = criterion(outputs, targets)
         loss_fea = fea_criterion(features, targets)
-        loss += loss_fea*0.01
+        loss += loss_fea*args.stage2_fea_loss_weight
         loss.backward()
         optimizer.step()
 
@@ -217,6 +218,7 @@ def cal_centroids(net,device):
 
 
 def main_stage2(net1, centroids):
+
     print(f"\n===> Start Stage-2 training...\n")
     start_epoch = 0  # start from epoch 0 or last checkpoint epoch
     # Ignore the classAwareSampler since we are not focusing on long-tailed problem.
@@ -226,7 +228,14 @@ def main_stage2(net1, centroids):
                   use_fc=True, attmodule=True, classifier='metaembedding', backbone_fc=False, data_shape=4)
     net2 = net2.to(device)
     init_stage2_model(net1, net2)
-    print("Initilize Net2 sccuess")
+
+    criterion = nn.CrossEntropyLoss()
+    fea_criterion = DiscCentroidsLoss(args.train_class_num, args.stage1_feature_dim)
+    fea_criterion = fea_criterion.to(device)
+    optimizer = optim.SGD(net2.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
+
+    # passing centroids data.
+    pass_centroids(net2, fea_criterion, init_centroids=centroids)
 
     if device == 'cuda':
         net2 = torch.nn.DataParallel(net2)
@@ -248,10 +257,7 @@ def main_stage2(net1, centroids):
         logger = Logger(os.path.join(args.checkpoint, 'log_stage2.txt'))
         logger.set_names(['Epoch', 'Learning Rate', 'Train Loss', 'Train Acc.'])
 
-    criterion = nn.CrossEntropyLoss()
-    fea_criterion = DiscCentroidsLoss(args.train_class_num,args.stage1_feature_dim )
-    fea_criterion = fea_criterion.to(device)
-    optimizer = optim.SGD(net2.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
+
 
     for epoch in range(start_epoch, start_epoch + args.stage2_es):
         print('\nStage_2 Epoch: %d   Learning rate: %f' % (epoch + 1, optimizer.param_groups[0]['lr']))
@@ -259,6 +265,7 @@ def main_stage2(net1, centroids):
         train_loss, train_acc = stage2_train(net2, trainloader, optimizer, criterion, fea_criterion, device)
         save_model(net2, None, epoch, os.path.join(args.checkpoint, 'stage_2_last_model.pth'))
         logger.append([epoch + 1, optimizer.param_groups[0]['lr'], train_loss, train_acc])
+        pass_centroids(net2, fea_criterion, init_centroids=None)
     logger.close()
     print(f"\nFinish Stage-2 training...\n")
     return net2
@@ -279,6 +286,23 @@ def init_stage2_model(net1, net2):
             continue    # we do not load the classifier weight from stage 1.
         dict2[k] = v
     net2.load_state_dict(dict2)
+
+
+def pass_centroids(net2, fea_criterion, init_centroids=None):
+    # net2: model in stage 2
+    # fea_criterion: the centroidsLoss
+    # init_centroids: initiated centroids from stage1(training set)
+    if init_centroids is not None:
+        centroids = init_centroids
+        criterion_dict = fea_criterion.state_dict()
+        criterion_dict['centroids'] = centroids
+        fea_criterion.load_state_dict(criterion_dict)
+    else:
+        criterion_dict = fea_criterion.state_dict()
+        centroids = criterion_dict['centroids']
+    net2_dict = net2.state_dict()
+    net2_dict['classifier.centroids'] = centroids
+    net2.load_state_dict(net2_dict)
 
 
 
