@@ -325,6 +325,8 @@ def test( net,  testloader, device):
             labels.append(targets)
             progress_bar(batch_idx, len(testloader))
 
+    scores = torch.cat(scores, dim=0).cpu().numpy()
+    labels = torch.cat(labels, dim=0).cpu().numpy()
     pred=[]
     for score in scores:
         pred.append(np.argmax(score) if np.max(score) >= args.oltr_threshold else args.train_class_num)
