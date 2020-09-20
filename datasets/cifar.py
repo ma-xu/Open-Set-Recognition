@@ -135,7 +135,7 @@ class CIFAR10(VisionDataset):
             indexes = [i for i, x in enumerate(self.targets) if x in train_classes]
             self.data = self.data[indexes, :, :, :]
             self.targets =[train_classes.index(self.targets[i]) for i in indexes]
-            print(f"Training data includes {train_class_num} classes, {len(self.targets)} samples.")
+            print(f"\tTraining data includes {train_class_num} classes, {len(self.targets)} samples.")
         else:
             indexes = [i for i, x in enumerate(self.targets) if x in test_classes]
             self.data = self.data[indexes, :, :, :]
@@ -145,10 +145,10 @@ class CIFAR10(VisionDataset):
             for i in range(0,len(self.targets)) :
                 if self.targets[i]>train_class_num:
                     self.targets[i] = train_class_num
-            print(f"Testing data includes {train_class_num+1} classes (Original {test_class_num} classes),"
+            print(f"\tTesting data includes {train_class_num+1} classes (Original {test_class_num} classes),"
                   f" {len(self.targets)} samples.")
             self.openness= float(len(temp_test_classes))/float(train_class_num+len(temp_test_classes))
-            print(f"During testing, openness is {self.openness}.")
+            print(f"\tDuring testing, openness is {self.openness}.")
 
     def _load_meta(self):
         path = os.path.join(self.root, self.base_folder, self.meta['filename'])

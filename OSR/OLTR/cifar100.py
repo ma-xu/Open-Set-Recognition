@@ -170,7 +170,7 @@ def stage1_train(net,trainloader,optimizer,criterion,device):
 
 # calculate centroids
 def cal_centroids(net,device):
-    print(f"Calculating centroids ...")
+    print(f"===> Calculating centroids ...")
     # data loader
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.bs, shuffle=True, num_workers=4)
 
@@ -191,7 +191,7 @@ def cal_centroids(net,device):
 
 
 def main_stage2(net1, centroids):
-    print(f"\nStart Stage-2 training...\n")
+    print(f"\n===> Start Stage-2 training...\n")
     start_epoch = 0  # start from epoch 0 or last checkpoint epoch
     # Ignore the classAwareSampler since we are not focusing on long-tailed problem.
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.bs, shuffle=True,  num_workers=4)
@@ -247,7 +247,9 @@ def init_stage2_model(net1, net2):
             k = k[9:]   # remove module.1.
         if k.startswith("module."):
             k = k[7:]   # remove module.1.
-        dict2[k]=v
+        if k.startswith("classifier"):
+            continue    # we do not load the classifier weight from stage 1.
+        dict2[k] = v
     net2.load_state_dict(dict2)
 
 
