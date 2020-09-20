@@ -243,6 +243,10 @@ def init_stage2_model(net1, net2):
     dict1 = net1.state_dict()
     dict2 = net2.state_dict()
     for k, v in dict1.items():
+        if k.startswith("module.1."):
+            k = k[9:]   # remove module.1.
+        if k.startswith("module."):
+            k = k[7:]   # remove module.1.
         dict2[k]=v
     net2.load_state_dict(dict2)
 
