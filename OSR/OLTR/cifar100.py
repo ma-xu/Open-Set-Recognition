@@ -20,6 +20,7 @@ import backbones.cifar as models
 from datasets import CIFAR100
 from Utils import adjust_learning_rate, progress_bar, Logger, mkdir_p, Evaluation
 from netbuilder import Network
+from DiscCentroidsLoss import DiscCentroidsLoss
 
 model_names = sorted(name for name in models.__dict__
     if not name.startswith("__")
@@ -168,6 +169,31 @@ def stage1_train(net,trainloader,optimizer,criterion,device):
     return train_loss/(batch_idx+1), correct/total
 
 
+def stage2_train(net,trainloader,optimizer,criterion, fea_criterion, device):
+    net.train()
+    train_loss = 0
+    correct = 0
+    total = 0
+    for batch_idx, (inputs, targets) in enumerate(trainloader):
+        inputs, targets = inputs.to(device), targets.to(device)
+        optimizer.zero_grad()
+        outputs, fea, featmaps = net(inputs)
+        loss = criterion(outputs, targets)
+        loss_fea = fea_criterion(fea, targets)
+        loss +=loss_fea*0.01
+        loss.backward()
+        optimizer.step()
+
+        train_loss += loss.item()
+        _, predicted = outputs.max(1)
+        total += targets.size(0)
+        correct += predicted.eq(targets).sum().item()
+
+        progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
+            % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
+    return train_loss/(batch_idx+1), correct/total
+
+
 # calculate centroids
 def cal_centroids(net,device):
     print(f"===> Calculating centroids ...")
@@ -223,12 +249,13 @@ def main_stage2(net1, centroids):
         logger.set_names(['Epoch', 'Learning Rate', 'Train Loss', 'Train Acc.'])
 
     criterion = nn.CrossEntropyLoss()
+    fea_criterion = DiscCentroidsLoss(args.train_class_num,args.stage1_feature_dim )
     optimizer = optim.SGD(net2.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
 
-    for epoch in range(start_epoch, start_epoch + args.stage1_es):
-        print('\nStage_1 Epoch: %d   Learning rate: %f' % (epoch + 1, optimizer.param_groups[0]['lr']))
+    for epoch in range(start_epoch, start_epoch + args.stage2_es):
+        print('\nStage_2 Epoch: %d   Learning rate: %f' % (epoch + 1, optimizer.param_groups[0]['lr']))
         adjust_learning_rate(optimizer, epoch, args.lr, step=10)
-        train_loss, train_acc = stage1_train(net2, trainloader, optimizer, criterion, device)
+        train_loss, train_acc = stage2_train(net2, trainloader, optimizer, criterion, fea_criterion, device)
         save_model(net2, None, epoch, os.path.join(args.checkpoint, 'stage_2_last_model.pth'))
         logger.append([epoch + 1, optimizer.param_groups[0]['lr'], train_loss, train_acc])
     logger.close()
