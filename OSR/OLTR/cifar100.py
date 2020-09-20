@@ -58,7 +58,7 @@ parser.add_argument('--stage2_es', default=70, type=int, help='epoch size')
 parser.add_argument('--stage2_use_fc', default=True,  action='store_true',
                     help='If to use the last FC/embedding layer in network, FC (whatever, stage1_feature_dim)')
 parser.add_argument('--stage2_fea_loss_weight', default=0.01, type=float, help='The wegiht for feature loss')
-
+parser.add_argument('--oltr_threshold', default=0.1, type=float, help='The score threshold for OLTR')
 
 
 
@@ -261,6 +261,7 @@ def main_stage2(net1, centroids):
 
     for epoch in range(start_epoch, start_epoch + args.stage2_es):
         print('\nStage_2 Epoch: %d   Learning rate: %f' % (epoch + 1, optimizer.param_groups[0]['lr']))
+        # Here, I didn't set optimizers respectively, just for simplicity. Performance did not vary a lot.
         adjust_learning_rate(optimizer, epoch, args.lr, step=10)
         train_loss, train_acc = stage2_train(net2, trainloader, optimizer, criterion, fea_criterion, device)
         save_model(net2, None, epoch, os.path.join(args.checkpoint, 'stage_2_last_model.pth'))
@@ -268,6 +269,9 @@ def main_stage2(net1, centroids):
         pass_centroids(net2, fea_criterion, init_centroids=None)
     logger.close()
     print(f"\nFinish Stage-2 training...\n")
+
+    testloader = torch.utils.data.DataLoader(testset, batch_size=args.bs, shuffle=False, num_workers=4)
+    test(net2, testloader, device)
     return net2
 
 
@@ -310,14 +314,22 @@ def pass_centroids(net2, fea_criterion, init_centroids=None):
 
 
 
-def test(epoch, net,trainloader,  testloader,criterion, device):
+def test( net,  testloader, device):
     net.eval()
-
+    scores, labels = [], []
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
-            outputs = net(inputs)
+            outputs,_,_,_ = net(inputs)
+            scores.append(outputs)
+            labels.append(targets)
             progress_bar(batch_idx, len(testloader))
+
+    pred=[]
+    for score in scores:
+        pred.append(np.argmax(score) if np.max(score) >= args.oltr_threshold else args.train_class_num)
+    eval = Evaluation(pred, labels)
+    print(f"OLTR accuracy is %.3f"%(eval.accuracy))
 
 
 def save_model(net, acc, epoch, path):
