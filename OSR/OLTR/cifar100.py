@@ -332,7 +332,10 @@ def test( net,  testloader, device):
             labels.append(targets)
             progress_bar(batch_idx, len(testloader))
 
-    scores = torch.cat(scores, dim=0).cpu().numpy()
+    scores = torch.cat(scores, dim=0)
+    scores = scores.softmax(dim=1)
+    scores = scores.cpu().numpy()
+
     print(scores.shape)
     labels = torch.cat(labels, dim=0).cpu().numpy()
     pred=[]
