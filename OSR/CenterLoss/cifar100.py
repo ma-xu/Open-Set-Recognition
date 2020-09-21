@@ -44,7 +44,7 @@ parser.add_argument('--evaluate', action='store_true',
                     help='Evaluate without training')
 parser.add_argument('--centerloss_weight', default=0.003, type=float, help='center loss weight')
 parser.add_argument('--center_lr', default=0.1, type=float, help='learning rate for center loss')
-
+parser.add_argument('--threshold', default=0.1, type=float, help='threshold for center-loss probability')
 
 
 args = parser.parse_args()
