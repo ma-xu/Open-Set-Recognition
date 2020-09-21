@@ -56,7 +56,9 @@ python3 cifar100.py --stage2_resume $PATH-TO-ChECKPOINTS$ --evaluate
 Under the default settings (e.g, ResNet18, train_class_num=50, test_class_num=100, *which means openness=0.5*), we got the preliminary results (ACCURACY) as follow:
 
 
-
+|          Method         | thr=0.1 | thr=0.2 | thr=0.3 | thr=0.5 | thr=0.7 | thr=0.9 |
+|:-----------------------:|---------|---------|---------|---------|---------|---------|
+|         SoftMax         | 0.367   | 0.368   | 0.384   | 0.464   | 0.551   |  0.627  |
 
 
 
