@@ -1,6 +1,6 @@
-# OpenMax
+# Center Loss
 
-This folder reproduced the results of OpenMax: [Towards Open Set Deep Networks](https://www.cv-foundation.org/openaccess/content_cvpr_2016/papers/Bendale_Towards_Open_Set_CVPR_2016_paper.pdf)
+This folder reproduced the results of Center-Loss: [A Discriminative Feature Learning Approach for Deep Face Recognition](https://ydwen.github.io/papers/WenECCV16.pdf)
 
 ## CIFAR-100
 ### CIFAR-100 Training  
@@ -18,15 +18,15 @@ Some other parameters:
 `--test_class_num`: the number of total classes for testing, default 100 (that is all rest are unknown).<br>
 `--includes_all_train_class`: whether includes all unknown classes during testing, default True (e.g., the number of unkown classes in testing should be test_class_num - train_class_num).<br>
 `--evaluate`: evaluate the model without training. So you should use `--resume` to load pretrained model.<br>
-`--weibull_tail`: parameters for weibull distribution, default 20.<br>
-`--weibull_alpha`: parameters for weibull distribution, default 3.<br>
-`--weibull_threshold`: parameters for confidence threshold, default 0.9. (0.9 may be the best for CIFAR datasets)<br>
+`--centerloss_weight`: the weight for center loss, default 0.03. <br>
+`--center_lr`: learning rate for center loss parameters, default 0.1 (0.5 in original paper).<br>
+`--threshold`: parameters for confidence threshold, default 0.9. (0.9 may be the best for CIFAR datasets)<br>
 
 ### CIFAR-100 Testing
 ``` shell
-python3 cifar100.py --resume $PATH-TO-ChECKPOINTS$ --evaluate
+python3 cifar100.py --resume $PATH-TO-ChECKPOINTS$ --evaluate --threshold 0.9
 # e.g.,
-# python3 cifar100.py --weibull_threshold 0.9 --evaluate --resume /home/xuma/Open-Set-Reconigtion/OSR/OpenMax/checkpoints/cifar/ResNet18/last_model.pth
+# python3 cifar100.py --evaluate --resume /home/g1007540910/Open-Set-Reconigtion/OSR/CenterLoss/checkpoints/cifar/ResNet18/last_model.pth --threshold 0.1
 ```
 
 ### CIFAR-100 Tips
@@ -35,16 +35,12 @@ python3 cifar100.py --resume $PATH-TO-ChECKPOINTS$ --evaluate
 - Checkpoint and log file are saved to `./checkpoints/cifar/$args.arch$/` folder.
 - Checkpoint is named as last_model.pth
 
-### CIFAR-100 preliminary results (Updated)
+### CIFAR-100 preliminary results 
 Under the default settings (e.g, ResNet18, train_class_num=50, test_class_num=100, *which means openness=0.5*), we got the preliminary results (ACCURACY) as follow:
 
 |          Method         | thr=0.1 | thr=0.2 | thr=0.3 | thr=0.5 | thr=0.7 | thr=0.9 |
 |:-----------------------:|---------|---------|---------|---------|---------|---------|
-|         SoftMax         | 0.374   | 0.374   | 0.374   | 0.374   | 0.374   | 0.374   |
-| SoftMax(with threshold) | 0.374   | 0.377   | 0.396   | 0.485   | 0.570   | 0.646   |
-|         OpenMax         | 0.504   | 0.499   | 0.513   | 0.545   | 0.583   | 0.633   |
-
-(openmax may vary results slightly. Better weibull parameters may give better performance for openmax.)
+|         Center-Loss     | 0.379   | 0.392   | 0.428   | 0.526   | 0.603   | 0.661   |
 
 
 
