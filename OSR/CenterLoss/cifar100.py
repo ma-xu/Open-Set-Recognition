@@ -164,9 +164,9 @@ def train(net,trainloader,optimizer_model,optimizer_centloss, criterion_softamx,
         correct += predicted.eq(targets).sum().item()
 
         progress_bar(batch_idx, len(trainloader),
-                     'Loss: %.3f |SoftmaxLoss: %.3f CenterLoss: %.3f |Acc: %.3f%% (%d/%d)'
+                     'Loss:%.3f (Softmax: %.3f CenterLoss: %.3f) Acc: %.3f%%'
             % (totoal_loss/(batch_idx+1), totoal_softmax_loss/(batch_idx+1), totoal_center_loss/(batch_idx+1),
-               100.*correct/total, correct, total))
+               100.*correct/total))
     return totoal_loss/(batch_idx+1), totoal_softmax_loss/(batch_idx+1), \
            totoal_center_loss/(batch_idx+1), correct/total
 
