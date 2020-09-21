@@ -15,6 +15,11 @@ pip3 install -U scikit-learn
 pip3 install numpy
 ```
 
+For OpenMax:
+```bash
+pip3 install libmr
+```
+
 
 ## Supporting
 * __DataSet__
