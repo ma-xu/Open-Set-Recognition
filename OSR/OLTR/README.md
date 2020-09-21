@@ -52,7 +52,7 @@ python3 cifar100.py --stage2_resume $PATH-TO-ChECKPOINTS$ --evaluate
 - Checkpoint and log file are saved to `./checkpoints/cifar/$args.arch$/` folder.
 - Checkpoint is named as stage_1_last_model/stage_2_last_model.pth
 
-### CIFAR-100 preliminary results (Updated)
+### CIFAR-100 preliminary results
 Under the default settings (e.g, ResNet18, train_class_num=50, test_class_num=100, *which means openness=0.5*), we got the preliminary results (ACCURACY) as follow:
 
 
