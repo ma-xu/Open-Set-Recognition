@@ -107,7 +107,7 @@ def main():
             print('==> Resuming from checkpoint..')
             checkpoint = torch.load(args.resume)
             net.load_state_dict(checkpoint['net'])
-            criterion_centerloss.load_state_dict(checkpoint['net'])
+            criterion_centerloss.load_state_dict(checkpoint['centerloss'])
             # best_acc = checkpoint['acc']
             # print("BEST_ACCURACY: "+str(best_acc))
             start_epoch = checkpoint['epoch']
