@@ -178,7 +178,7 @@ def test(net, testloader, device):
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
-            outputs = net(inputs)
+            _, outputs = net(inputs)
             scores.append(outputs)
             labels.append(targets)
             progress_bar(batch_idx, len(testloader))
