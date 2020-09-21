@@ -333,6 +333,7 @@ def test( net,  testloader, device):
             progress_bar(batch_idx, len(testloader))
 
     scores = torch.cat(scores, dim=0).cpu().numpy()
+    print(scores.shape)
     labels = torch.cat(labels, dim=0).cpu().numpy()
     pred=[]
     for score in scores:
