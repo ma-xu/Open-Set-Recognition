@@ -40,5 +40,5 @@ Click `go` link to the related method/dataset and have a try.
 |         |  | CIFAR-100 | CIFAR-10 | MNIST | ImageNet |
 |:-------:|:------:|:---------:|:--------:|:-----:|:--------:|
 | OpenMax |[[ReadME]](https://github.com/13952522076/Open-Set-Recognition/tree/master/OSR/OpenMax) |[go](https://github.com/13952522076/Open-Set-Recognition/blob/master/OSR/OpenMax/cifar100.py)|          |       |          |
-| OLTR    |   [ReadME](https://github.com/13952522076/Open-Set-Recognition/tree/master/OSR/OLTR)     |  [go](https://github.com/13952522076/Open-Set-Recognition/blob/master/OSR/OLTR/cifar100.py)         |          |       |          |
+| OLTR    |   [[ReadME]](https://github.com/13952522076/Open-Set-Recognition/tree/master/OSR/OLTR)     |  [go](https://github.com/13952522076/Open-Set-Recognition/blob/master/OSR/OLTR/cifar100.py)         |          |       |          |
  
