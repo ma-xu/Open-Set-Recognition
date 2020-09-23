@@ -3,7 +3,7 @@ import math
 
 class Distance:
     # Distance should return a tensor with shape [n, num_classes]
-    def __init__(self, features,centroids):
+    def __init__(self, features, centroids):
         self.features = features
         self.centroids = centroids
         assert len(self.features.shape) == 2  # [n, feat_dim]
@@ -39,7 +39,7 @@ class Distance:
             distance = distance/math.sqrt(self.dim_num)
         return distance
 
-    def cosine(self):
+    def cosine(self, scaled=False):
         raise NotImplementedError
 
 
@@ -47,7 +47,9 @@ def demo():
     feature = torch.rand(10,20)
     centroids = torch.rand(5,20)
     distance = Distance(feature,centroids)
-    print(distance.cosine())
+    metric = 'l2'
+    scaled = True
+    print(getattr(distance, metric)(scaled=scaled))
     print(distance.l2().shape)
 
-demo()
+# demo()

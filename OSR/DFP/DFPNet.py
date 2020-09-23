@@ -2,22 +2,26 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import backbones.cifar as models
+from Distance import Distance
 
 class DFPNet(nn.Module):
     def __init__(self, backbone='ResNet18', num_classes=1000,
-                  backbone_fc=False, embed_dim=None, embed_reduction=8):
+                  backbone_fc=False, embed_dim=None, embed_reduction=8, distance='l2', scaled=True):
         super(DFPNet, self).__init__()
         assert backbone_fc == False # drop out the classifier layer.
+        self.distance=distance
+        self.scaled = scaled
         # num_classes = num_classes would be useless if backbone_fc=False
         self.backbone = models.__dict__[backbone](num_classes=num_classes, backbone_fc=backbone_fc)
         feat_dim = self.get_backbone_last_layer_out_channel()  # get the channel number of backbone output
         self.classifier = nn.Linear(feat_dim, num_classes)
         if embed_dim:
+            # Embedding layer could be modified to a whitened feature map like DNL.
             self.embeddingLayer = nn.Sequential(
                 # embed_reduction just for parameter reduction, not attention mechanism.
                 nn.Linear(feat_dim,embed_dim//embed_reduction),
                 nn.ReLU(inplace=True),
-                nn.Linear(embed_dim//embed_reduction, feat_dim)
+                nn.Linear(embed_dim//embed_reduction, embed_dim)
             )
             feat_dim = embed_dim
         self.register_buffer("centeroids", torch.zeros(num_classes,feat_dim))
@@ -48,16 +52,18 @@ class DFPNet(nn.Module):
         # processing the clssifier branch
         logits = self.classifier(gap)
         # processing the distance branch
-
-
-        return logits
+        embed_fea = self.embeddingLayer(gap) if hasattr(self,'embeddingLayer') else gap
+        Dist = Distance(embed_fea, self.centeroids)
+        dis = getattr(Dist, self.distance)(scaled=self.scaled) # return [n, num_classes]
+        return logits, dis
 
 
 def demo():
     x = torch.rand([1, 3, 32, 32])
     net = DFPNet('ResNet18',num_classes=100, embed_dim=64)
-    y= net(x)
-    print(y.shape)
+    logits, dis= net(x)
+    print(logits.shape)
+    print(dis.shape)
 
 
 demo()
