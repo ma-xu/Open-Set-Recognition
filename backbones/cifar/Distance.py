@@ -31,7 +31,7 @@ class Distance:
 
 
     def l2(self, scaled=True):
-        # We can directly can torch.dist(), or cdist(), or pairwise_distance
+        # We can directly call torch.dist(), or cdist(), or pairwise_distance
         centroids = self.centroids.unsqueeze(0)
         features = self.features.unsqueeze(0)
         distance = torch.cdist(features, centroids, 2).squeeze(0)
