@@ -19,6 +19,9 @@ class DFPNet(nn.Module):
                 nn.ReLU(inplace=True),
                 nn.Linear(embed_dim//embed_reduction, feat_dim)
             )
+            feat_dim = embed_dim
+        self.register_buffer("centeroids", torch.zeros(num_classes,feat_dim))
+
 
 
     def get_backbone_last_layer_out_channel(self):
@@ -35,3 +38,26 @@ class DFPNet(nn.Module):
             return last_layer.num_features
         else:
             return last_layer.out_channels
+
+    def forward(self, x):
+        # TODO: extract more outputs from the backbone like FPN, but for intermediate weak-supervision.
+        x = self.backbone(x)
+        gap =F.adaptive_avg_pool2d(x,1)
+        gap = F.relu(gap.view(gap.size(0), -1), inplace=True)
+
+        # processing the clssifier branch
+        logits = self.classifier(gap)
+        # processing the distance branch
+
+
+        return logits
+
+
+def demo():
+    x = torch.rand([1, 3, 32, 32])
+    net = DFPNet('ResNet18',num_classes=100, embed_dim=64)
+    y= net(x)
+    print(y.shape)
+
+
+demo()
