@@ -1,0 +1,7 @@
+1. three stage training:
+    init centroids, training model, refine radius.
+2. the disentangled feature map like DNL in distance branch.
+3. DFPloss.py line 33, to all or to the closest non-gt centroid.
+4. In loss. we use sigmoid to rescale the loss. If a better way?
+
+BUG: OLTR fea_criterion need an optimizer.
