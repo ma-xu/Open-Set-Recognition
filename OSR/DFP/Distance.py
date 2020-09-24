@@ -17,7 +17,7 @@ class Distance:
         distance = torch.mm(self.features,centroids_t)
         if scaled:
             distance = distance/math.sqrt(self.dim_num)
-        return self.features
+        return distance
 
     def l1(self, scaled=True):
         centroids_t = self.centroids.permute(1, 0)
