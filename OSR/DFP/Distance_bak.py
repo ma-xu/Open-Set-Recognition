@@ -60,5 +60,4 @@ def demo():
     print(getattr(distance, metric)(scaled=scaled))
     # print(distance.l2().shape)
 
-# demo()
-
+demo()
