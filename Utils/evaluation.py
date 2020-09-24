@@ -12,6 +12,7 @@ class Evaluation(object):
         correct = (np.array(self.predict) == np.array(self.label)).sum()
         return float(correct)/float(len(self.predict))
 
+    # TODO: F1_MACRO, area under ROC curve (AUROC), Percision, Recall, Confuse_Matrix, ,
 
 if __name__ == '__main__':
     predict = [1, 2, 3, 4, 5, 3, 3, 2, 2, 5, 6, 6, 4, 3, 2, 4, 5, 6, 6, 3, 2]

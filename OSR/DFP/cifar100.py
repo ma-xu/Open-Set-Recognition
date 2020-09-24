@@ -37,18 +37,29 @@ parser.add_argument('--includes_all_train_class', default=True,  action='store_t
                     help='If required all known classes included in testing')
 
 # Others
-parser.add_argument('--arch', default='ResNet18', choices=model_names, type=str, help='choosing network')
 parser.add_argument('--bs', default=256, type=int, help='batch size')
 parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
 parser.add_argument('--evaluate', action='store_true', help='Evaluate without training')
 
+
+# General MODEL parameters
+parser.add_argument('--arch', default='ResNet18', choices=model_names, type=str, help='choosing network')
+parser.add_argument('--embed_dim', default=512, type=int, help='embedding feature dimension')
+parser.add_argument('--embed_reduction', default=8, type=int, help='reduction ratio for embedding like SENet.')
+parser.add_argument('--beta', default=1.0, type=float, help='wight of between-class distance loss')
+parser.add_argument('--alpha', default=1.0, type=float, help='weight of total distance loss')
+parser.add_argument('--distance', default='l2', choices=['l2','l1','dotproduct'],
+                    type=str, help='choosing distance metric')
+parser.add_argument('--scaled', default=True,  action='store_true',
+                    help='If scale distance by sqrt(embed_dim)')
+
+
 # Parameters for stage 1
 parser.add_argument('--stage1_resume', default='', type=str, metavar='PATH', help='path to latest checkpoint')
 parser.add_argument('--stage1_es', default=100, type=int, help='epoch size')
+parser.add_argument('--stage1_lr_cls', default=0.1, type=float, help='learning rate')
+parser.add_argument('--stage1_lr_dis', default=0.1, type=float, help='learning rate')
 
-parser.add_argument('--stage1_feature_dim', default=512, type=int, help='embedding feature dimension')
-parser.add_argument('--stage1_classifier', default='dotproduct', type=str,choices=['dotproduct', 'cosnorm', 'metaembedding'],
-                    help='Select a classifier (default dotproduct)')
 
 
 # Parameters for stage 2
@@ -98,8 +109,8 @@ def main():
     net1, centroids = None,None
     if not args.evaluate:
         net1 = main_stage1()
-        centroids = cal_centroids(net1, device)
-    main_stage2(net1, centroids)
+    #     centroids = cal_centroids(net1, device)
+    # main_stage2(net1, centroids)
 
 
 def main_stage1():
@@ -112,12 +123,20 @@ def main_stage1():
 
     # Model
     print('==> Building model..')
-    net = DFPNet(backbone=args.arch, num_classes=args.train_class_num, include_dist=True, embed_dim=512)
-    # net = models.__dict__[args.arch](num_classes=args.train_class_num) # CIFAR 100
-    net = net.to(device)
+    net = DFPNet(backbone=args.arch, num_classes=args.train_class_num,
+                 embed_dim=args.embed_dim,embed_reduction=args.embed_reduction)
+    embed_dim = net.feat_dim if not args.embed_dim else args.embed_dim
+    criterion_cls = nn.CrossEntropyLoss()
+    criterion_dis = DFPLoss(num_classes=args.train_class_num, feat_dim=embed_dim,
+                            beta=args.beta, distance=args.distance, scaled=args.scaled)
+    optimizer_cls = optim.SGD(net.parameters(), lr=args.stage1_lr_cls, momentum=0.9, weight_decay=5e-4)
+    optimizer_dis = optim.SGD(criterion_dis.parameters(), lr=args.stage1_lr_dis, momentum=0.9, weight_decay=5e-4)
 
+    net = net.to(device)
+    criterion_dis = criterion_dis.to(device)
     if device == 'cuda':
         net = torch.nn.DataParallel(net)
+        criterion_dis = torch.nn.DataParallel(criterion_dis)
         cudnn.benchmark = True
 
     if args.stage1_resume:
@@ -126,6 +145,7 @@ def main_stage1():
             print('==> Resuming from checkpoint..')
             checkpoint = torch.load(args.stage1_resume)
             net.load_state_dict(checkpoint['net'])
+            criterion_dis.load_state_dict(checkpoint['criterion'])
             # best_acc = checkpoint['acc']
             # print("BEST_ACCURACY: "+str(best_acc))
             start_epoch = checkpoint['epoch']
@@ -134,43 +154,63 @@ def main_stage1():
             print("=> no checkpoint found at '{}'".format(args.resume))
     else:
         logger = Logger(os.path.join(args.checkpoint, 'log_stage1.txt'))
-        logger.set_names(['Epoch', 'Learning Rate', 'Train Loss', 'Softmax Loss','Distance Loss', 'Train Acc.'])
+        logger.set_names(['Epoch', 'Train Loss', 'Softmax Loss','Distance Loss',
+                          'Within Loss','Between Loss', 'Train Acc.'])
 
-    criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
+
 
     for epoch in range(start_epoch, start_epoch + args.stage1_es):
-        print('\nStage_1 Epoch: %d   Learning rate: %f' % (epoch+1, optimizer.param_groups[0]['lr']))
-        adjust_learning_rate(optimizer, epoch, args.lr,step=10)
-        train_loss, train_acc = stage1_train(net,trainloader,optimizer,criterion,device)
-        save_model(net, None, epoch, os.path.join(args.checkpoint,'stage_1_last_model.pth'))
-        logger.append([epoch+1, optimizer.param_groups[0]['lr'], train_loss, train_acc])
+        print('\nStage_1 Epoch: %d | classification lr: %f | distance lr: %f'
+              % (epoch+1, optimizer_cls.param_groups[0]['lr'], optimizer_dis.param_groups[0]['lr']))
+        adjust_learning_rate(optimizer_cls, epoch, args.stage1_lr_cls, step=30)
+        adjust_learning_rate(optimizer_dis, epoch, args.stage1_lr_dis, step=30)
+        train_loss, cls_loss, dis_loss, within_loss, between_loss, train_acc = stage1_train(
+            net, trainloader, optimizer_cls, optimizer_dis, criterion_cls, criterion_dis, device)
+        save_model(net, criterion_dis, epoch, os.path.join(args.checkpoint, 'stage_1_last_model.pth'))
+        #['Epoch', 'Train Loss', 'Softmax Loss', 'Distance Loss', 'Within Loss', 'Between Loss', 'Train Acc.']
+        logger.append([epoch+1, train_loss, cls_loss, dis_loss, within_loss, between_loss, train_acc])
     logger.close()
     print(f"\nFinish Stage-1 training...\n")
     return net
 
+
 # Training
-def stage1_train(net,trainloader,optimizer,criterion,device):
+def stage1_train(net, trainloader, optimizer_cls, optimizer_dis, criterion_cls, criterion_dis, device):
     net.train()
     train_loss = 0
+    cls_loss = 0
+    dis_loss = 0
+    within_loss = 0
+    between_loss = 0
     correct = 0
     total = 0
     for batch_idx, (inputs, targets) in enumerate(trainloader):
         inputs, targets = inputs.to(device), targets.to(device)
-        optimizer.zero_grad()
-        outputs, _ = net(inputs)
-        loss = criterion(outputs, targets)
+        optimizer_cls.zero_grad()
+        optimizer_dis.zero_grad()
+        logits, embed_fea = net(inputs)
+        loss_cls = criterion_cls(logits, targets)
+        # loss_dis = loss_dis_within + loss_dis_between
+        loss_dis, loss_dis_within, loss_dis_between = criterion_dis(embed_fea,targets)
+        loss = loss_cls + args.alpha*loss_dis
         loss.backward()
-        optimizer.step()
+        optimizer_cls.step()
+        optimizer_dis.step()
 
         train_loss += loss.item()
-        _, predicted = outputs.max(1)
+        cls_loss +=loss_cls.item()
+        dis_loss +=loss_dis.item()
+        within_loss +=loss_dis_within.item()
+        between_loss +=loss_dis_between.item()
+
+        _, predicted = logits.max(1)
         total += targets.size(0)
         correct += predicted.eq(targets).sum().item()
 
         progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
             % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
-    return train_loss/(batch_idx+1), correct/total
+    return train_loss/(batch_idx+1), cls_loss/(batch_idx+1), dis_loss/(batch_idx+1),\
+           within_loss/(batch_idx+1), between_loss/(batch_idx+1), correct/total
 
 
 def stage2_train(net,trainloader,optimizer,criterion, fea_criterion, device):
@@ -219,67 +259,67 @@ def cal_centroids(net,device):
     centroids = centroids/(class_count.expand_as(centroids))
     return centroids
 
-
-def main_stage2(net1, centroids):
-
-    print(f"\n===> Start Stage-2 training...\n")
-    start_epoch = 0  # start from epoch 0 or last checkpoint epoch
-    # Ignore the classAwareSampler since we are not focusing on long-tailed problem.
-    trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.bs, shuffle=True,  num_workers=4)
-    print('==> Building model..')
-    net2 = Network(backbone=args.arch, embed_dim=512, num_classes=args.train_class_num,
-                  use_fc=True, attmodule=True, classifier='metaembedding', backbone_fc=False, data_shape=4)
-    net2 = net2.to(device)
-    if not args.evaluate:
-        init_stage2_model(net1, net2)
-
-    criterion = nn.CrossEntropyLoss()
-    fea_criterion = DiscCentroidsLoss(args.train_class_num, args.stage1_feature_dim)
-    fea_criterion = fea_criterion.to(device)
-    optimizer = optim.SGD(net2.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
-
-    # passing centroids data.
-    if not args.evaluate:
-        pass_centroids(net2, fea_criterion, init_centroids=centroids)
-
-    if device == 'cuda':
-        net2 = torch.nn.DataParallel(net2)
-        cudnn.benchmark = True
-
-    if args.stage2_resume:
-        # Load checkpoint.
-        if os.path.isfile(args.stage2_resume):
-            print('==> Resuming from checkpoint..')
-            checkpoint = torch.load(args.stage2_resume)
-            net2.load_state_dict(checkpoint['net'])
-            # best_acc = checkpoint['acc']
-            # print("BEST_ACCURACY: "+str(best_acc))
-            start_epoch = checkpoint['epoch']
-            logger = Logger(os.path.join(args.checkpoint, 'log_stage2.txt'), resume=True)
-        else:
-            print("=> no checkpoint found at '{}'".format(args.resume))
-    else:
-        logger = Logger(os.path.join(args.checkpoint, 'log_stage2.txt'))
-        logger.set_names(['Epoch', 'Learning Rate', 'Train Loss', 'Train Acc.'])
-
-    if not args.evaluate:
-        for epoch in range(start_epoch, start_epoch + args.stage2_es):
-            print('\nStage_2 Epoch: %d   Learning rate: %f' % (epoch + 1, optimizer.param_groups[0]['lr']))
-            # Here, I didn't set optimizers respectively, just for simplicity. Performance did not vary a lot.
-            adjust_learning_rate(optimizer, epoch, args.lr, step=20)
-            train_loss, train_acc = stage2_train(net2, trainloader, optimizer, criterion, fea_criterion, device)
-            save_model(net2, None, epoch, os.path.join(args.checkpoint, 'stage_2_last_model.pth'))
-            logger.append([epoch + 1, optimizer.param_groups[0]['lr'], train_loss, train_acc])
-            pass_centroids(net2, fea_criterion, init_centroids=None)
-        print(f"\nFinish Stage-2 training...\n")
-    logger.close()
-
-
-
-    testloader = torch.utils.data.DataLoader(testset, batch_size=args.bs, shuffle=False, num_workers=4)
-    test(net2, testloader, device)
-    return net2
-
+#
+# def main_stage2(net1, centroids):
+#
+#     print(f"\n===> Start Stage-2 training...\n")
+#     start_epoch = 0  # start from epoch 0 or last checkpoint epoch
+#     # Ignore the classAwareSampler since we are not focusing on long-tailed problem.
+#     trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.bs, shuffle=True,  num_workers=4)
+#     print('==> Building model..')
+#     net2 = Network(backbone=args.arch, embed_dim=512, num_classes=args.train_class_num,
+#                   use_fc=True, attmodule=True, classifier='metaembedding', backbone_fc=False, data_shape=4)
+#     net2 = net2.to(device)
+#     if not args.evaluate:
+#         init_stage2_model(net1, net2)
+#
+#     criterion = nn.CrossEntropyLoss()
+#     fea_criterion = DiscCentroidsLoss(args.train_class_num, args.stage1_feature_dim)
+#     fea_criterion = fea_criterion.to(device)
+#     optimizer = optim.SGD(net2.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
+#
+#     # passing centroids data.
+#     if not args.evaluate:
+#         pass_centroids(net2, fea_criterion, init_centroids=centroids)
+#
+#     if device == 'cuda':
+#         net2 = torch.nn.DataParallel(net2)
+#         cudnn.benchmark = True
+#
+#     if args.stage2_resume:
+#         # Load checkpoint.
+#         if os.path.isfile(args.stage2_resume):
+#             print('==> Resuming from checkpoint..')
+#             checkpoint = torch.load(args.stage2_resume)
+#             net2.load_state_dict(checkpoint['net'])
+#             # best_acc = checkpoint['acc']
+#             # print("BEST_ACCURACY: "+str(best_acc))
+#             start_epoch = checkpoint['epoch']
+#             logger = Logger(os.path.join(args.checkpoint, 'log_stage2.txt'), resume=True)
+#         else:
+#             print("=> no checkpoint found at '{}'".format(args.resume))
+#     else:
+#         logger = Logger(os.path.join(args.checkpoint, 'log_stage2.txt'))
+#         logger.set_names(['Epoch', 'Learning Rate', 'Train Loss', 'Train Acc.'])
+#
+#     if not args.evaluate:
+#         for epoch in range(start_epoch, start_epoch + args.stage2_es):
+#             print('\nStage_2 Epoch: %d   Learning rate: %f' % (epoch + 1, optimizer.param_groups[0]['lr']))
+#             # Here, I didn't set optimizers respectively, just for simplicity. Performance did not vary a lot.
+#             adjust_learning_rate(optimizer, epoch, args.lr, step=20)
+#             train_loss, train_acc = stage2_train(net2, trainloader, optimizer, criterion, fea_criterion, device)
+#             save_model(net2, None, epoch, os.path.join(args.checkpoint, 'stage_2_last_model.pth'))
+#             logger.append([epoch + 1, optimizer.param_groups[0]['lr'], train_loss, train_acc])
+#             pass_centroids(net2, fea_criterion, init_centroids=None)
+#         print(f"\nFinish Stage-2 training...\n")
+#     logger.close()
+#
+#
+#
+#     testloader = torch.utils.data.DataLoader(testset, batch_size=args.bs, shuffle=False, num_workers=4)
+#     test(net2, testloader, device)
+#     return net2
+#
 
 
 def init_stage2_model(net1, net2):
@@ -344,10 +384,10 @@ def test( net,  testloader, device):
     print(f"OLTR accuracy is %.3f"%(eval.accuracy))
 
 
-def save_model(net, acc, epoch, path):
+def save_model(net, criterion, epoch, path):
     state = {
         'net': net.state_dict(),
-        'testacc': acc,
+        'criterion': criterion.state_dict(),
         'epoch': epoch,
     }
     torch.save(state, path)
