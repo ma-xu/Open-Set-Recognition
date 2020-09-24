@@ -4,18 +4,27 @@ import torch.nn.functional as F
 import backbones.cifar as models
 from Distance import Distance
 
+
 class DFPNet(nn.Module):
-    def __init__(self, backbone='ResNet18', num_classes=1000,
-                  backbone_fc=False, embed_dim=None, embed_reduction=8, distance='l2', scaled=True):
+    def __init__(self, backbone='ResNet18', num_classes=1000, backbone_fc=False,
+                 include_dist=False, embed_dim=None, embed_reduction=8):
+        """
+
+        :param backbone: the backbone architecture, default ResNet18
+        :param num_classes: known classes
+        :param backbone_fc: includes FC layers in backbone, default false.
+        :param include_dist: if include the distance branch, default false to get traditional backbone architecture.
+        :param embed_dim: if include the embedding layer and tell the embedding dimension.
+        :param embed_reduction: for embedding reduction in SENet style. May deprecated.
+        """
         super(DFPNet, self).__init__()
         assert backbone_fc == False # drop out the classifier layer.
-        self.distance=distance
-        self.scaled = scaled
         # num_classes = num_classes would be useless if backbone_fc=False
         self.backbone = models.__dict__[backbone](num_classes=num_classes, backbone_fc=backbone_fc)
         feat_dim = self.get_backbone_last_layer_out_channel()  # get the channel number of backbone output
         self.classifier = nn.Linear(feat_dim, num_classes)
-        if embed_dim:
+        self.include_dist = include_dist
+        if embed_dim and include_dist:
             # Embedding layer could be modified to a whitened feature map like DNL.
             self.embeddingLayer = nn.Sequential(
                 # embed_reduction just for parameter reduction, not attention mechanism.
@@ -23,10 +32,6 @@ class DFPNet(nn.Module):
                 nn.ReLU(inplace=True),
                 nn.Linear(embed_dim//embed_reduction, embed_dim)
             )
-            feat_dim = embed_dim
-        self.register_buffer("centeroids", torch.zeros(num_classes,feat_dim))
-
-
 
     def get_backbone_last_layer_out_channel(self):
         last_layer = list(self.backbone.children())[-1]
@@ -46,24 +51,28 @@ class DFPNet(nn.Module):
     def forward(self, x):
         # TODO: extract more outputs from the backbone like FPN, but for intermediate weak-supervision.
         x = self.backbone(x)
-        gap =F.adaptive_avg_pool2d(x,1)
+
+        gap = F.adaptive_avg_pool2d(x,1)
         gap = F.relu(gap.view(gap.size(0), -1), inplace=True)
 
         # processing the clssifier branch
         logits = self.classifier(gap)
         # processing the distance branch
-        embed_fea = self.embeddingLayer(gap) if hasattr(self,'embeddingLayer') else gap
-        Dist = Distance(embed_fea, self.centeroids)
-        dis = getattr(Dist, self.distance)(scaled=self.scaled) # return [n, num_classes]
-        return logits, dis
+        embed_fea = None
+        if self.include_dist :
+            embed_fea = self.embeddingLayer(gap) if hasattr(self, 'embeddingLayer') else gap
+            """Calculate distance in DFPLoss"""
+            # Dist = Distance(embed_fea, centroids)
+            # dis = getattr(Dist, self.distance)(scaled=self.scaled) # return [n, num_classes]
+        return logits, embed_fea
 
 
 def demo():
     x = torch.rand([1, 3, 32, 32])
-    net = DFPNet('ResNet18',num_classes=100, embed_dim=64)
-    logits, dis= net(x)
+    net = DFPNet('ResNet18',num_classes=100, embed_dim=64, include_dist=True)
+    logits, embed_fea= net(x)
     print(logits.shape)
-    print(dis.shape)
+    print(embed_fea)
 
 
-demo()
+# demo()

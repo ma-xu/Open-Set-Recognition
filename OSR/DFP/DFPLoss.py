@@ -30,6 +30,7 @@ class DFPLoss(nn.Module):
         labels = labels.unsqueeze(1).expand(batch_size, self.num_classes)
         mask = labels.eq(self.classes.expand(batch_size, self.num_classes))
         dist_gt = (dist * mask.float()).sum(dim=1, keepdim=False)
+        # A question: distance to all other centroids or the closed non-gt centroid.
         dist_other = (-dist*(1-mask.float())).sum(dim=1, keepdim=False) # convert max to min
         dist_other = dist_other/(self.num_classes-1.0)
         loss = torch.sigmoid(dist_gt).sum()+self.beta*torch.sigmoid(dist_other)
