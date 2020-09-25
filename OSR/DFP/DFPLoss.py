@@ -29,32 +29,18 @@ class DFPLoss(nn.Module):
 
         labels = labels.unsqueeze(1).expand(batch_size, self.num_classes)
         mask = labels.eq(self.classes.expand(batch_size, self.num_classes))
-        dist_within = (dist * mask.float()).sum(dim=1, keepdim=False)
-        loss_within = (dist_within.sum()) / batch_size
+        dist_within = (dist * mask.float()).sum(dim=1,keepdim=True)
 
-        """ Version 1: L2-distance to other labels 
-        Function: beta*Sigmoid[-1/(class_num-1)*Sum_i(Dis(x,cls_i))]
-        # A question: distance to all other centroids or the closed non-gt centroid.
-        dist_between = (-dist*(1-mask.float())).sum(dim=1, keepdim=False)  # convert max to min
-        dist_between = dist_between/(self.num_classes-1.0)
-        loss_between = self.beta * (torch.sigmoid(dist_between).sum()) / batch_size
-        """
-
-        """Version 2: Cosine similarity to other labels()
-        Function: beta*1/(class_num-1)*Sum_i(Dis(x,cls_i))
-        similarity = getattr(distanceFun, self.similarity)(scaled=True) # [n, class_num]
-        sim_between = (similarity*(1-mask.float())).sum(dim=1, keepdim=False)
-        sim_between = sim_between/(self.num_classes-1.0)
-        loss_between = self.beta *(sim_between.sum()) / batch_size
-        """
-
-        """Version 3: L2-distance to other labels
-        """
-        distanceFun2 = Distance(self.centers, self.centers)
-        dist2 = getattr(distanceFun2, self.distance)(scaled=self.scaled)  # [n, class_num]
-        dist_between = torch.reciprocal_((dist2).sum(dim=1, keepdim=False))  # convert max to min 1/x
+        # dist_between = (dist * (1 - mask.float()))
+        dist_between = F.relu(dist_within-dist,inplace=True)  #ensure within_distance greater others
+        dist_between = dist_between.sum(dim=1, keepdim=False)
         dist_between = dist_between / (self.num_classes - 1.0)
-        loss_between = self.beta * dist_between.sum() / batch_size
+
+
+
+        loss_within = (dist_within.sum()) / batch_size
+        loss_between = self.beta * (dist_between.sum()) / batch_size
+
 
 
         loss = loss_within+loss_between
@@ -72,4 +58,4 @@ def demo():
     print(y3)
 
 
-# demo()
+demo()
