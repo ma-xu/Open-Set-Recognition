@@ -24,11 +24,12 @@ class DFPNet(nn.Module):
         self.classifier = nn.Linear(self.feat_dim, num_classes)
         if embed_dim:
             # Embedding layer could be modified to a whitened feature map like DNL.
+            intermediate = max(self.feat_dim,embed_dim,embed_reduction+1)
             self.embeddingLayer = nn.Sequential(
                 # embed_reduction just for parameter reduction, not attention mechanism.
-                nn.Linear(self.feat_dim,embed_dim//embed_reduction),
+                nn.Linear(self.feat_dim, intermediate//embed_reduction),
                 nn.ReLU(inplace=True),
-                nn.Linear(embed_dim//embed_reduction, embed_dim)
+                nn.Linear(intermediate//embed_reduction, embed_dim)
             )
 
     def get_backbone_last_layer_out_channel(self):

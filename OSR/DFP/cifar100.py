@@ -153,7 +153,7 @@ def main_stage1():
         else:
             print("=> no checkpoint found at '{}'".format(args.resume))
     else:
-        logger = Logger(os.path.join(args.checkpoint, 'log_stage1.txt'))
+        logger = Logger(os.path.join(args.checkpoint, 'log_stage1_%s_%s.txt' % (args.alpha, args.beta)))
         logger.set_names(['Epoch', 'Train Loss', 'Softmax Loss','Distance Loss',
                           'Within Loss','Between Loss', 'Train Acc.'])
 
@@ -166,7 +166,8 @@ def main_stage1():
         adjust_learning_rate(optimizer_dis, epoch, args.stage1_lr_dis, step=30)
         train_loss, cls_loss, dis_loss, within_loss, between_loss, train_acc = stage1_train(
             net, trainloader, optimizer_cls, optimizer_dis, criterion_cls, criterion_dis, device)
-        save_model(net, criterion_dis, epoch, os.path.join(args.checkpoint, 'stage_1_last_model.pth'))
+        save_model(net, criterion_dis, epoch, os.path.join(args.checkpoint,
+                                                           'stage_1_last_model_%s_%s.pth' % (args.alpha, args.beta)))
         #['Epoch', 'Train Loss', 'Softmax Loss', 'Distance Loss', 'Within Loss', 'Between Loss', 'Train Acc.']
         logger.append([epoch+1, train_loss, cls_loss, dis_loss, within_loss, between_loss, train_acc])
     logger.close()
