@@ -30,7 +30,7 @@ class DFPLoss(nn.Module):
         labels = labels.unsqueeze(1).expand(batch_size, self.num_classes)
         mask = labels.eq(self.classes.expand(batch_size, self.num_classes))
         dist_within = (dist * mask.float()).sum(dim=1, keepdim=False)
-        loss_within = (dist_within.sum()) / batch_size
+        loss_within = (torch.sigmoid(dist_within).sum()) / batch_size
 
         """ Version 1: L2-distance to other labels 
         Function: beta*Sigmoid[-1/(class_num-1)*Sum_i(Dis(x,cls_i))]
@@ -52,9 +52,9 @@ class DFPLoss(nn.Module):
         """
         distanceFun2 = Distance(self.centers, self.centers)
         dist2 = getattr(distanceFun2, self.distance)(scaled=self.scaled)  # [n, class_num]
-        dist_between = torch.reciprocal_((dist2).sum(dim=1, keepdim=False))  # convert max to min 1/x
+        dist_between = -(dist2).sum(dim=1, keepdim=False)  # convert max to min
         dist_between = dist_between / (self.num_classes - 1.0)
-        loss_between = self.beta * dist_between.sum() / batch_size
+        loss_between = self.beta * (torch.sigmoid(dist_between).sum()) / batch_size
 
 
         loss = loss_within+loss_between
