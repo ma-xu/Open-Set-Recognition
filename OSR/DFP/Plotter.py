@@ -102,6 +102,10 @@ def main():
                             beta=args.beta, distance=args.distance, scaled=args.scaled)
     net = net.to(device)
     criterion_dis = criterion_dis.to(device)
+    if device == 'cuda':
+        net = torch.nn.DataParallel(net)
+        criterion_dis = torch.nn.DataParallel(criterion_dis)
+        cudnn.benchmark = True
     if args.stage1_resume:
         # Load checkpoint.
         if os.path.isfile(args.stage1_resume):
