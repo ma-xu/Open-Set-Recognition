@@ -79,19 +79,19 @@ class DFPNet(nn.Module):
 
 
 def demo():
-    # x = torch.rand([1, 3, 32, 32])
-    # net = DFPNet('ResNet18', num_classes=100, embed_dim=64)
-    # output = net(x)
-    # print(output["logits"].shape)
-    # print(output["embed_fea"].shape)
-    # print(output["dist_fea2cen"].shape)
-    # # print(output["dist_cen2cen"].shape)
-
-    x = torch.rand([1, 1, 28, 28])
-    net = DFPNet('LeNetPlus', num_classes=10, embed_dim=64)
+    x = torch.rand([1, 3, 32, 32])
+    net = DFPNet('ResNet18', num_classes=100, embed_dim=64)
     output = net(x)
     print(output["logits"].shape)
     print(output["embed_fea"].shape)
     print(output["dist_fea2cen"].shape)
+    # # print(output["dist_cen2cen"].shape)
+
+    # x = torch.rand([1, 1, 28, 28])
+    # net = DFPNet('LeNetPlus', num_classes=10, embed_dim=64)
+    # output = net(x)
+    # print(output["logits"].shape)
+    # print(output["embed_fea"].shape)
+    # print(output["dist_fea2cen"].shape)
 
 # demo()
