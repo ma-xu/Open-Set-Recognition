@@ -87,6 +87,9 @@ trainset = CIFAR100(root='../../data', train=True, download=True, transform=tran
 testset = CIFAR100(root='../../data', train=False, download=True, transform=transform_test,
                    train_class_num=args.train_class_num, test_class_num=args.test_class_num,
                    includes_all_train_class=args.includes_all_train_class)
+trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.bs, shuffle=True, num_workers=4)
+testloader = torch.utils.data.DataLoader(testset, batch_size=args.bs, shuffle=False, num_workers=4)
+
 
 assert os.path.isfile(args.stage1_resume)
 
@@ -118,13 +121,44 @@ def main():
             print("=> no checkpoint found at '{}'".format(args.resume))
     else:
         print("Resume is required")
+    plot_feature(net, criterion_dis, trainloader, device, args.plotter, epoch=0, plot_class_num=10, maximum=500)
 
 
 
+def plot_feature(net, criterion_dis, plotloader, device,dirname, epoch=0,plot_class_num=10, maximum=500):
+    plot_features = []
+    plot_labels = []
+    with torch.no_grad():
+        for batch_idx, (inputs, targets) in enumerate(plotloader):
+            inputs, targets = inputs.to(device), targets.to(device)
+            logits, embed_fea = net(inputs)
+            plot_features.append(embed_fea)
+            plot_labels.append(targets)
 
-
-
-
+    centroids = criterion_dis.centers
+    colors = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9']
+    for label_idx in range(plot_class_num):
+        features = plot_features[plot_labels == label_idx,:]
+        maximum = max(maximum, features.size(0)) if maximum else features.size(0)
+        plt.scatter(
+            features[0:maximum, 0],
+            features[0:maximum, 1],
+            c=colors[label_idx],
+            s=1,
+        )
+        plt.scatter(
+            centroids[label_idx, 0],
+            centroids[label_idx, 1],
+            c=colors[label_idx],
+            marker='^',
+            s=1.5,
+        )
+    # currently only support 10 classes, for a good visualization.
+    # change plot_class_num would lead to problems.
+    plt.legend(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'], loc='upper right')
+    save_name = os.path.join(dirname, 'epoch_' + str(epoch + 1) + '.png')
+    plt.savefig(save_name, bbox_inches='tight')
+    plt.close()
 
 
 
