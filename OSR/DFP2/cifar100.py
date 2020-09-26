@@ -145,7 +145,7 @@ def main_stage1():
 
     for epoch in range(start_epoch, start_epoch + args.stage1_es):
         print('\nStage_1 Epoch: %d | Learning rate: %f ' % (epoch + 1, optimizer.param_groups[0]['lr']))
-        adjust_learning_rate(optimizer, epoch, args.stage1_lr_cls, step=30)
+        adjust_learning_rate(optimizer, epoch, args.stage1_lr, step=30)
         train_out = stage1_train(
             net, trainloader, optimizer, criterion_cls, criterion_dis, device)
         save_model(net, epoch, os.path.join(args.checkpoint,
