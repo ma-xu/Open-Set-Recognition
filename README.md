@@ -13,6 +13,8 @@ pip3 install torch torchvision
 pip3 install -U scikit-learn
 # numpy
 pip3 install numpy
+# scikit-learn-0.23.2
+pip3 install -U sklearn
 ```
 
 For OpenMax:
