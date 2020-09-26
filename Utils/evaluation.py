@@ -2,6 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, f1_score, \
     classification_report, precision_recall_fscore_support, roc_auc_score
+from sklearn.preprocessing import OneHotEncoder
+
 
 class Evaluation(object):
     '''Evaluation class based on pathon list'''
@@ -40,10 +42,25 @@ class Evaluation(object):
         precision, recall, _, _ = precision_recall_fscore_support(label, predict, average=average)
         return precision, recall
 
-    def _auroc(self):
-        """Area Under Receiver Operating Curve"""
-        assert len(self.predict) == len(self.label)
-        return roc_auc_score(label, )
+    def auroc(self, prediction_scores: np.array = None, multi_class='ovo'):
+        """
+        Area Under Receiver Operating Characteristic Curve
+
+        :param prediction_scores: array-like of shape (n_samples, n_classes). The multi-class ROC curve requires prediction scores for each class. If
+        :param multi_class: {'ovo', 'ovr'}, default='ovo'
+            'ovo' computes the average AUC of all possible pairwise combinations of classes.
+            'ovr' Computes the AUC of each class against the rest.
+        :return:
+        """
+
+        one_hot_encoder = OneHotEncoder(sparse=False, handle_unknown='ignore')
+        #one_hot_encoder.fit(np.array(label+predict).reshape(-1, 1))
+        one_hot_encoder.fit(np.array(label).reshape(-1, 1))
+        true_scores = one_hot_encoder.transform(np.array(label).reshape(-1, 1))
+        if prediction_scores is None:
+            prediction_scores = one_hot_encoder.transform(np.array(predict).reshape(-1, 1))
+        assert prediction_scores.shape == true_scores.shape
+        return roc_auc_score(true_scores, prediction_scores, multi_class=multi_class)
 
 
     def _confusion_matrix(self, normalize=None):
@@ -69,6 +86,8 @@ class Evaluation(object):
 if __name__ == '__main__':
     predict = [1, 2, 3, 4, 5, 3, 3, 2, 2, 5, 6, 6, 4, 3, 2, 4, 5, 6, 6, 3, 2]
     label =   [2, 5, 3, 4, 5, 3, 2, 2, 4, 6, 6, 6, 3, 3, 2, 5, 5, 6, 6, 3, 3]
+
+
     eval = Evaluation(predict, label)
     print('Accuracy:', f"%.3f"%(eval.accuracy))
     print('F1-measure:', f'{eval.f1_measure:.3f}')
@@ -80,6 +99,15 @@ if __name__ == '__main__':
     print('recall:', f'{eval.recall:.3f}')
     print('recall (macro):', f'{eval.recall_macro:.3f}')
     print('recall (weighted):', f'{eval.recall_weighted:.3f}')
+
+    # Generate "random prediction score" to test feeding in prediction score from NN
+    one_hot_encoder = OneHotEncoder(sparse=False, handle_unknown='ignore')
+    one_hot_encoder.fit(np.array(label).reshape(-1, 1))
+    rand_prediction_scores = 2*one_hot_encoder.transform(np.array(predict).reshape(-1, 1))  # One hot
+    rand_prediction_scores += np.random.rand(*rand_prediction_scores.shape)
+    rand_prediction_scores /= rand_prediction_scores.sum(axis=1)[:, None]
+    print('Area under ROC curve (with 100% confidence in prediction):', f'{eval.auroc():.3f}')
+    print('Area under ROC curve (variable probability across classes):', f'{eval.auroc(prediction_scores=rand_prediction_scores):.3f}')
     print(eval.confusion_matrix)
     eval.plot_confusion_matrix()
 
