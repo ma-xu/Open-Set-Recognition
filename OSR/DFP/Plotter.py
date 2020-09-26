@@ -136,8 +136,8 @@ def plot_feature(net, criterion_dis, plotloader, device,dirname, epoch=0,plot_cl
             plot_labels.append(targets)
 
 
-    centroids = criterion_dis.state_dict()['centers'] if isinstance(criterion_dis,nn.DataParallel) \
-        else criterion_dis.state_dict()['module.centers']
+    # centroids = criterion_dis.state_dict()['centers'] if isinstance(criterion_dis,nn.DataParallel) \
+    #     else criterion_dis.state_dict()['module.centers']
     colors = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9']
     for label_idx in range(plot_class_num):
         features = plot_features[plot_labels == label_idx,:]
@@ -148,13 +148,13 @@ def plot_feature(net, criterion_dis, plotloader, device,dirname, epoch=0,plot_cl
             c=colors[label_idx],
             s=1,
         )
-        plt.scatter(
-            centroids[label_idx, 0],
-            centroids[label_idx, 1],
-            c=colors[label_idx],
-            marker='^',
-            s=1.5,
-        )
+        # plt.scatter(
+        #     centroids[label_idx, 0],
+        #     centroids[label_idx, 1],
+        #     c=colors[label_idx],
+        #     marker='^',
+        #     s=1.5,
+        # )
     # currently only support 10 classes, for a good visualization.
     # change plot_class_num would lead to problems.
     plt.legend(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'], loc='upper right')
