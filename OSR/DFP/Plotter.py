@@ -59,7 +59,8 @@ parser.add_argument('--scaled', default=True,  action='store_true',
 # Parameters for stage 1
 parser.add_argument('--stage1_resume', default='', type=str, metavar='PATH', help='path to latest checkpoint')
 
-
+# Parameters for plotting
+parser.add_argument('--plot_max', default=0, type=int, help='max examples to plot in each class, 0 indicates all.')
 
 args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -121,7 +122,7 @@ def main():
             print("=> no checkpoint found at '{}'".format(args.resume))
     else:
         print("Resume is required")
-    plot_feature(net, criterion_dis, trainloader, device, args.plotter, epoch=0, plot_class_num=10, maximum=500)
+    plot_feature(net, criterion_dis, trainloader, device, args.plotter, epoch=0, plot_class_num=10, maximum=args.plot_max)
 
 
 
@@ -167,7 +168,7 @@ def plot_feature(net, criterion_dis, plotloader, device,dirname, epoch=0,plot_cl
     # currently only support 10 classes, for a good visualization.
     # change plot_class_num would lead to problems.
     plt.legend(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'], loc='upper right')
-    save_name = os.path.join(dirname, 'epoch_' + str(epoch + 1) + '.png')
+    save_name = os.path.join(dirname, 'epoch_' + str(epoch) + '.png')
     plt.savefig(save_name, bbox_inches='tight')
     plt.close()
 
