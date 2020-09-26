@@ -146,8 +146,10 @@ def plot_feature(net, criterion_dis, plotloader, device,dirname, epoch=0,plot_cl
     plot_features = np.concatenate(plot_features, 0)
     plot_labels = np.concatenate(plot_labels, 0)
 
-    # centroids = criterion_dis.state_dict()['centers'] if isinstance(criterion_dis,nn.DataParallel) \
-    #     else criterion_dis.state_dict()['module.centers']
+    criterion_dict = criterion_dis.state_dict()
+    centroids = criterion_dict['centers'] if isinstance(criterion_dis,nn.DataParallel) \
+        else criterion_dict['module.centers']
+    print(centroids)
     colors = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9']
     for label_idx in range(plot_class_num):
         features = plot_features[plot_labels == label_idx,:]
