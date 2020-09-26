@@ -132,9 +132,18 @@ def plot_feature(net, criterion_dis, plotloader, device,dirname, epoch=0,plot_cl
         for batch_idx, (inputs, targets) in enumerate(plotloader):
             inputs, targets = inputs.to(device), targets.to(device)
             logits, embed_fea = net(inputs)
+            try:
+                embed_fea = embed_fea.data.cpu().numpy()
+                targets = targets.data.cpu().numpy()
+            except:
+                embed_fea = embed_fea.data.cpu().numpy()
+                targets = targets.data.cpu().numpy()
+
             plot_features.append(embed_fea)
             plot_labels.append(targets)
 
+    plot_features = np.concatenate(plot_features, 0)
+    plot_labels = np.concatenate(plot_labels, 0)
 
     # centroids = criterion_dis.state_dict()['centers'] if isinstance(criterion_dis,nn.DataParallel) \
     #     else criterion_dis.state_dict()['module.centers']
