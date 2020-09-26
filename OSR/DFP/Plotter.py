@@ -135,8 +135,9 @@ def plot_feature(net, criterion_dis, plotloader, device,dirname, epoch=0,plot_cl
             plot_features.append(embed_fea)
             plot_labels.append(targets)
 
-    print(type(criterion_dis))
-    centroids = criterion_dis.centers
+
+    centroids = criterion_dis.state_dict()['centers'] if isinstance(criterion_dis,nn.DataParallel) \
+        else criterion_dis.state_dict()['module.centers']
     colors = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9']
     for label_idx in range(plot_class_num):
         features = plot_features[plot_labels == label_idx,:]
