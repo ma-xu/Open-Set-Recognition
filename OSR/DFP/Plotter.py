@@ -135,6 +135,7 @@ def plot_feature(net, criterion_dis, plotloader, device,dirname, epoch=0,plot_cl
             plot_features.append(embed_fea)
             plot_labels.append(targets)
 
+    print(type(criterion_dis))
     centroids = criterion_dis.centers
     colors = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9']
     for label_idx in range(plot_class_num):
