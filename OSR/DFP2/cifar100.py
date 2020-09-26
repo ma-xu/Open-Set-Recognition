@@ -182,9 +182,9 @@ def stage1_train(net, trainloader, optimizer, criterion_cls, criterion_dis, devi
 
         train_loss += loss.item()
         cls_loss += loss_cls.item()
-        dis_loss_total += loss_dis.item()
-        dis_loss_within += dis_loss_within.item()
-        dis_loss_between += dis_loss_between.item()
+        dis_loss_total += loss_dis["total"].item()
+        dis_loss_within += loss_dis["within"].item()
+        dis_loss_between += loss_dis["between"].item()
 
         _, predicted = (out["logits"]).max(1)
         total += targets.size(0)
