@@ -8,8 +8,7 @@ import numpy as np
 import torch
 import codecs
 
-from torchvision.datasets.utils import download_url, download_and_extract_archive, extract_archive, \
-    makedir_exist_ok, verify_str_arg
+from torchvision.datasets.utils import download_and_extract_archive
 
 """
 For making sense, the unkown classes starts from zero to number. 
@@ -180,13 +179,13 @@ class MNIST(VisionDataset):
         if self._check_exists():
             return
 
-        makedir_exist_ok(self.raw_folder)
-        makedir_exist_ok(self.processed_folder)
+        os.makedirs(self.raw_folder, exist_ok=True)
+        os.makedirs(self.processed_folder, exist_ok=True)
 
         # download files
-        for url in self.urls:
+        for url, md5 in self.resources:
             filename = url.rpartition('/')[2]
-            download_and_extract_archive(url, download_root=self.raw_folder, filename=filename)
+            download_and_extract_archive(url, download_root=self.raw_folder, filename=filename, md5=md5)
 
         # process and save as torch files
         print('Processing...')
