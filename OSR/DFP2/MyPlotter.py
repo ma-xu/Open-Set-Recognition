@@ -7,7 +7,7 @@ import numpy as np
 import os
 
 
-def plot_feature(net, plotloader, device,dirname, epoch=0,plot_class_num=10, maximum=500):
+def plot_feature(net, plotloader, device,dirname, epoch=0,plot_class_num=10, maximum=500, plot_quality=150):
     plot_features = []
     plot_labels = []
     with torch.no_grad():
@@ -61,7 +61,7 @@ def plot_feature(net, plotloader, device,dirname, epoch=0,plot_class_num=10, max
     plt.legend(legends[0:plot_class_num]+['c'], loc='upper right')
 
     save_name = os.path.join(dirname, 'epoch_' + str(epoch) + '.png')
-    plt.savefig(save_name, bbox_inches='tight',dpi=600)
+    plt.savefig(save_name, bbox_inches='tight',dpi=plot_quality)
     plt.close()
 
 

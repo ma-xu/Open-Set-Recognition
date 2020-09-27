@@ -61,7 +61,7 @@ parser.add_argument('--stage1_lr', default=0.01, type=float, help='learning rate
 # Parameters for stage plotting
 parser.add_argument('--plot', default=True, action='store_true', help='Plotting the training set.')
 parser.add_argument('--plot_max', default=0, type=int, help='max examples to plot in each class, 0 indicates all.')
-
+parser.add_argument('--plot_quality', default=200, type=int, help='DPI of plot figure')
 
 
 args = parser.parse_args()
@@ -150,7 +150,7 @@ def main_stage1():
                        train_out["dis_loss_between"], train_out["accuracy"]])
         if args.plot:
             plot_feature(net, trainloader, device, args.plotfolder, epoch=epoch,
-                         plot_class_num=args.train_class_num, maximum=args.plot_max)
+                         plot_class_num=args.train_class_num, maximum=args.plot_max,plot_quality=args.plot_quality)
     logger.close()
     print(f"\nFinish Stage-1 training...\n")
     return net
