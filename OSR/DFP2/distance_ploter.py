@@ -138,7 +138,7 @@ def plot_distance(net,
         # min_distance = min(cls_dist)
         min_distance = 0
         max_distance = max(cls_dist)
-        hist = torch.histc(torch.tensor([1., 2, 1]), bins=args.bins, min=min_distance, max=max_distance)
+        hist = torch.histc(torch.tensor(cls_dist), bins=args.bins, min=min_distance, max=max_distance)
         print(hist)
 
 
