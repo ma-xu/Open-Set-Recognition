@@ -7,7 +7,7 @@ For any issue and question, please email [xuma@my.unt.edu](mailto:xuma@my.unt.ed
 ## Requirements
 For different Algorithms and different datasets, the requirements varies. In general, the basic and must requirements are:
 ```bash
-# pytorch 1.4+, torchvision
+# pytorch 1.4+, torchvision 0.7.0 +
 pip3 install torch torchvision
 # sklearn
 pip3 install -U scikit-learn
