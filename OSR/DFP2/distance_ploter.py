@@ -123,7 +123,7 @@ def plot_distance(net,
                   ) -> dict:
     results = {i: {"distances": []} for i in range(args.train_class_num)}
     with torch.no_grad():
-        for batch_idx, (inputs, targets) in tqdm(enumerate(plotloader)):
+        for batch_idx, (inputs, targets) in enumerate(plotloader):
             inputs, targets = inputs.to(device), targets.to(device)
             out = net(inputs)
             dist_fea2cen = out["dist_fea2cen"]  # [n, class_num]
@@ -132,6 +132,8 @@ def plot_distance(net,
                 dist = dist_fea2cen[i, label]
                 results[label.item()]["distances"].append(dist)
 
+    for i in range(args.train_class_num):
+        print(f"The examples number in class {i} is {len(results[i]['distances'])}")
 
 if __name__ == '__main__':
     main()
