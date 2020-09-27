@@ -93,10 +93,10 @@ def main():
     print('==> Building model..')
     net = DFPNet(backbone=args.arch, num_classes=args.train_class_num,
                  embed_dim=args.embed_dim, distance=args.distance, scaled=args.scaled)
-    # embed_dim = net.feat_dim if not args.embed_dim else args.embed_dim
-    criterion_cls = nn.CrossEntropyLoss()
-    criterion_dis = DFPLoss(beta=args.beta)
-    optimizer = optim.SGD(net.parameters(), lr=args.stage1_lr, momentum=0.9, weight_decay=5e-4)
+    # # embed_dim = net.feat_dim if not args.embed_dim else args.embed_dim
+    # criterion_cls = nn.CrossEntropyLoss()
+    # criterion_dis = DFPLoss(beta=args.beta)
+    # optimizer = optim.SGD(net.parameters(), lr=args.stage1_lr, momentum=0.9, weight_decay=5e-4)
 
     net = net.to(device)
     if device == 'cuda':
