@@ -142,6 +142,11 @@ def plot_feature(net, plotloader, device,dirname, epoch=0,plot_class_num=10, max
     net_dict = net.state_dict()
     centroids = net_dict['module.centroids'] if isinstance(net, nn.DataParallel) \
         else net_dict['centroids']
+
+    try:
+        centroids = centroids.data.cpu().numpy()
+    except:
+        centroids = centroids.data.numpy()
     print(centroids)
     colors = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9']
     for label_idx in range(plot_class_num):
