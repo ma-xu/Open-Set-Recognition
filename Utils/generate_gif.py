@@ -3,7 +3,7 @@ Generate gif from images.
 """
 import argparse
 import os.path as path
-import tqdm
+from tqdm import tqdm
 try:
     import imageio
 except ImportError:
