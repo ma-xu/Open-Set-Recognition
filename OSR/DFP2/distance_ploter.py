@@ -6,6 +6,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 import torch.backends.cudnn as cudnn
 import matplotlib
+from tqdm import tqdm
 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -122,14 +123,14 @@ def plot_distance(net,
                   ) -> dict:
     results = {i: {"distances": []} for i in range(args.train_class_num)}
     with torch.no_grad():
-        for batch_idx, (inputs, targets) in enumerate(plotloader):
+        for batch_idx, (inputs, targets) in tqdm(enumerate(plotloader)):
             inputs, targets = inputs.to(device), targets.to(device)
             out = net(inputs)
             dist_fea2cen = out["dist_fea2cen"]  # [n, class_num]
             for i in range(dist_fea2cen.shape[0]):
                 label = targets[i]
                 dist = dist_fea2cen[i, label]
-                results[label.item()]["distance"].append(dist)
+                results[label.item()]["distances"].append(dist)
 
 
 if __name__ == '__main__':
