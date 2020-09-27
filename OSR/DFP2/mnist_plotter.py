@@ -140,7 +140,8 @@ def plot_feature(net, plotloader, device,dirname, epoch=0,plot_class_num=10, max
     plot_labels = np.concatenate(plot_labels, 0)
 
     net_dict = net.state_dict()
-    isinstance(net_dict, nn.DataParallel)
+    print(f"get the type: {isinstance(net_dict, nn.DataParallel)}")
+    print(f"get the type: {type(net_dict)}")
     for k, _ in net_dict.items():
         print(k)
     centroids = net_dict['module.centroids'] if isinstance(net_dict, nn.DataParallel) \
