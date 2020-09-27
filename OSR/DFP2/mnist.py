@@ -21,6 +21,7 @@ from datasets import MNIST
 from Utils import adjust_learning_rate, progress_bar, Logger, mkdir_p, Evaluation
 from DFPLoss import DFPLoss
 from DFPNet import DFPNet
+from mnist_plotter import plot_feature
 
 model_names = sorted(name for name in models.__dict__
                      if not name.startswith("__")
@@ -57,11 +58,22 @@ parser.add_argument('--stage1_es', default=100, type=int, help='epoch size')
 parser.add_argument('--stage1_lr', default=0.01, type=float, help='learning rate') # works for MNIST
 
 
+# Parameters for stage plotting
+parser.add_argument('--plot', default=True, action='store_true', help='Plotting the training set.')
+parser.add_argument('--plot_max', default=0, type=int, help='max examples to plot in each class, 0 indicates all.')
+
+
+
 args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 args.checkpoint = './checkpoints/mnist/' + args.arch
 if not os.path.isdir(args.checkpoint):
     mkdir_p(args.checkpoint)
+
+# folder to save figures
+args.plotfolder = './checkpoints/mnist/' + args.arch + '/plotter_%s_%s' % (args.alpha, args.beta)
+if not os.path.isdir(args.plotfolder):
+    mkdir_p(args.plotfolder)
 
 print('==> Preparing data..')
 transform = transforms.Compose([
@@ -136,6 +148,9 @@ def main_stage1():
         logger.append([epoch + 1, train_out["train_loss"], train_out["cls_loss"],
                        train_out["dis_loss_total"], train_out["dis_loss_within"],
                        train_out["dis_loss_between"], train_out["accuracy"]])
+        if args.plot:
+            plot_feature(net, trainloader, device, args.plotfolder, epoch=epoch,
+                         plot_class_num=args.train_class_num, maximum=args.plot_max)
     logger.close()
     print(f"\nFinish Stage-1 training...\n")
     return net
