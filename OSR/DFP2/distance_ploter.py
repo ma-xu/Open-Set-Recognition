@@ -133,7 +133,14 @@ def plot_distance(net,
                 results[label.item()]["distances"].append(dist)
 
     for i in range(args.train_class_num):
-        print(f"The examples number in class {i} is {len(results[i]['distances'])}")
+        # print(f"The examples number in class {i} is {len(results[i]['distances'])}")
+        cls_dist = results[i]['distances'] # distance list for each class
+        # min_distance = min(cls_dist)
+        min_distance = 0
+        max_distance = max(cls_dist)
+        hist = torch.histc(torch.tensor([1., 2, 1]), bins=args.bins, min=min_distance, max=max_distance)
+        print(hist)
+
 
 if __name__ == '__main__':
     main()
