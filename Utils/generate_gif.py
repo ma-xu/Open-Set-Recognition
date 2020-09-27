@@ -3,6 +3,7 @@ Generate gif from images.
 """
 import argparse
 import os.path as path
+import tqdm
 try:
     import imageio
 except ImportError:
@@ -23,7 +24,7 @@ args = parser.parse_args()
 def main():
     outfile_name = path.join(args.folder,args.out)
     gif_images = []
-    for i in range(args.start, args.number+args.start):
+    for i in tqdm(range(args.start, args.number+args.start)):
         image_path = args.prefix+str(i)+args.suffix
         image_path = path.join(args.folder, image_path)
         if path.exists(image_path):
