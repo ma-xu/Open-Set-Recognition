@@ -164,7 +164,7 @@ def plot_feature(net, plotloader, device,dirname, epoch=0,plot_class_num=10, max
             # c=colors[label_idx],
             c='black',
             marker="*",
-            s=1.5,
+            s=3,
         )
     # currently only support 10 classes, for a good visualization.
     # change plot_class_num would lead to problems.
