@@ -159,8 +159,8 @@ def plot_feature(net, plotloader, device,dirname, epoch=0,plot_class_num=10, max
             s=1,
         )
     plt.scatter(
-        centroids[label_idx, 0],
-        centroids[label_idx, 1],
+        centroids[:, 0],
+        centroids[:, 1],
         # c=colors[label_idx],
         c='black',
         marker="*",
