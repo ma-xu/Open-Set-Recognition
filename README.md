@@ -22,6 +22,12 @@ For OpenMax:
 pip3 install libmr
 ```
 
+For plotting MNIST:
+```bash
+pip3 install imageio
+pip3 install tqdm
+```
+
 
 ## Supporting
 * __DataSet__
