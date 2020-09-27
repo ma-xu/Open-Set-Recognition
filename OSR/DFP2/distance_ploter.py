@@ -129,7 +129,7 @@ def plot_distance(net,
             for i in range(dist_fea2cen.shape[0]):
                 label = targets[i]
                 dist = dist_fea2cen[i, label]
-                results[label.item()].append(dist)
+                results[label.item()]["distance"].append(dist)
 
 
 if __name__ == '__main__':
