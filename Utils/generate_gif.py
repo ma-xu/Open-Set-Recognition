@@ -11,7 +11,7 @@ except ImportError:
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
 parser.add_argument('-f', '--folder', default='/Users/melody/Downloads/log/train', type=str, metavar='PATH')
 parser.add_argument('-o', '--out', default='result.gif', type=str)
-parser.add_argument('-start', '--number', default=0, type=int)
+parser.add_argument('-s', '--start', default=0, type=int)
 parser.add_argument('-n', '--number', default=100, type=int)
 parser.add_argument('--prefix', default='epoch_', type=str)
 parser.add_argument('--suffix', default='.png', type=str)
