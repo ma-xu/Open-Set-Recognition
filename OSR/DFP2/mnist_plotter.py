@@ -153,13 +153,13 @@ def plot_feature(net, plotloader, device,dirname, epoch=0,plot_class_num=10, max
             c=colors[label_idx],
             s=1,
         )
-        # plt.scatter(
-        #     centroids[label_idx, 0],
-        #     centroids[label_idx, 1],
-        #     c=colors[label_idx],
-        #     marker='^',
-        #     s=1.5,
-        # )
+        plt.scatter(
+            centroids[label_idx, 0],
+            centroids[label_idx, 1],
+            c=colors[label_idx],
+            marker="*",
+            s=1.5,
+        )
     # currently only support 10 classes, for a good visualization.
     # change plot_class_num would lead to problems.
     legends= ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
