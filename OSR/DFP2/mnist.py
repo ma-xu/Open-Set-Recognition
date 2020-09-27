@@ -38,7 +38,6 @@ parser.add_argument('--includes_all_train_class', default=True, action='store_tr
 
 # Others
 parser.add_argument('--bs', default=256, type=int, help='batch size')
-parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
 parser.add_argument('--evaluate', action='store_true', help='Evaluate without training')
 
 # General MODEL parameters
@@ -55,15 +54,8 @@ parser.add_argument('--scaled', default=True, action='store_true',
 # Parameters for stage 1
 parser.add_argument('--stage1_resume', default='', type=str, metavar='PATH', help='path to latest checkpoint')
 parser.add_argument('--stage1_es', default=100, type=int, help='epoch size')
-parser.add_argument('--stage1_lr', default=0.1, type=float, help='learning rate')
+parser.add_argument('--stage1_lr', default=0.01, type=float, help='learning rate') # works for MNIST
 
-# Parameters for stage 2
-parser.add_argument('--stage2_resume', default='', type=str, metavar='PATH', help='path to latest checkpoint')
-parser.add_argument('--stage2_es', default=70, type=int, help='epoch size')
-parser.add_argument('--stage2_use_fc', default=True, action='store_true',
-                    help='If to use the last FC/embedding layer in network, FC (whatever, stage1_feature_dim)')
-parser.add_argument('--stage2_fea_loss_weight', default=0.01, type=float, help='The wegiht for feature loss')
-parser.add_argument('--oltr_threshold', default=0.1, type=float, help='The score threshold for OLTR')
 
 args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
