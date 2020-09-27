@@ -161,7 +161,8 @@ def plot_feature(net, plotloader, device,dirname, epoch=0,plot_class_num=10, max
         plt.scatter(
             centroids[label_idx, 0],
             centroids[label_idx, 1],
-            c=colors[label_idx],
+            # c=colors[label_idx],
+            c='black',
             marker="*",
             s=1.5,
         )
