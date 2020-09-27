@@ -171,7 +171,7 @@ def plot_feature(net, plotloader, device,dirname, epoch=0,plot_class_num=10, max
     legends= ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
     plt.legend(legends[0:plot_class_num], loc='upper right')
     save_name = os.path.join(dirname, 'epoch_' + str(epoch) + '.png')
-    plt.savefig(save_name, bbox_inches='tight')
+    plt.savefig(save_name, bbox_inches='tight',dpi=600)
     plt.close()
 
 
