@@ -21,7 +21,7 @@ from datasets import MNIST
 from Utils import adjust_learning_rate, progress_bar, Logger, mkdir_p, Evaluation
 from DFPLoss import DFPLoss
 from DFPNet import DFPNet
-from mnist_plotter import plot_feature
+from MyPlotter import plot_feature
 
 model_names = sorted(name for name in models.__dict__
                      if not name.startswith("__")
