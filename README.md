@@ -33,7 +33,7 @@ pip3 install tqdm
 * __DataSet__
   * CIFAR-100 (done)
   * CIFAR-10 (todo)
-  * MNIST (todo)
+  * MNIST (Done)
   * ImageNet (todo)
 * __Algorithms__
   * SoftMax (done)
