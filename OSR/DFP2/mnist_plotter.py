@@ -114,8 +114,9 @@ def main():
             print("=> no checkpoint found at '{}'".format(args.resume))
     else:
         print("Resume is required")
-    plot_feature(net, trainloader, device, args.plotter, epoch=0, plot_class_num=args.train_class_num, maximum=args.plot_max)
-
+    # plot_feature(net, trainloader, device, args.plotter, epoch=0, plot_class_num=args.train_class_num, maximum=args.plot_max)
+    plot_feature(net, testloader, device, args.plotter, epoch=99999, plot_class_num=args.train_class_num+1,
+                 maximum=args.plot_max)
 
 
 def plot_feature(net, plotloader, device,dirname, epoch=0,plot_class_num=10, maximum=500):
