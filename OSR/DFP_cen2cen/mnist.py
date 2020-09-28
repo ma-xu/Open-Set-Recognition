@@ -175,7 +175,9 @@ def stage1_train(net, trainloader, optimizer, criterion_cls, criterion_dis, devi
         # loss_cls = criterion_cls(out["logits"], targets)
         # loss_dis = loss_dis_within + loss_dis_between
         loss_dis = criterion_dis(out["dist_fea2cen"], targets)
-        loss_cen2cen = 1.0 - (torch.sigmoid(out["dist_cen2cen"].sum()))
+        loss_cen2cen = (out["dist_cen2cen"].sum())/(out["dist_cen2cen"].shape[0]-1)
+        loss_cen2cen = loss_cen2cen / (out["dist_cen2cen"].shape[0] - 1)
+        loss_cen2cen = 1.0 - (torch.sigmoid(loss_cen2cen))
         # loss = loss_cls + args.alpha * (loss_dis["total"])
         loss = args.alpha * (loss_dis["total"]) + args.gamma * loss_cen2cen
         loss.backward()
