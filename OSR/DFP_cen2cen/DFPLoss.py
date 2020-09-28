@@ -28,7 +28,7 @@ class DFPLoss(nn.Module):
         # dist_between = (dist * (1 - mask.float()))
         dist_between = F.relu(dist_within - dist, inplace=True)  # ensure within_distance greater others
         dist_between = dist_between.sum(dim=1, keepdim=False)
-        dist_between = dist_between / (num_classes - 1.0)
+        # dist_between = dist_between / (num_classes - 1.0)
 
         loss_within = (dist_within.sum()) / batch_size
         loss_between = self.beta * (dist_between.sum()) / batch_size
