@@ -49,6 +49,7 @@ parser.add_argument('--arch', default='LeNetPlus', choices=model_names, type=str
 parser.add_argument('--embed_dim', default=2, type=int, help='embedding feature dimension')
 parser.add_argument('--beta', default=1.0, type=float, help='wight of between-class distance loss')
 parser.add_argument('--alpha', default=1.0, type=float, help='weight of total distance loss')
+parser.add_argument('--gamma', default=1.0, type=float, help='weight of center-2-center loss')
 parser.add_argument('--distance', default='l2', choices=['l2','l1','dotproduct'],
                     type=str, help='choosing distance metric')
 parser.add_argument('--scaled', default=True,  action='store_true',
@@ -63,7 +64,7 @@ parser.add_argument('--plot_max', default=0, type=int, help='max examples to plo
 
 args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-args.plotter = './checkpoints/mnist/' + args.arch + '/plotter_%s_%s'%(args.alpha,args.beta)
+args.plotter = './checkpoints/mnist/' + args.arch + '/plotter_%s_%s_%s'%(args.alpha,args.beta, args.gamma)
 if not os.path.isdir(args.plotter):
     mkdir_p(args.plotter)
 
