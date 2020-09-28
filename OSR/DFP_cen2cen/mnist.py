@@ -56,14 +56,12 @@ parser.add_argument('--scaled', default=True, action='store_true',
 # Parameters for stage 1
 parser.add_argument('--stage1_resume', default='', type=str, metavar='PATH', help='path to latest checkpoint')
 parser.add_argument('--stage1_es', default=100, type=int, help='epoch size')
-parser.add_argument('--stage1_lr', default=0.01, type=float, help='learning rate') # works for MNIST
-
+parser.add_argument('--stage1_lr', default=0.01, type=float, help='learning rate')  # works for MNIST
 
 # Parameters for stage plotting
 parser.add_argument('--plot', default=True, action='store_true', help='Plotting the training set.')
 parser.add_argument('--plot_max', default=0, type=int, help='max examples to plot in each class, 0 indicates all.')
 parser.add_argument('--plot_quality', default=200, type=int, help='DPI of plot figure')
-
 
 args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -72,23 +70,23 @@ if not os.path.isdir(args.checkpoint):
     mkdir_p(args.checkpoint)
 
 # folder to save figures
-args.plotfolder = './checkpoints/mnist/' + args.arch + '/plotter_%s_%s' % (args.alpha, args.beta)
+args.plotfolder = './checkpoints/mnist/' + args.arch + '/plotter_%s_%s_%s' % (args.alpha, args.beta, args.gamma)
 if not os.path.isdir(args.plotfolder):
     mkdir_p(args.plotfolder)
 
 print('==> Preparing data..')
 transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize((0.1307,), (0.3081,))
-    ])
+    transforms.ToTensor(),
+    transforms.Normalize((0.1307,), (0.3081,))
+])
 
 trainset = MNIST(root='../../data', train=True, download=True, transform=transform,
-                    train_class_num=args.train_class_num, test_class_num=args.test_class_num,
-                    includes_all_train_class=args.includes_all_train_class)
+                 train_class_num=args.train_class_num, test_class_num=args.test_class_num,
+                 includes_all_train_class=args.includes_all_train_class)
 
 testset = MNIST(root='../../data', train=False, download=True, transform=transform,
-                   train_class_num=args.train_class_num, test_class_num=args.test_class_num,
-                   includes_all_train_class=args.includes_all_train_class)
+                train_class_num=args.train_class_num, test_class_num=args.test_class_num,
+                includes_all_train_class=args.includes_all_train_class)
 
 # data loader
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.bs, shuffle=True, num_workers=4)
@@ -130,11 +128,13 @@ def main_stage1():
             checkpoint = torch.load(args.stage1_resume)
             net.load_state_dict(checkpoint['net'])
             start_epoch = checkpoint['epoch']
-            logger = Logger(os.path.join(args.checkpoint, 'log_stage1.txt'), resume=True)
+            logger = Logger(os.path.join(args.checkpoint,
+                                         'log_stage1_%s_%s_%s.txt' % (args.alpha, args.beta, args.gamma)),
+                            resume=True)
         else:
             print("=> no checkpoint found at '{}'".format(args.resume))
     else:
-        logger = Logger(os.path.join(args.checkpoint, 'log_stage1_%s_%s.txt' % (args.alpha, args.beta)))
+        logger = Logger(os.path.join(args.checkpoint, 'log_stage1_%s_%s_%s.txt' % (args.alpha, args.beta, args.gamma)))
         logger.set_names(['Epoch', 'Train Loss', 'Softmax Loss', 'Distance Loss',
                           'Within Loss', 'Between Loss', 'Cen2Cen Loss', 'Train Acc.'])
 
@@ -144,14 +144,14 @@ def main_stage1():
         train_out = stage1_train(
             net, trainloader, optimizer, criterion_cls, criterion_dis, device)
         save_model(net, epoch, os.path.join(args.checkpoint,
-                                                           'stage_1_last_model_%s_%s.pth' % (args.alpha, args.beta)))
+                                            'stage_1_last_model_%s_%s_%s.pth' % (args.alpha, args.beta, args.gamma)))
         # ['Epoch', 'Train Loss', 'Softmax Loss', 'Distance Loss', 'Within Loss', 'Between Loss', 'Train Acc.']
         logger.append([epoch + 1, train_out["train_loss"], train_out["cls_loss"],
                        train_out["dis_loss_total"], train_out["dis_loss_within"],
-                       train_out["dis_loss_between"],train_out["dis_loss_cen2cen"], train_out["accuracy"]])
+                       train_out["dis_loss_between"], train_out["dis_loss_cen2cen"], train_out["accuracy"]])
         if args.plot:
             plot_feature(net, trainloader, device, args.plotfolder, epoch=epoch,
-                         plot_class_num=args.train_class_num, maximum=args.plot_max,plot_quality=args.plot_quality)
+                         plot_class_num=args.train_class_num, maximum=args.plot_max, plot_quality=args.plot_quality)
     logger.close()
     print(f"\nFinish Stage-1 training...\n")
     return net
@@ -175,9 +175,9 @@ def stage1_train(net, trainloader, optimizer, criterion_cls, criterion_dis, devi
         # loss_cls = criterion_cls(out["logits"], targets)
         # loss_dis = loss_dis_within + loss_dis_between
         loss_dis = criterion_dis(out["dist_fea2cen"], targets)
-        loss_cen2cen = 1.0 - torch.sigmoid(out["dist_fea2cen"].sum())
+        loss_cen2cen = 1.0 - (torch.sigmoid(out["dist_cen2cen"].sum()))
         # loss = loss_cls + args.alpha * (loss_dis["total"])
-        loss = args.alpha * (loss_dis["total"]) + args.gamma*loss_cen2cen
+        loss = args.alpha * (loss_dis["total"]) + args.gamma * loss_cen2cen
         loss.backward()
         optimizer.step()
 
@@ -203,7 +203,6 @@ def stage1_train(net, trainloader, optimizer, criterion_cls, criterion_dis, devi
         "dis_loss_cen2cen": dis_loss_cen2cen / (batch_idx + 1),
         "accuracy": correct / total
     }
-
 
 
 def test(net, testloader, device):
