@@ -196,7 +196,7 @@ def stage1_train(net, trainloader, optimizer, criterion_cls, criterion_dis, devi
 
         progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
                      % (train_loss / (batch_idx + 1), 100. * correct / total, correct, total))
-    print(f"cen2cen sum is {out['dist_cen2cen'].sum()}; \n cen2cen distance is {out['dist_cen2cen']}")
+    # print(f"cen2cen sum is {out['dist_cen2cen'].sum()}; \n cen2cen distance is {out['dist_cen2cen']}")
     return {
         "train_loss": train_loss / (batch_idx + 1),
         "cls_loss": cls_loss / (batch_idx + 1),
