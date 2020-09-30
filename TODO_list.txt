@@ -5,3 +5,7 @@
 4. In loss. we use sigmoid to rescale the loss. If a better way?
 
 BUG: OLTR fea_criterion need an optimizer.
+
+# what about normalization to deal with the extremly distance problem.
+
+
