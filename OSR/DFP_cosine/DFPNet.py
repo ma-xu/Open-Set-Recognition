@@ -68,9 +68,13 @@ class DFPNet(nn.Module):
 
         # calculate distance.
         DIST = Distance(scaled=self.scaled, cosine_weight=self.cosine_weight)
-        dist_fea2cen = getattr(DIST, self.distance)(embed_fea, self.centroids)  # [n, class_num]
-        dist_cen2cen = getattr(DIST, self.distance)(self.centroids, self.centroids)  # [class_num, class_num]
 
+        # dist_fea2cen = getattr(DIST, self.distance)(embed_fea, self.centroids)  # [n, class_num]
+        # dist_cen2cen = getattr(DIST, self.distance)(self.centroids, self.centroids)  # [class_num, class_num]
+
+        normalized_centroids = F.normalize(self.centroids, dim=1, p=2)
+        dist_fea2cen = getattr(DIST, self.distance)(embed_fea, normalized_centroids)
+        dist_cen2cen = DIST.l2(normalized_centroids,normalized_centroids)
 
 
         return {
