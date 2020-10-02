@@ -4,9 +4,10 @@ import torch.nn.functional as F
 
 class Distance(torch.nn.Module):
     # Distance should return a tensor with shape [n, num_classes]
-    def __init__(self, scaled=True):
+    def __init__(self, scaled=True, cosine_weight=1):
         super(Distance, self).__init__()
         self.scaled = scaled
+        self.cosine_weight = cosine_weight
 
 
     def l1(self, features, centroids):
@@ -34,7 +35,14 @@ class Distance(torch.nn.Module):
         class_num = centroids.shape[0]
         centroids = centroids.unsqueeze(0).expand(sample_num,class_num, dim_num)
         features = features.unsqueeze(1).expand(sample_num, class_num, dim_num)
-        distance = F.cosine_similarity(features,centroids, dim=2)
+        distance = F.cosine_similarity(features, centroids, dim=2)
+
+        # re-range the range [-1,1] tp [0,1]
+        # after re-ranging, distance 0 means same, 0.5 means orthogonality/decorrelation, 1 means opposite.
+        # referring https://en.wikipedia.org/wiki/Cosine_similarity
+        distance = (1.0-distance)/2.0
+        distance = self.cosine_weight * distance
+
         # We don't consider scled in consine-similarity.
         # if self.scaled:
         #     distance = distance / math.sqrt(dim_num)

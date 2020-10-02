@@ -53,6 +53,7 @@ parser.add_argument('--distance', default='cosine', choices=['l2', 'l1', 'cosine
                     type=str, help='choosing distance metric')
 parser.add_argument('--scaled', default=True, action='store_true',
                     help='If scale distance by sqrt(embed_dim)')
+parser.add_argument('--cosine_weight', default=1.0, type=float, help='wight of magnifying the cosine distance')
 
 # Parameters for stage 1
 parser.add_argument('--stage1_resume', default='', type=str, metavar='PATH', help='path to latest checkpoint')
@@ -112,8 +113,8 @@ def main_stage1():
 
     # Model
     print('==> Building model..')
-    net = DFPNet(backbone=args.arch, num_classes=args.train_class_num,
-                 embed_dim=args.embed_dim, distance=args.distance, scaled=args.scaled)
+    net = DFPNet(backbone=args.arch, num_classes=args.train_class_num, embed_dim=args.embed_dim,
+                 distance=args.distance, scaled=args.scaled, cosine_weight=args.cosine_weight)
     # embed_dim = net.feat_dim if not args.embed_dim else args.embed_dim
     # criterion_cls = nn.CrossEntropyLoss()
     criterion_dis = DFPLoss(beta=args.beta, sigma=args.sigma)

@@ -10,7 +10,7 @@ from Distance import Distance
 
 class DFPNet(nn.Module):
     def __init__(self, backbone='ResNet18', num_classes=1000,
-                 backbone_fc=False, embed_dim=None, distance='cosine', scaled=True):
+                 backbone_fc=False, embed_dim=None, distance='cosine', scaled=True, cosine_weight =1.0):
         """
 
         :param backbone: the backbone architecture, default ResNet18
@@ -34,6 +34,7 @@ class DFPNet(nn.Module):
         self.distance = distance
         assert self.distance in ['l1', 'l2', 'cosine']
         self.scaled = scaled
+        self.cosine_weight = cosine_weight
 
     def get_backbone_last_layer_out_channel(self):
         if self.backbone_name == "LeNetPlus":
@@ -66,15 +67,10 @@ class DFPNet(nn.Module):
         # logits = self.classifier(embed_fea)
 
         # calculate distance.
-        DIST = Distance(scaled=self.scaled)
+        DIST = Distance(scaled=self.scaled, cosine_weight=self.cosine_weight)
         dist_fea2cen = getattr(DIST, self.distance)(embed_fea, self.centroids)  # [n, class_num]
         dist_cen2cen = getattr(DIST, self.distance)(self.centroids, self.centroids)  # [class_num, class_num]
-        if self.distance=="cosine":
-            # re-range the range [-1,1] tp [0,1]
-            # after re-ranging, distance 0 means same, 0.5 means orthogonality/decorrelation, 1 means opposite.
-            # referring https://en.wikipedia.org/wiki/Cosine_similarity
-            dist_fea2cen= (1.0-dist_fea2cen)/2.0
-            dist_cen2cen = (1.0-dist_cen2cen)/2.0
+
 
 
         return {
