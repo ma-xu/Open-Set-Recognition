@@ -90,7 +90,7 @@ def demo():
     x = torch.rand([1, 3, 32, 32])
     net = DFPNet('ResNet18', num_classes=100, embed_dim=64)
     output = net(x)
-    print(output["logits"].shape)
+    # print(output["logits"].shape)
     print(output["embed_fea"].shape)
     print(output["dist_fea2cen"].shape)
     print(output["dist_cen2cen"].shape)
@@ -102,4 +102,4 @@ def demo():
     # print(output["embed_fea"].shape)
     # print(output["dist_fea2cen"].shape)
 
-demo()
+# demo()
