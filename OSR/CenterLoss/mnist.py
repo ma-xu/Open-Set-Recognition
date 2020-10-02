@@ -72,6 +72,10 @@ args.plotfolder = './checkpoints/mnist/' + args.arch + '/plotter'
 if not os.path.isdir(args.plotfolder):
     mkdir_p(args.plotfolder)
 
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+print(device)
+start_epoch = 0  # start from epoch 0 or last checkpoint epoch
+
 print('==> Preparing data..')
 transform = transforms.Compose([
         transforms.ToTensor(),
