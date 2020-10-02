@@ -35,8 +35,7 @@ class DFPLoss(nn.Module):
 
         loss_cen2cen = (dist_cen2cen.sum()) / (dist_cen2cen.shape[0] - 1)
         loss_cen2cen = loss_cen2cen / (dist_cen2cen.shape[0] - 1)
-        loss_cen2cen = 1.0 - (torch.sigmoid(loss_cen2cen))
-        loss_cen2cen = self.sigma*loss_cen2cen
+        loss_cen2cen = self.sigma*(1.0 - loss_cen2cen)
 
         loss = loss_within + loss_between + loss_cen2cen
 

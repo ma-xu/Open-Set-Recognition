@@ -69,12 +69,13 @@ parser.add_argument('--plot_quality', default=200, type=int, help='DPI of plot f
 
 args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-args.checkpoint = './checkpoints/mnist/' + args.arch
+args.checkpoint = './checkpoints/mnist/' + args.arch +\
+                  '/%s_%s_%s_%s' % (args.alpha, args.beta,args.sigma,args.cosine_weight)
 if not os.path.isdir(args.checkpoint):
     mkdir_p(args.checkpoint)
 
 # folder to save figures
-args.plotfolder = './checkpoints/mnist/' + args.arch + '/plotter_%s_%s_%s' % (args.alpha, args.beta,args.sigma)
+args.plotfolder = os.path.join(args.checkpoint,"plotter")
 if not os.path.isdir(args.plotfolder):
     mkdir_p(args.plotfolder)
 
@@ -136,7 +137,7 @@ def main_stage1():
         else:
             print("=> no checkpoint found at '{}'".format(args.resume))
     else:
-        logger = Logger(os.path.join(args.checkpoint, 'log_stage1_%s_%s_%s.txt' % (args.alpha, args.beta, args.sigma)))
+        logger = Logger(os.path.join(args.checkpoint, 'log_stage1.txt'))
         logger.set_names(['Epoch', 'Train Loss', 'Softmax Loss', 'Distance Loss',
                           'Within Loss', 'Between Loss', 'Cen2cen Loss', 'Train Acc.'])
 
@@ -144,8 +145,7 @@ def main_stage1():
         print('\nStage_1 Epoch: %d | Learning rate: %f ' % (epoch + 1, optimizer.param_groups[0]['lr']))
         adjust_learning_rate(optimizer, epoch, args.stage1_lr, step=30)
         train_out = stage1_train(net, trainloader, optimizer, criterion_dis, device)
-        save_model(net, epoch, os.path.join(args.checkpoint,
-                                            'stage_1_last_model_%s_%s_%s.pth' % (args.alpha, args.beta, args.sigma)))
+        save_model(net, epoch, os.path.join(args.checkpoint,'stage_1_last_model.pth'))
         # ['Epoch', 'Train Loss', 'Softmax Loss', 'Distance Loss',
         # 'Within Loss', 'Between Loss','Cen2cen loss', 'Train Acc.']
         logger.append([epoch + 1, train_out["train_loss"], 0.0,
