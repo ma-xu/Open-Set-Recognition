@@ -19,7 +19,7 @@ sys.path.append("../..")
 import backbones.cifar as models
 from datasets import MNIST
 from Utils import adjust_learning_rate, progress_bar, Logger, mkdir_p, Evaluation
-from .DFPLoss import DFPLoss
+from DFPLoss import DFPLoss
 from DFPNet import DFPNet
 from MyPlotter import plot_feature
 
