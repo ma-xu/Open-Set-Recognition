@@ -135,7 +135,7 @@ def main_stage1():
         else:
             print("=> no checkpoint found at '{}'".format(args.resume))
     else:
-        logger = Logger(os.path.join(args.checkpoint, 'log_stage1_%s_%s_%s.txt' % (args.alpha, args.beta.args.sigma)))
+        logger = Logger(os.path.join(args.checkpoint, 'log_stage1_%s_%s_%s.txt' % (args.alpha, args.beta, args.sigma)))
         logger.set_names(['Epoch', 'Train Loss', 'Softmax Loss', 'Distance Loss',
                           'Within Loss', 'Between Loss', 'Cen2cen Loss', 'Train Acc.'])
 
