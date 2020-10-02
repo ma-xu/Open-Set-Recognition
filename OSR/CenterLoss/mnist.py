@@ -62,40 +62,40 @@ parser.add_argument('--plot_quality', default=200, type=int, help='DPI of plot f
 
 
 args = parser.parse_args()
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
-args.checkpoint = './checkpoints/mnist/' + args.arch
-if not os.path.isdir(args.checkpoint):
-    mkdir_p(args.checkpoint)
 
-# folder to save figures
-args.plotfolder = './checkpoints/mnist/' + args.arch + '/plotter'
-if not os.path.isdir(args.plotfolder):
-    mkdir_p(args.plotfolder)
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
-print(device)
-start_epoch = 0  # start from epoch 0 or last checkpoint epoch
+def main():
+    args.checkpoint = './checkpoints/mnist/' + args.arch
+    if not os.path.isdir(args.checkpoint):
+        mkdir_p(args.checkpoint)
 
-print('==> Preparing data..')
-transform = transforms.Compose([
+    # folder to save figures
+    args.plotfolder = './checkpoints/mnist/' + args.arch + '/plotter'
+    if not os.path.isdir(args.plotfolder):
+        mkdir_p(args.plotfolder)
+
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    print(device)
+    start_epoch = 0  # start from epoch 0 or last checkpoint epoch
+
+    print('==> Preparing data..')
+    transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize((0.1307,), (0.3081,))
     ])
 
-trainset = MNIST(root='../../data', train=True, download=True, transform=transform,
+    trainset = MNIST(root='../../data', train=True, download=True, transform=transform,
+                     train_class_num=args.train_class_num, test_class_num=args.test_class_num,
+                     includes_all_train_class=args.includes_all_train_class)
+
+    testset = MNIST(root='../../data', train=False, download=True, transform=transform,
                     train_class_num=args.train_class_num, test_class_num=args.test_class_num,
                     includes_all_train_class=args.includes_all_train_class)
 
-testset = MNIST(root='../../data', train=False, download=True, transform=transform,
-                   train_class_num=args.train_class_num, test_class_num=args.test_class_num,
-                   includes_all_train_class=args.includes_all_train_class)
+    # data loader
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.bs, shuffle=True, num_workers=4)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=args.bs, shuffle=False, num_workers=4)
 
-# data loader
-trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.bs, shuffle=True, num_workers=4)
-testloader = torch.utils.data.DataLoader(testset, batch_size=args.bs, shuffle=False, num_workers=4)
-
-
-def main():
     print('==> Building model..')
     net = Network(backbone=args.arch, num_classes=args.train_class_num)
     fea_dim = net.classifier.in_features
