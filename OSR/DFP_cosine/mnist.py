@@ -147,7 +147,7 @@ def main_stage1():
                                             'stage_1_last_model_%s_%s_%s.pth' % (args.alpha, args.beta, args.sigma)))
         # ['Epoch', 'Train Loss', 'Softmax Loss', 'Distance Loss',
         # 'Within Loss', 'Between Loss','Cen2cen loss', 'Train Acc.']
-        logger.append([epoch + 1, train_out["train_loss"], '-',
+        logger.append([epoch + 1, train_out["train_loss"], 0.0,
                        train_out["dis_loss_total"], train_out["dis_loss_within"],
                        train_out["dis_loss_between"], train_out["dis_loss_cen2cen"], train_out["accuracy"]])
         if args.plot:
