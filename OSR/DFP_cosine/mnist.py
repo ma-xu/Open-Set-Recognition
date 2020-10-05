@@ -70,7 +70,7 @@ parser.add_argument('--plot_quality', default=200, type=int, help='DPI of plot f
 args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 args.checkpoint = './checkpoints/mnist/' + args.arch +\
-                  '/%s_%s_%s_%s' % (args.alpha, args.beta,args.sigma,args.cosine_weight)
+                  '/ALPHA%s_BETA%s_SIGMA%s_COSINE%s' % (args.alpha, args.beta,args.sigma,args.cosine_weight)
 if not os.path.isdir(args.checkpoint):
     mkdir_p(args.checkpoint)
 
@@ -188,7 +188,7 @@ def stage1_train(net, trainloader, optimizer, criterion_dis, device):
         dis_loss_between += loss_dis["between"].item()
         dis_loss_cen2cen += loss_dis["cen2cen"].item()
 
-        _, predicted = (out["dist_fea2cen"]).max(1)
+        _, predicted = (out["dist_fea2cen"]).min(1)
         total += targets.size(0)
         correct += predicted.eq(targets).sum().item()
 
