@@ -30,7 +30,8 @@ class DFPNet(nn.Module):
             self.embeddingLayer = nn.Linear(self.feat_dim, embed_dim)
             self.feat_dim = embed_dim
         # self.classifier = nn.Linear(self.feat_dim, num_classes)
-        self.centroids = nn.Parameter(torch.randn(num_classes, self.feat_dim))
+        # We add 1 centroid for the unknown class, which is like a placeholder.
+        self.centroids = nn.Parameter(torch.randn(num_classes+1, self.feat_dim))
         self.distance = distance
         assert self.distance in ['l1', 'l2', 'cosine']
         self.scaled = scaled
@@ -73,8 +74,8 @@ class DFPNet(nn.Module):
         # dist_cen2cen = getattr(DIST, self.distance)(self.centroids, self.centroids)  # [class_num, class_num]
 
         normalized_centroids = F.normalize(self.centroids, dim=1, p=2)
-        dist_fea2cen = getattr(DIST, self.distance)(embed_fea, normalized_centroids)
-        dist_cen2cen = DIST.l2(normalized_centroids,normalized_centroids)
+        dist_fea2cen = getattr(DIST, self.distance)(embed_fea, normalized_centroids)  # [n,c+1]
+        dist_cen2cen = DIST.l2(normalized_centroids,normalized_centroids)  # [c+1,c+1]
 
 
         return {
