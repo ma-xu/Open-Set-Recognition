@@ -60,4 +60,4 @@ def demo():
     print(dist_loss['between'])
     print(dist_loss['cen2cen'])
 
-demo()
+# demo()
