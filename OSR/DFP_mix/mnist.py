@@ -107,8 +107,8 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=args.bs, shuffle=Fa
 def main():
     print(device)
     net1, centroids = None, None
-    if not args.evaluate:
-        net1 = main_stage1()
+
+    net1 = main_stage1()
     #     centroids = cal_centroids(net1, device)
     # main_stage2(net1, centroids)
 
