@@ -147,25 +147,32 @@ def main_stage1():
         logger.set_names(['Epoch', 'Train Loss', 'Softmax Loss', 'Distance Loss',
                           'Within Loss', 'Between Loss', 'Cen2cen Loss', 'Train Acc.'])
 
-    for epoch in range(start_epoch, start_epoch + args.stage1_es):
-        print('\nStage_1 Epoch: %d | Learning rate: %f ' % (epoch + 1, optimizer.param_groups[0]['lr']))
-        adjust_learning_rate(optimizer, epoch, args.stage1_lr, step=15)
-        train_out = stage1_train(net, trainloader, optimizer, criterion_dis, device)
-        save_model(net, epoch, os.path.join(args.checkpoint,'stage_1_last_model.pth'))
-        # ['Epoch', 'Train Loss', 'Softmax Loss', 'Distance Loss',
-        # 'Within Loss', 'Between Loss','Cen2cen loss', 'Train Acc.']
-        logger.append([epoch + 1, train_out["train_loss"], 0.0,
-                       train_out["dis_loss_total"], train_out["dis_loss_within"],
-                       train_out["dis_loss_between"], train_out["dis_loss_cen2cen"], train_out["accuracy"]])
-        if args.plot:
-            plot_feature(net, trainloader, device, args.plotfolder, epoch=epoch,
-                         plot_class_num=args.train_class_num, maximum=args.plot_max,plot_quality=args.plot_quality)
+    if not args.evaluate:
+        for epoch in range(start_epoch, start_epoch + args.stage1_es):
+            print('\nStage_1 Epoch: %d | Learning rate: %f ' % (epoch + 1, optimizer.param_groups[0]['lr']))
+            adjust_learning_rate(optimizer, epoch, args.stage1_lr, step=15)
+            train_out = stage1_train(net, trainloader, optimizer, criterion_dis, device)
+            save_model(net, epoch, os.path.join(args.checkpoint,'stage_1_last_model.pth'))
+            # ['Epoch', 'Train Loss', 'Softmax Loss', 'Distance Loss',
+            # 'Within Loss', 'Between Loss','Cen2cen loss', 'Train Acc.']
+            logger.append([epoch + 1, train_out["train_loss"], 0.0,
+                           train_out["dis_loss_total"], train_out["dis_loss_within"],
+                           train_out["dis_loss_between"], train_out["dis_loss_cen2cen"], train_out["accuracy"]])
+            if args.plot:
+                plot_feature(net, trainloader, device, args.plotfolder, epoch=epoch,
+                             plot_class_num=args.train_class_num, maximum=args.plot_max,plot_quality=args.plot_quality)
+    if args.plot:
+        # plot the test set
+        plot_feature(net, testloader, device, args.plotfolder, epoch="test",
+                     plot_class_num=args.train_class_num + 1, maximum=args.plot_max, plot_quality=args.plot_quality)
 
-    # calculating distances for last epoch
-    plot_distance(net, trainloader, device, args)
+        # calculating distances for last epoch
+        plot_distance(net, trainloader, device, args)
 
     logger.close()
     print(f"\nFinish Stage-1 training...\n")
+    print("===> Evaluating ...")
+    stage1_test(net, testloader, device)
     return net
 
 
@@ -214,6 +221,20 @@ def stage1_train(net, trainloader, optimizer, criterion_dis, device):
         "accuracy": correct / total
     }
 
+
+def stage1_test(net,testloader, device):
+    correct = 0
+    total = 0
+    with torch.no_grad():
+        for batch_idx, (inputs, targets) in enumerate(testloader):
+            inputs, targets = inputs.to(device), targets.to(device)
+            out = net(inputs)
+            _, predicted = (out["dist_fea2cen"]).min(1)
+            total += targets.size(0)
+            correct += predicted.eq(targets).sum().item()
+
+            progress_bar(batch_idx, len(trainloader), '| Acc: %.3f%% (%d/%d)'
+                         % ( 100. * correct / total, correct, total))
 
 def save_model(net, epoch, path, **kwargs):
     state = {
