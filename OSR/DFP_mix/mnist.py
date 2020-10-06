@@ -21,8 +21,7 @@ from datasets import MNIST
 from Utils import adjust_learning_rate, progress_bar, Logger, mkdir_p, Evaluation
 from DFPLoss import DFPLoss
 from DFPNet import DFPNet
-from MyPlotter import plot_feature
-from distance_ploter import plot_distance
+from MyPlotter import plot_feature, plot_distance
 
 model_names = sorted(name for name in models.__dict__
                      if not name.startswith("__")

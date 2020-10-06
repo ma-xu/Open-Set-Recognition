@@ -65,3 +65,28 @@ def plot_feature(net, plotloader, device,dirname, epoch=0,plot_class_num=10, max
     plt.close()
 
 
+def plot_distance(net,
+                  plotloader: torch.utils.data.DataLoader,
+                  device: str,
+                  args
+                  ) -> dict:
+    results = {i: {"distances": []} for i in range(args.train_class_num)}
+    with torch.no_grad():
+        for batch_idx, (inputs, targets) in enumerate(plotloader):
+            inputs, targets = inputs.to(device), targets.to(device)
+            out = net(inputs)
+            dist_fea2cen = out["dist_fea2cen"]  # [n, class_num]
+            for i in range(dist_fea2cen.shape[0]):
+                label = targets[i]
+                dist = dist_fea2cen[i, label]
+                results[label.item()]["distances"].append(dist)
+
+    for i in range(args.train_class_num):
+        # print(f"The examples number in class {i} is {len(results[i]['distances'])}")
+        cls_dist = torch.tensor(results[i]['distances'])  # distance list for each class
+        # cls_dist = cls_dist / (max(cls_dist))  # normalized to 0-1, we consider min as 0.
+        # min_distance = min(cls_dist)
+        min_distance = 0
+        max_distance = max(cls_dist)
+        hist = torch.histc(torch.tensor(cls_dist), bins=args.bins, min=min_distance, max=max_distance)
+        print(hist)
