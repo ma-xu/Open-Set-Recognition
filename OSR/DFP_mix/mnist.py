@@ -66,6 +66,12 @@ parser.add_argument('--plot', default=True, action='store_true', help='Plotting 
 parser.add_argument('--plot_max', default=0, type=int, help='max examples to plot in each class, 0 indicates all.')
 parser.add_argument('--plot_quality', default=200, type=int, help='DPI of plot figure')
 parser.add_argument('--bins', default=20, type=int, help='divided into n bins')
+parser.add_argument('--tail_number', default=20, type=int,
+                    help='number of maximum distance we do not take into account, '
+                         'which may be anomaly or wrong labeled.')
+
+
+
 
 args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'

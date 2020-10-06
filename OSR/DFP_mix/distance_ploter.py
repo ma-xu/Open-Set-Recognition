@@ -127,6 +127,8 @@ def plot_distance(net,
             inputs, targets = inputs.to(device), targets.to(device)
             out = net(inputs)
             dist_fea2cen = out["dist_fea2cen"]  # [n, class_num]
+            dist_fea2cen = dist_fea2cen/args.cosine_weight  # rescale to [0,1].
+
             for i in range(dist_fea2cen.shape[0]):
                 label = targets[i]
                 dist = dist_fea2cen[i, label]
