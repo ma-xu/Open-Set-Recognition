@@ -70,6 +70,7 @@ def plot_distance(net,
                   device: str,
                   args
                   ) -> dict:
+    print("===> Calculating distances...")
     results = {i: {"distances": []} for i in range(args.train_class_num)}
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(plotloader):
@@ -89,4 +90,8 @@ def plot_distance(net,
         min_distance = 0
         max_distance = max(cls_dist)
         hist = torch.histc(torch.tensor(cls_dist), bins=args.bins, min=min_distance, max=max_distance)
-        print(hist)
+        results[i]['hist']=hist
+        results[i]['max'] = max_distance
+    torch.save(results,os.path.join(args.checkpoint, 'distance.pkl'))
+    print("===> Distance saved.")
+    return results

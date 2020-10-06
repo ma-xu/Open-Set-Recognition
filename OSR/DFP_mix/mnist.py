@@ -154,8 +154,9 @@ def main_stage1():
         if args.plot:
             plot_feature(net, trainloader, device, args.plotfolder, epoch=epoch,
                          plot_class_num=args.train_class_num, maximum=args.plot_max,plot_quality=args.plot_quality)
-            # calculating distances
-            plot_distance(net, trainloader, device, args)
+
+    # calculating distances for last epoch
+    plot_distance(net, trainloader, device, args)
 
     logger.close()
     print(f"\nFinish Stage-1 training...\n")
