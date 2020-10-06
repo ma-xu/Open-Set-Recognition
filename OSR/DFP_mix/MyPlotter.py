@@ -86,16 +86,17 @@ def plot_distance(net,
 
     for i in range(args.train_class_num):
         # print(f"The examples number in class {i} is {len(results[i]['distances'])}")
-        cls_dist = torch.tensor(results[i]['distances'])  # distance list for each class
+        cls_dist = results[i]['distances']  # distance list for each class
         cls_dist.sort()  # python sort function do not return anything.
         cls_dist = cls_dist[:-(args.tail_number)]  #remove the tail examples.
         # cls_dist = cls_dist / (max(cls_dist))  # normalized to 0-1, we consider min as 0.
         # min_distance = min(cls_dist)
-        min_distance = 0
+        min_distance = min(cls_dist)
         max_distance = max(cls_dist)
-        hist = torch.histc(cls_dist, bins=args.bins, min=min_distance, max=max_distance)
+        hist = torch.histc(torch.Tensor(cls_dist), bins=args.bins, min=min_distance, max=max_distance)
         results[i]['hist']=hist
         results[i]['max'] = max_distance
+        results[i]['min'] = min_distance
     torch.save(results,os.path.join(args.checkpoint, 'distance.pkl'))
     print("===> Distance saved.")
     return results
