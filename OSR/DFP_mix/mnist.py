@@ -235,7 +235,8 @@ def stage1_test(net,testloader, device):
 
             progress_bar(batch_idx, len(trainloader), '| Acc: %.3f%% (%d/%d)'
                          % ( 100. * correct / total, correct, total))
-    print("Stage 1 testing results is {:.2f}%".format(100. * correct / total))
+
+    print("\nStage 1 testing results is {:.2f}%".format(100. * correct / total))
 
 def save_model(net, epoch, path, **kwargs):
     state = {
