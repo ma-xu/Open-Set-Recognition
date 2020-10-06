@@ -22,6 +22,7 @@ from Utils import adjust_learning_rate, progress_bar, Logger, mkdir_p, Evaluatio
 from DFPLoss import DFPLoss
 from DFPNet import DFPNet
 from MyPlotter import plot_feature
+from distance_ploter import plot_distance
 
 model_names = sorted(name for name in models.__dict__
                      if not name.startswith("__")
@@ -65,7 +66,7 @@ parser.add_argument('--stage1_lr', default=0.01, type=float, help='learning rate
 parser.add_argument('--plot', default=True, action='store_true', help='Plotting the training set.')
 parser.add_argument('--plot_max', default=0, type=int, help='max examples to plot in each class, 0 indicates all.')
 parser.add_argument('--plot_quality', default=200, type=int, help='DPI of plot figure')
-
+parser.add_argument('--bins', default=20, type=int, help='divided into n bins')
 
 args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -154,6 +155,9 @@ def main_stage1():
         if args.plot:
             plot_feature(net, trainloader, device, args.plotfolder, epoch=epoch,
                          plot_class_num=args.train_class_num, maximum=args.plot_max,plot_quality=args.plot_quality)
+            # calculating distances
+            plot_distance(net, trainloader, device, args)
+
     logger.close()
     print(f"\nFinish Stage-1 training...\n")
     return net

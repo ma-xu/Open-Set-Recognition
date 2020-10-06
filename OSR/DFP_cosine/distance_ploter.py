@@ -64,9 +64,9 @@ parser.add_argument('--bins', default=20, type=int, help='divided into n bins')
 
 args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-args.distance_folder = './checkpoints/mnist/' + args.arch + '/distance_%s_%s' % (args.alpha, args.beta)
-if not os.path.isdir(args.distance_folder):
-    mkdir_p(args.distance_folder)
+# args.distance_folder = './checkpoints/mnist/' + args.arch + '/distance_%s_%s' % (args.alpha, args.beta)
+# if not os.path.isdir(args.distance_folder):
+#     mkdir_p(args.distance_folder)
 
 print('==> Preparing data..')
 transform = transforms.Compose([
@@ -121,6 +121,7 @@ def plot_distance(net,
                   device: str,
                   args
                   ) -> dict:
+    print("===> Calculating distances...")
     results = {i: {"distances": []} for i in range(args.train_class_num)}
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(plotloader):
@@ -140,8 +141,11 @@ def plot_distance(net,
         min_distance = 0
         max_distance = max(cls_dist)
         hist = torch.histc(torch.tensor(cls_dist), bins=args.bins, min=min_distance, max=max_distance)
-        print(hist)
-
+        results[i]['hist']=hist
+        results[i]['max'] = max_distance
+    torch.save(results,os.path.join(args.checkpoint, 'distance.pkl'))
+    print("===> Distance saved.")
+    return results
 
 if __name__ == '__main__':
     main()
