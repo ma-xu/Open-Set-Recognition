@@ -77,6 +77,8 @@ def plot_distance(net,
             inputs, targets = inputs.to(device), targets.to(device)
             out = net(inputs)
             dist_fea2cen = out["dist_fea2cen"]  # [n, class_num]
+            dist_fea2cen = dist_fea2cen / args.cosine_weight  # rescale to [0,1].
+
             for i in range(dist_fea2cen.shape[0]):
                 label = targets[i]
                 dist = dist_fea2cen[i, label]
@@ -85,7 +87,7 @@ def plot_distance(net,
     for i in range(args.train_class_num):
         # print(f"The examples number in class {i} is {len(results[i]['distances'])}")
         cls_dist = torch.tensor(results[i]['distances'])  # distance list for each class
-        cls_dist = cls_dist.sort()
+        cls_dist.sort()  # python sort function do not return anything.
         cls_dist = cls_dist[:-(args.tail_number)]  #remove the tail examples.
         # cls_dist = cls_dist / (max(cls_dist))  # normalized to 0-1, we consider min as 0.
         # min_distance = min(cls_dist)
