@@ -72,11 +72,11 @@ class DFPNet(nn.Module):
         dist_gen2cen = None
 
         gap = (F.adaptive_avg_pool2d(x, 1)).view(x.size(0), -1)
-        if self.thresholds is not None:
-            generate = self.generat_rand_feature(gap)
-            generate = F.relu(generate, inplace=True)
-            # if includes embedding layer.
-            generate = self.embeddingLayer(generate) if hasattr(self, 'embeddingLayer') else generate
+        # if self.thresholds is not None:
+        #     generate = self.generat_rand_feature(gap)
+        #     generate = F.relu(generate, inplace=True)
+        #     # if includes embedding layer.
+        #     generate = self.embeddingLayer(generate) if hasattr(self, 'embeddingLayer') else generate
         gap = F.relu(gap, inplace=True)
 
         # if includes embedding layer.
@@ -95,11 +95,11 @@ class DFPNet(nn.Module):
         dist_fea2cen = getattr(DIST, self.distance)(embed_fea, normalized_centroids)  # [n,c+1]
         dist_cen2cen = DIST.l2(normalized_centroids, normalized_centroids)  # [c+1,c+1]
 
-        if self.thresholds is not None:
-            dist_gen2cen_temp = getattr(DIST, self.distance)(generate, normalized_centroids)  # [n,c+1]
-            mask = dist_gen2cen_temp - self.thresholds.unsqueeze(dim=0)
-            value_min, indx_min = mask.min(dim=1, keepdim=False)
-            dist_gen2cen = dist_gen2cen_temp[value_min > 0, :]
+        # if self.thresholds is not None:
+        #     dist_gen2cen_temp = getattr(DIST, self.distance)(generate, normalized_centroids)  # [n,c+1]
+        #     mask = dist_gen2cen_temp - self.thresholds.unsqueeze(dim=0)
+        #     value_min, indx_min = mask.min(dim=1, keepdim=False)
+        #     dist_gen2cen = dist_gen2cen_temp[value_min > 0, :]
 
         return {
             "backbone_fea": x,
