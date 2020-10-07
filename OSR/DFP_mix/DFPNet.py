@@ -35,6 +35,7 @@ class DFPNet(nn.Module):
         # self.init_parameters()
         print(f"Initilized Centroids: \n {self.centroids}")
         print(f"Initilized Centroids STD: \n {torch.std(self.centroids,dim=0)}")
+        print(f"Initilized Centroids MEAN: \n {torch.mean(self.centroids, dim=0)}")
         self.distance = distance
         assert self.distance in ['l1', 'l2', 'cosine']
         self.scaled = scaled
