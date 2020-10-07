@@ -251,7 +251,7 @@ def stage1_test(net,testloader, device):
             progress_bar(batch_idx, len(trainloader), '| Acc: %.3f%% (%d/%d)'
                          % ( 100. * correct / total, correct, total))
 
-    print("\nStage 1 testing results is {:.2f}%".format(100. * correct / total))
+    print("\nTesting results is {:.2f}%".format(100. * correct / total))
 
 
 def main_stage2(stage1_dict):
@@ -294,7 +294,7 @@ def main_stage2(stage1_dict):
     if not args.evaluate:
         for epoch in range(start_epoch, args.stage2_es):
             adjust_learning_rate(optimizer, epoch, args.stage2_lr, step=20)
-            print('\nStage_1 Epoch: %d | Learning rate: %f ' % (epoch + 1, optimizer.param_groups[0]['lr']))
+            print('\nStage_2 Epoch: %d | Learning rate: %f ' % (epoch + 1, optimizer.param_groups[0]['lr']))
             train_out = stage2_train(net2, trainloader, optimizer, criterion_dis, device)
             save_model(net2, epoch, os.path.join(args.checkpoint, 'stage_2_last_model.pth'))
             # ['Epoch', 'Train Loss', 'Softmax Loss', 'Distance Loss',
@@ -314,7 +314,7 @@ def main_stage2(stage1_dict):
     # distance_results = plot_distance(net2, trainloader, device, args)
 
     logger.close()
-    print(f"\nFinish Stage-1 training...\n")
+    print(f"\nFinish Stage-2 training...\n")
     print("===> Evaluating ...")
     stage1_test(net2, testloader, device)
     return net2
