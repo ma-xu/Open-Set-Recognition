@@ -257,8 +257,10 @@ def main_stage2(stage1_dict):
     print(f"\n===> Start Stage-2 training...\n")
     start_epoch = 0
     print('==> Building model..')
+    # net2 = DFPNet(backbone=args.arch, num_classes=args.train_class_num, embed_dim=args.embed_dim,
+    #              distance=args.distance, scaled=args.scaled, cosine_weight=args.cosine_weight,thresholds=thresholds)
     net2 = DFPNet(backbone=args.arch, num_classes=args.train_class_num, embed_dim=args.embed_dim,
-                 distance=args.distance, scaled=args.scaled, cosine_weight=args.cosine_weight,thresholds=thresholds)
+                  distance=args.distance, scaled=args.scaled, cosine_weight=args.cosine_weight, thresholds=None)
     net2 = net2.to(device)
 
     criterion_dis = DFPLossGeneral(beta=args.beta, sigma=args.sigma)
