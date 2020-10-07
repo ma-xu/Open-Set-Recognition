@@ -1,0 +1,1 @@
+/Open-Set-Recognition/OSR/DFP_mix$ python3 mnist.py --cosine_weight 2.0 --evaluate --stage1_resume /home/UNT/jg0737/Open-Set-Recognition/OSR/DFP_mix/checkpoints/mnist/LeNetPlus/ALPHA1.0_BETA1.0_SIGMA1.0_COSINE2.0/stage_1_last_model.pth
