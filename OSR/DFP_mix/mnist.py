@@ -88,9 +88,13 @@ if not os.path.isdir(args.checkpoint):
     mkdir_p(args.checkpoint)
 
 # folder to save figures
-args.plotfolder = os.path.join(args.checkpoint,"plotter")
-if not os.path.isdir(args.plotfolder):
-    mkdir_p(args.plotfolder)
+args.plotfolder1 = os.path.join(args.checkpoint,"plotter_Stage1")
+if not os.path.isdir(args.plotfolder1):
+    mkdir_p(args.plotfolder1)
+# folder to save figures
+args.plotfolder2 = os.path.join(args.checkpoint,"plotter_Stage2")
+if not os.path.isdir(args.plotfolder2):
+    mkdir_p(args.plotfolder2)
 
 print('==> Preparing data..')
 transform = transforms.Compose([
@@ -167,11 +171,11 @@ def main_stage1():
                            train_out["dis_loss_total"], train_out["dis_loss_within"],
                            train_out["dis_loss_between"], train_out["dis_loss_cen2cen"], train_out["accuracy"]])
             if args.plot:
-                plot_feature(net, trainloader, device, args.plotfolder, epoch=epoch,
+                plot_feature(net, trainloader, device, args.plotfolder1, epoch=epoch,
                              plot_class_num=args.train_class_num, maximum=args.plot_max,plot_quality=args.plot_quality)
     if args.plot:
         # plot the test set
-        plot_feature(net, testloader, device, args.plotfolder, epoch="test",
+        plot_feature(net, testloader, device, args.plotfolder1, epoch="test",
                      plot_class_num=args.train_class_num + 1, maximum=args.plot_max, plot_quality=args.plot_quality)
 
     # calculating distances for last epoch
@@ -298,11 +302,11 @@ def main_stage2(stage1_dict):
             logger.append([epoch + 1, train_out["dis_loss_total"], train_out["dis_loss_within"],
                            train_out["dis_loss_between"], train_out["dis_loss_cen2cen"], train_out["accuracy"]])
             if args.plot:
-                plot_feature(net2, trainloader, device, args.plotfolder, epoch=epoch,
+                plot_feature(net2, trainloader, device, args.plotfolder2, epoch=epoch,
                              plot_class_num=args.train_class_num, maximum=args.plot_max, plot_quality=args.plot_quality)
     if args.plot:
         # plot the test set
-        plot_feature(net2, testloader, device, args.plotfolder, epoch="test",
+        plot_feature(net2, testloader, device, args.plotfolder2, epoch="test",
                      plot_class_num=args.train_class_num + 1, maximum=args.plot_max, plot_quality=args.plot_quality)
 
     # calculating distances for last epoch
