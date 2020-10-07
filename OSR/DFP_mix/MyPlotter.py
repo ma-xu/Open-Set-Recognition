@@ -104,7 +104,7 @@ def plot_distance(net,
         results[i]['max'] = max_distance
         results[i]['min'] = min_distance
         results[i]['threshold'] = threshold
-    results[i]['threshold_list'] = threshold_list
+    results['threshold_list'] = threshold_list
     torch.save(results,os.path.join(args.checkpoint, 'distance.pkl'))
     print("===> Distance saved.")
     return results
