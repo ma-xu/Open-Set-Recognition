@@ -76,7 +76,7 @@ class DFPNet(nn.Module):
             generate = self.generat_rand_feature(gap)
             generate = F.relu(generate, inplace=True)
             # if includes embedding layer.
-            generate = self.embeddingLayer(generate) if hasattr(self, 'embeddingLayer') else generate
+            # generate = self.embeddingLayer(generate) if hasattr(self, 'embeddingLayer') else generate
         gap = F.relu(gap, inplace=True)
 
         # if includes embedding layer.
