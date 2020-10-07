@@ -32,7 +32,7 @@ class DFPNet(nn.Module):
         # self.classifier = nn.Linear(self.feat_dim, num_classes)
         # We add 1 centroid for the unknown class, which is like a placeholder.
         self.centroids = nn.Parameter(torch.randn(num_classes + 1, self.feat_dim))
-        # self.init_parameters()
+        self.init_parameters()
         print(f"Initilized Centroids: \n {self.centroids}")
         print(f"Initilized Centroids STD: \n {torch.std(self.centroids,dim=0)}")
         print(f"Initilized Centroids MEAN: \n {torch.mean(self.centroids, dim=0)}")
@@ -44,7 +44,7 @@ class DFPNet(nn.Module):
 
     def init_parameters(self):
         centroids = self.centroids-self.centroids.mean(dim=0,keepdim=True)
-        centroids = centroids/F.normalize(centroids,p=2,dim=1)
+        centroids = centroids/F.normalize(centroids,p=2,dim=0)
         self.centroids = nn.Parameter(centroids)
         # nn.init.normal_(self.centroids)
 
