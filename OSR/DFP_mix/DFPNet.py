@@ -57,13 +57,12 @@ class DFPNet(nn.Module):
 
     def generat_rand_feature(self, gap, sampler=6):
         # generate a tensor with same shape as gap.
-        # n, c = gap.shape
-        # pool = gap.repeat(sampler, 1)  # repeat examples 3 times [n*sampler, c]
-        # pool_random = pool[torch.randperm(pool.size()[0])]
-        # pool_random = pool_random.view(sampler, n, c)
-        # pool_random = pool_random.mean(dim=0, keepdim=False)
-        # return pool_random
-        return gap
+        n, c = gap.shape
+        pool = gap.repeat(sampler, 1)  # repeat examples 3 times [n*sampler, c]
+        pool_random = pool[torch.randperm(pool.size()[0])]
+        pool_random = pool_random.view(sampler, n, c)
+        pool_random = pool_random.mean(dim=0, keepdim=False)
+        return pool_random
 
     def forward(self, x):
         # TODO: extract more outputs from the backbone like FPN, but for intermediate weak-supervision.
@@ -73,10 +72,10 @@ class DFPNet(nn.Module):
 
         gap = (F.adaptive_avg_pool2d(x, 1)).view(x.size(0), -1)
         if self.thresholds is not None:
-            generate = self.generat_rand_feature(gap.clone())
+            generate = self.generat_rand_feature(gap.clone()) # !!!need clone function, or gradient problem, shit
             generate_fea = F.relu(generate, inplace=True)
             # if includes embedding layer.
-            # generate = self.embeddingLayer(generate) if hasattr(self, 'embeddingLayer') else generate
+            generate = self.embeddingLayer(generate) if hasattr(self, 'embeddingLayer') else generate
         gap = F.relu(gap, inplace=True)
 
         # if includes embedding layer.
