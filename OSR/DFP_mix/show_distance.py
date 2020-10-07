@@ -11,7 +11,7 @@ for k, v in results.items():
     cls_dist.sort()  # python sort function do not return anything.
     cls_dist = cls_dist[:-tail_number]  # remove the tail examples.
     index = int(len(cls_dist)*(1-p_value))
-    threshold = cls_dist[index]
+    threshold = cls_dist[index].item()
     # cls_dist = cls_dist / (max(cls_dist))  # normalized to 0-1, we consider min as 0.
     # min_distance = min(cls_dist)
     min_distance = min(cls_dist)

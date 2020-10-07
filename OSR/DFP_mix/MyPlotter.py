@@ -93,7 +93,7 @@ def plot_distance(net,
         cls_dist = cls_dist[:-(args.tail_number)]  #remove the tail examples.
 
         index = int(len(cls_dist) * (1 - args.p_value))
-        threshold = cls_dist[index]
+        threshold = cls_dist[index].item()
         threshold_list.append(threshold)
         # cls_dist = cls_dist / (max(cls_dist))  # normalized to 0-1, we consider min as 0.
         # min_distance = min(cls_dist)
