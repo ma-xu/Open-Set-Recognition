@@ -18,7 +18,10 @@ class DFPLoss(nn.Module):
         self.beta = beta
         self.sigma = sigma
 
-    def forward(self, dist_fea2cen, dist_cen2cen, labels):
+    def forward(self, net_out, labels):
+        dist_fea2cen = net_out["dist_fea2cen"]
+        dist_cen2cen = net_out["dist_cen2cen"]
+    
         batch_size, num_classes = dist_fea2cen.shape
         classes = torch.arange(num_classes, device=labels.device).long()
         labels = labels.unsqueeze(1).expand(batch_size, num_classes)
