@@ -70,10 +70,10 @@ class DFPLossGeneral(nn.Module):
         dist_fea2cen = net_out["dist_fea2cen"]
         dist_cen2cen = net_out["dist_cen2cen"]
         dist_gen2cen = net_out["dist_gen2cen"]
-        # if dist_gen2cen is not None:
-        #     gen_label = dist_gen2cen.shape[1]*torch.ones(dist_gen2cen.shape[0],device=labels.device)
-        #     dist_fea2cen = torch.cat([dist_fea2cen,dist_gen2cen], dim=0)
-        #     labels = torch.cat([labels,gen_label], dim=0)
+        if dist_gen2cen is not None:
+            gen_label = dist_gen2cen.shape[1]*torch.ones(dist_gen2cen.shape[0],device=labels.device)
+            dist_fea2cen = torch.cat([dist_fea2cen,dist_gen2cen], dim=0)
+            labels = torch.cat([labels,gen_label], dim=0)
 
         batch_size, num_classes = dist_fea2cen.shape
         classes = torch.arange(num_classes, device=labels.device).long()
