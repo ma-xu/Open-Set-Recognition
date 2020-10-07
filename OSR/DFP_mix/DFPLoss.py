@@ -71,6 +71,7 @@ class DFPLossGeneral(nn.Module):
         dist_cen2cen = net_out["dist_cen2cen"]
         dist_gen2cen = net_out["dist_gen2cen"]
         if dist_gen2cen is not None:
+            print(f"Generated example number is {dist_gen2cen.shape[0]} \n")
             gen_label = dist_gen2cen.shape[1]*torch.ones(dist_gen2cen.shape[0],device=labels.device)
             dist_fea2cen = torch.cat([dist_fea2cen,dist_gen2cen], dim=0)
             labels = torch.cat([labels,gen_label], dim=0)
