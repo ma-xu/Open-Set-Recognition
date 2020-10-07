@@ -203,7 +203,7 @@ def stage1_train(net, trainloader, optimizer, criterion_dis, device):
         optimizer.zero_grad()
         out = net(inputs)
         # loss_cls = criterion_cls(out["logits"], targets)
-        loss_dis = criterion_dis(out["dist_fea2cen"], out["dist_cen2cen"], targets)
+        loss_dis = criterion_dis(out, targets)
         # loss = loss_cls + args.alpha * (loss_dis["total"])
         loss = args.alpha * (loss_dis["total"])
         loss.backward()

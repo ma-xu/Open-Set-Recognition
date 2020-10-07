@@ -63,10 +63,10 @@ class DFPLossGeneral(nn.Module):
         self.beta = beta
         self.sigma = sigma
 
-    def forward(self, dist_dict, labels):
-        dist_fea2cen = dist_dict["dist_fea2cen"]
-        dist_cen2cen = dist_dict["dist_cen2cen"]
-        dist_gen2cen = dist_dict["dist_gen2cen"]
+    def forward(self, net_out, labels):
+        dist_fea2cen = net_out["dist_fea2cen"]
+        dist_cen2cen = net_out["dist_cen2cen"]
+        dist_gen2cen = net_out["dist_gen2cen"]
         if dist_gen2cen is not None:
             gen_label = torch.ones(dist_gen2cen.shape[0],device=labels.device)
             dist_fea2cen = torch.cat([dist_fea2cen,dist_gen2cen], dim=0)
