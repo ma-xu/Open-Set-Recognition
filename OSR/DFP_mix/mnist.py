@@ -229,7 +229,6 @@ def stage1_train(net, trainloader, optimizer, criterion_dis, device):
                      % (train_loss / (batch_idx + 1), 100. * correct / total, correct, total))
     return {
         "train_loss": train_loss / (batch_idx + 1),
-        # "cls_loss": cls_loss / (batch_idx + 1),
         "dis_loss_total": dis_loss_total / (batch_idx + 1),
         "dis_loss_within": dis_loss_within / (batch_idx + 1),
         "dis_loss_between": dis_loss_between / (batch_idx + 1),

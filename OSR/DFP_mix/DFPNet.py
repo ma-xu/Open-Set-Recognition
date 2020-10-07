@@ -67,7 +67,6 @@ class DFPNet(nn.Module):
     def forward(self, x):
         # TODO: extract more outputs from the backbone like FPN, but for intermediate weak-supervision.
         x = self.backbone(x)
-        generate = None
         dist_gen2cen = None
 
         gap = (F.adaptive_avg_pool2d(x, 1)).view(x.size(0), -1)
@@ -75,27 +74,20 @@ class DFPNet(nn.Module):
             generate = self.generat_rand_feature(gap.clone()) # !!!need clone function, or gradient problem, shit
             generate_fea = F.relu(generate, inplace=True)
             # if includes embedding layer.
-            generate = self.embeddingLayer(generate) if hasattr(self, 'embeddingLayer') else generate
+            generate_fea = self.embeddingLayer(generate_fea) if hasattr(self, 'embeddingLayer') else generate_fea
         gap = F.relu(gap, inplace=True)
 
         # if includes embedding layer.
         embed_fea = self.embeddingLayer(gap) if hasattr(self, 'embeddingLayer') else gap
 
-        # processing the clssifier branch
-        # logits = self.classifier(embed_fea)
-
         # calculate distance.
         DIST = Distance(scaled=self.scaled, cosine_weight=self.cosine_weight)
-
-        # dist_fea2cen = getattr(DIST, self.distance)(embed_fea, self.centroids)  # [n, class_num]
-        # dist_cen2cen = getattr(DIST, self.distance)(self.centroids, self.centroids)  # [class_num, class_num]
-
         normalized_centroids = F.normalize(self.centroids, dim=1, p=2)
         dist_fea2cen = getattr(DIST, self.distance)(embed_fea, normalized_centroids)  # [n,c+1]
         dist_cen2cen = DIST.l2(normalized_centroids, normalized_centroids)  # [c+1,c+1]
 
         if self.thresholds is not None:
-            dist_gen2cen_temp = getattr(DIST, self.distance)(generate, normalized_centroids)  # [n,c+1]
+            dist_gen2cen_temp = getattr(DIST, self.distance)(generate_fea, normalized_centroids)  # [n,c+1]
             mask = dist_gen2cen_temp - self.thresholds.unsqueeze(dim=0)
             value_min, indx_min = mask.min(dim=1, keepdim=False)
             dist_gen2cen = dist_gen2cen_temp[value_min > 0, :]
