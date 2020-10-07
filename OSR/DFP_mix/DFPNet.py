@@ -32,12 +32,18 @@ class DFPNet(nn.Module):
         # self.classifier = nn.Linear(self.feat_dim, num_classes)
         # We add 1 centroid for the unknown class, which is like a placeholder.
         self.centroids = nn.Parameter(torch.randn(num_classes + 1, self.feat_dim))
+        self.init_parameters()
         print(f"Initilized Centroids: \n {self.centroids}")
         self.distance = distance
         assert self.distance in ['l1', 'l2', 'cosine']
         self.scaled = scaled
         self.cosine_weight = cosine_weight
         self.register_buffer("thresholds", thresholds)
+
+    def init_parameters(self):
+        self.centroids = self.centroids-self.centroids.mean(dim=0,keepdim=True)
+        self.centroids = self.centroids/F.normalize(self.centroids,p=2,dim=1)
+
 
     def get_backbone_last_layer_out_channel(self):
         if self.backbone_name == "LeNetPlus":
