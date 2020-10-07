@@ -104,7 +104,6 @@ def plot_distance(net,
         results[i]['max'] = max_distance
         results[i]['min'] = min_distance
         results[i]['threshold'] = threshold
-    print(threshold_list)
     unknown_threshold = threshold-threshold-100. # we set threshold for unknown to -100. (actually 0 is fine)
     threshold_list.append(unknown_threshold)
     results['thresholds'] = torch.Tensor(threshold_list) # the threshold for unknown is 0.

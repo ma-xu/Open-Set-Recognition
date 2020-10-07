@@ -59,7 +59,7 @@ class DFPLossGeneral(nn.Module):
         """
 
     def __init__(self, beta=1, sigma=1):
-        super(DFPLoss, self).__init__()
+        super(DFPLossGeneral, self).__init__()
         self.beta = beta
         self.sigma = sigma
 
