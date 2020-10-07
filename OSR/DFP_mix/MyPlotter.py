@@ -72,6 +72,7 @@ def plot_distance(net,
                   ) -> dict:
     print("===> Calculating distances...")
     results = {i: {"distances": []} for i in range(args.train_class_num)}
+    threshold_list=[]
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(plotloader):
             inputs, targets = inputs.to(device), targets.to(device)
@@ -88,7 +89,12 @@ def plot_distance(net,
         # print(f"The examples number in class {i} is {len(results[i]['distances'])}")
         cls_dist = results[i]['distances']  # distance list for each class
         cls_dist.sort()  # python sort function do not return anything.
+        results[i]['distances'] = cls_dist
         cls_dist = cls_dist[:-(args.tail_number)]  #remove the tail examples.
+
+        index = int(len(cls_dist) * (1 - args.p_value))
+        threshold = cls_dist[index]
+        threshold_list.append(threshold)
         # cls_dist = cls_dist / (max(cls_dist))  # normalized to 0-1, we consider min as 0.
         # min_distance = min(cls_dist)
         min_distance = min(cls_dist)
@@ -97,6 +103,8 @@ def plot_distance(net,
         results[i]['hist']=hist
         results[i]['max'] = max_distance
         results[i]['min'] = min_distance
+        results[i]['threshold'] = threshold
+    results[i]['threshold_list'] = threshold_list
     torch.save(results,os.path.join(args.checkpoint, 'distance.pkl'))
     print("===> Distance saved.")
     return results
