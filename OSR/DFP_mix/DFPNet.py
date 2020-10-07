@@ -74,7 +74,7 @@ class DFPNet(nn.Module):
         gap = (F.adaptive_avg_pool2d(x, 1)).view(x.size(0), -1)
         if self.thresholds is not None:
             generate = self.generat_rand_feature(gap)
-            # generate = F.relu(generate, inplace=True)
+            generate_fea = F.relu(generate, inplace=True)
             # if includes embedding layer.
             # generate = self.embeddingLayer(generate) if hasattr(self, 'embeddingLayer') else generate
         gap = F.relu(gap, inplace=True)
