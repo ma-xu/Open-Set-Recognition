@@ -41,7 +41,7 @@ class DFPNet(nn.Module):
         self.register_buffer("thresholds", thresholds)
 
     def init_parameters(self):
-        self.centroids = self.centroids-self.centroids.mean(dim=0,keepdim=True)
+        self.centroids = nn.Parameter(self.centroids-self.centroids.mean(dim=0,keepdim=True))
         # self.centroids = self.centroids/F.normalize(self.centroids,p=2,dim=1)
         # nn.init.normal_(self.centroids)
 
