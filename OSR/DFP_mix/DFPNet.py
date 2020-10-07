@@ -10,7 +10,7 @@ from Distance import Distance
 
 class DFPNet(nn.Module):
     def __init__(self, backbone='ResNet18', num_classes=1000,
-                 backbone_fc=False, embed_dim=None, distance='cosine', scaled=True, cosine_weight =1.0):
+                 backbone_fc=False, embed_dim=None, distance='cosine', scaled=True, cosine_weight =1.0,thresholds=None):
         """
 
         :param backbone: the backbone architecture, default ResNet18
@@ -36,6 +36,7 @@ class DFPNet(nn.Module):
         assert self.distance in ['l1', 'l2', 'cosine']
         self.scaled = scaled
         self.cosine_weight = cosine_weight
+        self.register_buffer("thresholds", thresholds)
 
     def get_backbone_last_layer_out_channel(self):
         if self.backbone_name == "LeNetPlus":
@@ -54,12 +55,29 @@ class DFPNet(nn.Module):
         else:
             return last_layer.out_channels
 
+    def generat_rand_feature(self,gap,sampler=6):
+        # generate a tensor with same shape as gap.
+        n,c = gap.shape
+        pool = gap.repeat(sampler,1) # repeat examples 3 times [n*sampler, c]
+        pool=pool[torch.randperm(pool.size()[0])]
+        pool = pool.view(sampler,n,c)
+        pool = pool.mean(dim=0,keepdim=False)
+        return pool
+
+
     def forward(self, x):
         # TODO: extract more outputs from the backbone like FPN, but for intermediate weak-supervision.
         x = self.backbone(x)
+        generate = None
+        dist_gen2cen = None
 
-        gap = F.adaptive_avg_pool2d(x, 1)
-        gap = F.relu(gap.view(gap.size(0), -1), inplace=True)
+        gap = (F.adaptive_avg_pool2d(x, 1)).view(x.size(0), -1)
+        if self.thresholds is not None:
+            generate = self.generat_rand_feature(gap)
+            generate = F.relu(generate, inplace=True)
+            # if includes embedding layer.
+            generate = self.embeddingLayer(generate) if hasattr(self, 'embeddingLayer') else generate
+        gap = F.relu(gap, inplace=True)
 
         # if includes embedding layer.
         embed_fea = self.embeddingLayer(gap) if hasattr(self, 'embeddingLayer') else gap
@@ -77,19 +95,25 @@ class DFPNet(nn.Module):
         dist_fea2cen = getattr(DIST, self.distance)(embed_fea, normalized_centroids)  # [n,c+1]
         dist_cen2cen = DIST.l2(normalized_centroids,normalized_centroids)  # [c+1,c+1]
 
+        if self.thresholds is not None:
+            dist_gen2cen = getattr(DIST, self.distance)(generate, normalized_centroids)  # [n,c+1]
+            mask = dist_gen2cen-self.thresholds.unsqueeze(dim=0)
+            value_min, indx_min = mask.min(dim=1, keepdim=False)
+            dist_gen2cen = dist_gen2cen[value_min>0,:]
 
         return {
             "backbone_fea": x,
             # "logits": logits,
             "embed_fea": embed_fea,
             "dist_fea2cen": dist_fea2cen,
-            "dist_cen2cen": dist_cen2cen
+            "dist_cen2cen": dist_cen2cen,
+            "dist_gen2cen": dist_gen2cen
         }
 
 
 def demo():
-    x = torch.rand([1, 3, 32, 32])
-    net = DFPNet('ResNet18', num_classes=100, embed_dim=64)
+    x = torch.rand([10, 3, 32, 32])
+    net = DFPNet('ResNet18', num_classes=10, embed_dim=64,thresholds=torch.rand(11))
     output = net(x)
     # print(output["logits"].shape)
     print(output["embed_fea"].shape)
