@@ -96,10 +96,10 @@ class DFPNet(nn.Module):
         dist_cen2cen = DIST.l2(normalized_centroids,normalized_centroids)  # [c+1,c+1]
 
         if self.thresholds is not None:
-            dist_gen2cen = getattr(DIST, self.distance)(generate, normalized_centroids)  # [n,c+1]
-            mask = dist_gen2cen-self.thresholds.unsqueeze(dim=0)
+            dist_gen2cen_temp = getattr(DIST, self.distance)(generate, normalized_centroids)  # [n,c+1]
+            mask = dist_gen2cen_temp-self.thresholds.unsqueeze(dim=0)
             value_min, indx_min = mask.min(dim=1, keepdim=False)
-            dist_gen2cen = dist_gen2cen[value_min>0,:]
+            dist_gen2cen = dist_gen2cen_temp[value_min>0,:]
 
         return {
             "backbone_fea": x,
