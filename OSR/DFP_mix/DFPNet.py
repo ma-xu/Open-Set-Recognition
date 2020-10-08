@@ -1,6 +1,7 @@
 """
 Version2: includes centroids into model, and shares embedding layers.
 """
+import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -23,6 +24,7 @@ class DFPNet(nn.Module):
         super(DFPNet, self).__init__()
         assert backbone_fc == False  # drop out the classifier layer.
         # num_classes = num_classes would be useless if backbone_fc=False
+        self.num_classes = num_classes
         self.backbone_name = backbone
         self.backbone = models.__dict__[backbone](num_classes=num_classes, backbone_fc=backbone_fc)
         self.feat_dim = self.get_backbone_last_layer_out_channel()  # get the channel number of backbone output
@@ -46,10 +48,10 @@ class DFPNet(nn.Module):
         # centroids = centroids/(0.5*centroids.std(dim=0,keepdim=True))
         #
         # self.centroids = nn.Parameter(centroids)
-        nn.init.normal_(self.centroids,mean=0., std=2)
-        # print(f"Initilized Centroids: \n {self.centroids}")
-        # print(f"Initilized Centroids STD: \n {torch.std(self.centroids,dim=0)}")
-        # print(f"Initilized Centroids MEAN: \n {torch.mean(self.centroids, dim=0)}")
+        nn.init.normal_(self.centroids,mean=0., std=math.sqrt(self.num_classes))
+        print(f"Initilized Centroids: \n {self.centroids}")
+        print(f"Initilized Centroids STD: \n {torch.std(self.centroids,dim=0)}")
+        print(f"Initilized Centroids MEAN: \n {torch.mean(self.centroids, dim=0)}")
         # nn.init.normal_(self.centroids)
 
 
