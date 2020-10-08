@@ -48,7 +48,7 @@ class DFPNet(nn.Module):
         # centroids = centroids/(0.5*centroids.std(dim=0,keepdim=True))
         #
         # self.centroids = nn.Parameter(centroids)
-        nn.init.normal_(self.centroids,mean=0., std=math.sqrt(self.num_classes))
+        nn.init.normal_(self.centroids,mean=0., std=2.)
         print(f"Initilized Centroids: \n {self.centroids}")
         print(f"Initilized Centroids STD: \n {torch.std(self.centroids,dim=0)}")
         print(f"Initilized Centroids MEAN: \n {torch.mean(self.centroids, dim=0)}")
