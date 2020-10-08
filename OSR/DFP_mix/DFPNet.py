@@ -33,9 +33,7 @@ class DFPNet(nn.Module):
         # We add 1 centroid for the unknown class, which is like a placeholder.
         self.centroids = nn.Parameter(torch.randn(num_classes + 1, self.feat_dim))
         self.init_parameters()
-        print(f"Initilized Centroids: \n {self.centroids}")
-        print(f"Initilized Centroids STD: \n {torch.std(self.centroids,dim=0)}")
-        print(f"Initilized Centroids MEAN: \n {torch.mean(self.centroids, dim=0)}")
+
         self.distance = distance
         assert self.distance in ['l1', 'l2', 'cosine']
         self.scaled = scaled
@@ -43,10 +41,15 @@ class DFPNet(nn.Module):
         self.register_buffer("thresholds", thresholds)
 
     def init_parameters(self):
-        centroids = self.centroids-self.centroids.mean(dim=0,keepdim=True)
-        # the greater std is, seems can achieve by
-        centroids = centroids/(0.5*centroids.std(dim=0,keepdim=True))
-        self.centroids = nn.Parameter(centroids)
+        # centroids = self.centroids-self.centroids.mean(dim=0,keepdim=True)
+        # # the greater std is, seems can achieve by
+        # centroids = centroids/(0.5*centroids.std(dim=0,keepdim=True))
+        #
+        # self.centroids = nn.Parameter(centroids)
+        nn.init.normal_(self.centroids,mean=0., std=2)
+        # print(f"Initilized Centroids: \n {self.centroids}")
+        # print(f"Initilized Centroids STD: \n {torch.std(self.centroids,dim=0)}")
+        # print(f"Initilized Centroids MEAN: \n {torch.mean(self.centroids, dim=0)}")
         # nn.init.normal_(self.centroids)
 
 
