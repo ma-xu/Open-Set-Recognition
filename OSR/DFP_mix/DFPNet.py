@@ -104,7 +104,6 @@ class DFPNet(nn.Module):
         dist_cen2cen = DIST.l2(normalized_centroids, normalized_centroids)  # [c+1,c+1]
 
         if self.thresholds is not None:
-            print(1111)
             dist_gen2cen_temp = getattr(DIST, self.distance)(generate_fea, normalized_centroids)  # [n,c+1]
             mask = dist_gen2cen_temp - self.thresholds.unsqueeze(dim=0)
             value_min, indx_min = mask.min(dim=1, keepdim=False)
