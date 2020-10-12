@@ -74,11 +74,13 @@ class DFPNet(nn.Module):
 
     def generat_rand_feature(self, gap, sampler=6):
         # generate a tensor with same shape as gap.
-        n, c = gap.shape
-        pool = gap.repeat(sampler, 1)  # repeat examples 3 times [n*sampler, c]
-        pool_random = pool[torch.randperm(pool.size()[0])]
-        pool_random = pool_random.view(sampler, n, c)
-        pool_random = pool_random.mean(dim=0, keepdim=False)
+        # n, c = gap.shape
+        # pool = gap.repeat(sampler, 1)  # repeat examples 3 times [n*sampler, c]
+        # pool_random = pool[torch.randperm(pool.size()[0])]
+        # pool_random = pool_random.view(sampler, n, c)
+        # pool_random = pool_random.mean(dim=0, keepdim=False)
+
+        pool_random = torch.rand(gap.size(), device=gap.device)
         return pool_random
 
     def forward(self, x):
