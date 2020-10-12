@@ -11,7 +11,7 @@ from Distance import Distance
 
 class DFPNet(nn.Module):
     def __init__(self, backbone='ResNet18', num_classes=1000,
-                 backbone_fc=False, embed_dim=None, classify_dim=2,
+                 backbone_fc=False, embed_dim=None, classify_dim=64,
                  distance='cosine', scaled=True, cosine_weight=1.0, thresholds=None):
         """
 
@@ -134,4 +134,4 @@ def demo():
     # print(output["embed_fea"].shape)
     # print(output["dist_fea2cen"].shape)
 
-demo()
+# demo()
