@@ -11,7 +11,7 @@ from Distance import Distance
 
 class DFPNet(nn.Module):
     def __init__(self, backbone='ResNet18', num_classes=1000,
-                 backbone_fc=False, embed_dim=None, classify_dim=512,
+                 backbone_fc=False, embed_dim=None, classify_dim=2,
                  distance='cosine', scaled=True, cosine_weight=1.0, thresholds=None):
         """
 
@@ -105,7 +105,7 @@ class DFPNet(nn.Module):
         DIST = Distance(scaled=self.scaled, cosine_weight=self.cosine_weight)
         normalized_centroids = F.normalize(self.centroids, dim=1, p=2)
         dist_fea2cen = getattr(DIST, self.distance)(classify_fea, normalized_centroids)  # [n,c+1]
-        dist_cen2cen = DIST.l2(normalized_centroids, normalized_centroids)  # [c+1,c+1]
+        dist_cen2cen = getattr(DIST, self.distance)(normalized_centroids, normalized_centroids)  # [c+1,c+1]
 
 
         return {
