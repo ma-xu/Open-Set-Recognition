@@ -70,7 +70,7 @@ parser.add_argument('--stage2_lr', default=0.001, type=float, help='learning rat
 
 
 # Parameters for stage plotting
-parser.add_argument('--plot', default=True, action='store_true', help='Plotting the training set.')
+parser.add_argument('--plot', action='store_true', help='Plotting the training set.')
 parser.add_argument('--plot_max', default=0, type=int, help='max examples to plot in each class, 0 indicates all.')
 parser.add_argument('--plot_quality', default=200, type=int, help='DPI of plot figure')
 parser.add_argument('--bins', default=50, type=int, help='divided into n bins')
