@@ -63,7 +63,7 @@ class Evaluation(object):
         :return: float, float: representing the precision and recall scores respectively
         """
         assert len(self.predict) == len(self.label)
-        precision, recall, _, _ = precision_recall_fscore_support(label, predict, average=average)
+        precision, recall, _, _ = precision_recall_fscore_support(self.label, self.predict, average=average)
         return precision, recall
 
     def area_under_roc(self, prediction_scores: np.array = None, multi_class='ovo') -> float:
