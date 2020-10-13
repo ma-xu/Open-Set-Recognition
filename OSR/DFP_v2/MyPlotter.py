@@ -29,13 +29,7 @@ def plot_feature(net, plotloader, device,dirname, epoch=0,plot_class_num=10, max
     plot_labels = np.concatenate(plot_labels, 0)
 
     net_dict = net.state_dict()
-    centroids = net_dict['module.centroids'] if isinstance(net, nn.DataParallel) \
-        else net_dict['centroids']
 
-    try:
-        centroids = centroids.data.cpu().numpy()
-    except:
-        centroids = centroids.data.numpy()
     # print(centroids)
     colors = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9']
     for label_idx in range(plot_class_num):
@@ -47,14 +41,7 @@ def plot_feature(net, plotloader, device,dirname, epoch=0,plot_class_num=10, max
             c=colors[label_idx],
             s=1,
         )
-    plt.scatter(
-        centroids[:, 0],
-        centroids[:, 1],
-        # c=colors[label_idx],
-        c='black',
-        marker="*",
-        s=5,
-    )
+
     # currently only support 10 classes, for a good visualization.
     # change plot_class_num would lead to problems.
     legends= ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
