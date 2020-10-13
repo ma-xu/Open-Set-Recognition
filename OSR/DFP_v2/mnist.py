@@ -61,13 +61,12 @@ parser.add_argument('--p_value', default=0.01, type=float, help='default statist
 # Parameters for stage 1
 parser.add_argument('--stage1_resume', default='', type=str, metavar='PATH', help='path to latest checkpoint')
 parser.add_argument('--stage1_es', default=50, type=int, help='epoch size')
-parser.add_argument('--stage1_lr', default=0.01, type=float, help='learning rate') # works for MNIST
+parser.add_argument('--stage1_lr', default=0.01, type=float, help='learning rate')  # works for MNIST
 
 # Parameters for stage 2
 parser.add_argument('--stage2_resume', default='', type=str, metavar='PATH', help='path to latest checkpoint')
 parser.add_argument('--stage2_es', default=50, type=int, help='epoch size')
-parser.add_argument('--stage2_lr', default=0.001, type=float, help='learning rate') # works for MNIST
-
+parser.add_argument('--stage2_lr', default=0.001, type=float, help='learning rate')  # works for MNIST
 
 # Parameters for stage plotting
 parser.add_argument('--plot', default=True, action='store_true', help='Plotting the training set.')
@@ -78,38 +77,35 @@ parser.add_argument('--tail_number', default=50, type=int,
                     help='number of maximum distance we do not take into account, '
                          'which may be anomaly or wrong labeled.')
 
-
-
-
 args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-args.checkpoint = './checkpoints/mnist/' + args.arch +\
-                  '/ALPHA%s_BETA%s_SIGMA%s_COSINE%s' % (args.alpha, args.beta,args.sigma,args.cosine_weight)
+args.checkpoint = './checkpoints/mnist/' + args.arch + \
+                  '/ALPHA%s_BETA%s_SIGMA%s_COSINE%s' % (args.alpha, args.beta, args.sigma, args.cosine_weight)
 if not os.path.isdir(args.checkpoint):
     mkdir_p(args.checkpoint)
 
 # folder to save figures
-args.plotfolder1 = os.path.join(args.checkpoint,"plotter_Stage1")
+args.plotfolder1 = os.path.join(args.checkpoint, "plotter_Stage1")
 if not os.path.isdir(args.plotfolder1):
     mkdir_p(args.plotfolder1)
 # folder to save figures
-args.plotfolder2 = os.path.join(args.checkpoint,"plotter_Stage2")
+args.plotfolder2 = os.path.join(args.checkpoint, "plotter_Stage2")
 if not os.path.isdir(args.plotfolder2):
     mkdir_p(args.plotfolder2)
 
 print('==> Preparing data..')
 transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize((0.1307,), (0.3081,))
-    ])
+    transforms.ToTensor(),
+    transforms.Normalize((0.1307,), (0.3081,))
+])
 
 trainset = MNIST(root='../../data', train=True, download=True, transform=transform,
-                    train_class_num=args.train_class_num, test_class_num=args.test_class_num,
-                    includes_all_train_class=args.includes_all_train_class)
+                 train_class_num=args.train_class_num, test_class_num=args.test_class_num,
+                 includes_all_train_class=args.includes_all_train_class)
 
 testset = MNIST(root='../../data', train=False, download=True, transform=transform,
-                   train_class_num=args.train_class_num, test_class_num=args.test_class_num,
-                   includes_all_train_class=args.includes_all_train_class)
+                train_class_num=args.train_class_num, test_class_num=args.test_class_num,
+                includes_all_train_class=args.includes_all_train_class)
 
 # data loader
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.bs, shuffle=True, num_workers=4)
@@ -137,7 +133,7 @@ def main_stage1():
                  distance=args.distance, scaled=args.scaled)
     # embed_dim = net.feat_dim if not args.embed_dim else args.embed_dim
     # criterion_cls = nn.CrossEntropyLoss()
-    criterion= DFPLoss(beta=args.beta, sigma=args.sigma)
+    criterion = DFPLoss(alpha=args.alpha, beta=args.beta)
     optimizer = optim.SGD(net.parameters(), lr=args.stage1_lr, momentum=0.9, weight_decay=5e-4)
 
     net = net.to(device)
@@ -165,7 +161,7 @@ def main_stage1():
             adjust_learning_rate(optimizer, epoch, args.stage1_lr, step=15)
             print('\nStage_1 Epoch: %d | Learning rate: %f ' % (epoch + 1, optimizer.param_groups[0]['lr']))
             train_out = stage1_train(net, trainloader, optimizer, criterion, device)
-            save_model(net, epoch, os.path.join(args.checkpoint,'stage_1_last_model.pth'))
+            save_model(net, epoch, os.path.join(args.checkpoint, 'stage_1_last_model.pth'))
             # ['Epoch', 'Train Loss', 'Softmax Loss', 'Distance Loss',
             # 'Within Loss', 'Between Loss','Cen2cen loss', 'Train Acc.']
             logger.append([epoch + 1, train_out["train_loss"], train_out["cls_loss"],
@@ -173,7 +169,7 @@ def main_stage1():
                            train_out["accuracy"]])
             if args.plot:
                 plot_feature(net, trainloader, device, args.plotfolder1, epoch=epoch,
-                             plot_class_num=args.train_class_num, maximum=args.plot_max,plot_quality=args.plot_quality)
+                             plot_class_num=args.train_class_num, maximum=args.plot_max, plot_quality=args.plot_quality)
     if args.plot:
         # plot the test set
         plot_feature(net, testloader, device, args.plotfolder1, epoch="test",
@@ -232,7 +228,7 @@ def stage1_train(net, trainloader, optimizer, criterion, device):
     }
 
 
-def stage1_test(net,testloader, device):
+def stage1_test(net, testloader, device):
     correct = 0
     total = 0
     with torch.no_grad():
@@ -244,7 +240,7 @@ def stage1_test(net,testloader, device):
             correct += predicted.eq(targets).sum().item()
 
             progress_bar(batch_idx, len(trainloader), '| Acc: %.3f%% (%d/%d)'
-                         % ( 100. * correct / total, correct, total))
+                         % (100. * correct / total, correct, total))
 
     print("\nTesting results is {:.2f}%".format(100. * correct / total))
 
@@ -262,7 +258,7 @@ def main_stage2(stage1_dict):
                   distance=args.distance, scaled=args.scaled, cosine_weight=args.cosine_weight, thresholds=thresholds)
     net2 = net2.to(device)
 
-    criterion_dis = DFPLossGeneral(beta=args.beta, sigma=args.sigma,gamma=args.gamma)
+    criterion_dis = DFPLossGeneral(beta=args.beta, sigma=args.sigma, gamma=args.gamma)
     optimizer = optim.SGD(net2.parameters(), lr=args.stage2_lr, momentum=0.9, weight_decay=5e-4)
 
     if not args.evaluate:
@@ -295,7 +291,7 @@ def main_stage2(stage1_dict):
             # ['Epoch', 'Train Loss', 'Softmax Loss', 'Distance Loss',
             # 'Within Loss', 'Between Loss','Cen2cen loss', 'Train Acc.']
             logger.append([epoch + 1, train_out["dis_loss_total"], train_out["dis_loss_within"],
-                           train_out["dis_loss_between"],train_out["dis_loss_within_gen"],
+                           train_out["dis_loss_between"], train_out["dis_loss_within_gen"],
                            train_out["dis_loss_between_gen"], train_out["dis_loss_cen2cen"], train_out["accuracy"]])
             if args.plot:
                 plot_feature(net2, trainloader, device, args.plotfolder2, epoch=epoch,
@@ -313,6 +309,7 @@ def main_stage2(stage1_dict):
     print("===> Evaluating ...")
     stage1_test(net2, testloader, device)
     return net2
+
 
 # Training
 def stage2_train(net, trainloader, optimizer, criterion_dis, device):
@@ -383,11 +380,12 @@ def init_stage2_model(net1, net2):
     dict2 = net2.state_dict()
     for k, v in dict1.items():
         if k.startswith("module.1."):
-            k = k[9:]   # remove module.1.
+            k = k[9:]  # remove module.1.
         if k.startswith("module."):
-            k = k[7:]   # remove module.1.
+            k = k[7:]  # remove module.1.
         dict2[k] = v
     net2.load_state_dict(dict2)
+
 
 if __name__ == '__main__':
     main()
