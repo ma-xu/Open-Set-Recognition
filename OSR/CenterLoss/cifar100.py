@@ -120,7 +120,7 @@ def main():
 
     if not args.evaluate:
         scheduler = lr_scheduler.StepLR(optimizer_softmax, step_size=30, gamma=0.1)
-        for epoch in range(start_epoch, start_epoch + args.es):
+        for epoch in range(start_epoch, args.es):
             print('\nEpoch: %d   Learning rate: %f' % (epoch+1, optimizer_softmax.param_groups[0]['lr']))
             train_loss, softmax_loss, center_loss, train_acc = train(net,trainloader,optimizer_softmax,
                                      optimizer_centerloss, criterion_softamx, criterion_centerloss, device)
