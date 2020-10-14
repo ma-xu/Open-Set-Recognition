@@ -19,7 +19,7 @@ sys.path.append("../..")
 import backbones.cifar as models
 from datasets import MNIST
 from Utils import adjust_learning_rate, progress_bar, Logger, mkdir_p, Evaluation
-from DFPLoss import DFPLoss, DFPLossGeneral
+from DFPLoss import DFPLoss
 from DFPNet import DFPNet
 from MyPlotter import plot_feature, plot_distance
 
@@ -48,13 +48,10 @@ parser.add_argument('--embed_dim', default=2, type=int, help='embedding feature 
 # alpha is deprecated.
 parser.add_argument('--alpha', default=1.0, type=float, help='weight of total distance loss')
 parser.add_argument('--beta', default=1.0, type=float, help='wight of between-class distance loss')
-parser.add_argument('--sigma', default=1.0, type=float, help='wight of center-to-center distance loss')
-parser.add_argument('--gamma', default=1.0, type=float, help='wight of generated data distance loss')
 parser.add_argument('--distance', default='cosine', choices=['l2', 'l1', 'cosine'],
                     type=str, help='choosing distance metric')
 parser.add_argument('--scaled', default=True, action='store_true',
                     help='If scale distance by sqrt(embed_dim)')
-parser.add_argument('--cosine_weight', default=1.0, type=float, help='wight of magnifying the cosine distance')
 parser.add_argument('--p_value', default=0.01, type=float, help='default statistical p_value threshold,'
                                                                 ' usually 0.05. 0.01')
 
@@ -84,7 +81,7 @@ parser.add_argument('--tail_number', default=50, type=int,
 args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 args.checkpoint = './checkpoints/mnist/' + args.arch +\
-                  '/ALPHA%s_BETA%s_SIGMA%s_COSINE%s' % (args.alpha, args.beta,args.sigma,args.cosine_weight)
+                  '/A%s_B%s_SIGMA%s_embed%s' % (args.alpha, args.beta,args.embed_dim)
 if not os.path.isdir(args.checkpoint):
     mkdir_p(args.checkpoint)
 
@@ -120,7 +117,7 @@ def main():
     print(device)
 
     stage1_dict = main_stage1()
-    main_stage2(stage1_dict)
+    # main_stage2(stage1_dict)
 
     #     centroids = cal_centroids(net1, device)
     # main_stage2(net1, centroids)
@@ -134,10 +131,8 @@ def main_stage1():
     # Model
     print('==> Building model..')
     net = DFPNet(backbone=args.arch, num_classes=args.train_class_num, embed_dim=args.embed_dim,
-                 distance=args.distance, scaled=args.scaled, cosine_weight=args.cosine_weight)
-    # embed_dim = net.feat_dim if not args.embed_dim else args.embed_dim
-    # criterion_cls = nn.CrossEntropyLoss()
-    criterion_dis = DFPLoss(beta=args.beta, sigma=args.sigma)
+                 distance=args.distance, scaled=args.scaled)
+    criterion = DFPLoss(beta=args.beta, sigma=args.sigma)
     optimizer = optim.SGD(net.parameters(), lr=args.stage1_lr, momentum=0.9, weight_decay=5e-4)
 
     net = net.to(device)
@@ -157,20 +152,16 @@ def main_stage1():
             print("=> no checkpoint found at '{}'".format(args.resume))
     else:
         logger = Logger(os.path.join(args.checkpoint, 'log_stage1.txt'))
-        logger.set_names(['Epoch', 'Train Loss', 'Softmax Loss', 'Distance Loss',
-                          'Within Loss', 'Between Loss', 'Cen2cen Loss', 'Train Acc.'])
+        logger.set_names(['Epoch', 'Train Loss', 'Softmax Loss', 'Within Loss', 'Between Loss', 'Train Acc.'])
 
     if not args.evaluate:
         for epoch in range(start_epoch, args.stage1_es):
             adjust_learning_rate(optimizer, epoch, args.stage1_lr, step=15)
             print('\nStage_1 Epoch: %d | Learning rate: %f ' % (epoch + 1, optimizer.param_groups[0]['lr']))
-            train_out = stage1_train(net, trainloader, optimizer, criterion_dis, device)
+            train_out = stage1_train(net, trainloader, optimizer, criterion, device)
             save_model(net, epoch, os.path.join(args.checkpoint,'stage_1_last_model.pth'))
-            # ['Epoch', 'Train Loss', 'Softmax Loss', 'Distance Loss',
-            # 'Within Loss', 'Between Loss','Cen2cen loss', 'Train Acc.']
-            logger.append([epoch + 1, train_out["train_loss"], 0.0,
-                           train_out["dis_loss_total"], train_out["dis_loss_within"],
-                           train_out["dis_loss_between"], train_out["dis_loss_cen2cen"], train_out["accuracy"]])
+            logger.append([epoch + 1, train_out["train_loss"], train_out["cls_loss"], train_out["dis_loss_within"],
+                           train_out["dis_loss_between"], train_out["accuracy"]])
             if args.plot:
                 plot_feature(net, trainloader, device, args.plotfolder1, epoch=epoch,
                              plot_class_num=args.train_class_num, maximum=args.plot_max,plot_quality=args.plot_quality)
@@ -193,35 +184,29 @@ def main_stage1():
 
 
 # Training
-def stage1_train(net, trainloader, optimizer, criterion_dis, device):
+def stage1_train(net, trainloader, optimizer, criterion, device):
     net.train()
     train_loss = 0
     cls_loss = 0
-    dis_loss_total = 0
     dis_loss_within = 0
     dis_loss_between = 0
-    dis_loss_cen2cen = 0
     correct = 0
     total = 0
     for batch_idx, (inputs, targets) in enumerate(trainloader):
         inputs, targets = inputs.to(device), targets.to(device)
         optimizer.zero_grad()
         out = net(inputs)
-        # loss_cls = criterion_cls(out["logits"], targets)
-        loss_dis = criterion_dis(out, targets)
-        # loss = loss_cls + args.alpha * (loss_dis["total"])
-        loss = args.alpha * (loss_dis["total"])
+        loss_dict = criterion(out, targets)
+        loss = loss_dict["total"]
         loss.backward()
         optimizer.step()
 
         train_loss += loss.item()
-        cls_loss += 0
-        dis_loss_total += loss_dis["total"].item()
-        dis_loss_within += loss_dis["within"].item()
-        dis_loss_between += loss_dis["between"].item()
-        dis_loss_cen2cen += loss_dis["cen2cen"].item()
+        cls_loss += loss_dict["classify"].item()
+        dis_loss_within += loss_dict["within"].item()
+        dis_loss_between += loss_dict["between"].item()
 
-        _, predicted = (out["dist_fea2cen"]).min(1)
+        _, predicted = (out["logits"]).max(1)
         total += targets.size(0)
         correct += predicted.eq(targets).sum().item()
 
@@ -229,10 +214,9 @@ def stage1_train(net, trainloader, optimizer, criterion_dis, device):
                      % (train_loss / (batch_idx + 1), 100. * correct / total, correct, total))
     return {
         "train_loss": train_loss / (batch_idx + 1),
-        "dis_loss_total": dis_loss_total / (batch_idx + 1),
+        "cls_loss": cls_loss / (batch_idx + 1),
         "dis_loss_within": dis_loss_within / (batch_idx + 1),
         "dis_loss_between": dis_loss_between / (batch_idx + 1),
-        "dis_loss_cen2cen": dis_loss_cen2cen / (batch_idx + 1),
         "accuracy": correct / total
     }
 
