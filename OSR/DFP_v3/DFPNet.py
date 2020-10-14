@@ -18,15 +18,12 @@ class DFPNet(nn.Module):
         self.feat_dim = self.get_backbone_last_layer_out_channel()  # get the channel number of backbone output
         if embed_dim:
             self.embeddingLayer = nn.Sequential(
-                nn.ReLU(inplace=True),
+                nn.PReLU(),
                 nn.Linear(self.feat_dim, embed_dim)
             )
             self.feat_dim = embed_dim
         self.centroids = nn.Parameter(torch.randn(num_classes, self.feat_dim))
-        self.classifier = nn.Sequential(
-            nn.ReLU(inplace=True),
-            nn.Linear(self.feat_dim, self.num_classes)
-        )
+        self.classifier = nn.Linear(self.feat_dim, self.num_classes)
 
         self.distance = distance
         assert self.distance in ['l1', 'l2', 'cosine']

@@ -44,8 +44,6 @@ parser.add_argument('--evaluate', action='store_true', help='Evaluate without tr
 # General MODEL parameters
 parser.add_argument('--arch', default='LeNetPlus', choices=model_names, type=str, help='choosing network')
 parser.add_argument('--embed_dim', default=2, type=int, help='embedding feature dimension')
-# parser.add_argument('--embed_reduction', default=8, type=int, help='reduction ratio for embedding like SENet.')
-# alpha is deprecated.
 parser.add_argument('--alpha', default=1.0, type=float, help='weight of total distance loss')
 parser.add_argument('--beta', default=1.0, type=float, help='wight of between-class distance loss')
 parser.add_argument('--distance', default='cosine', choices=['l2', 'l1', 'cosine'],
@@ -228,7 +226,7 @@ def stage1_test(net,testloader, device):
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
             out = net(inputs)
-            _, predicted = (out["dist_fea2cen"]).min(1)
+            _, predicted = (out["logits"]).max(1)
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
 
