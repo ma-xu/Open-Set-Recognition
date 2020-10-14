@@ -132,7 +132,7 @@ def main_stage1():
     print('==> Building model..')
     net = DFPNet(backbone=args.arch, num_classes=args.train_class_num, embed_dim=args.embed_dim,
                  distance=args.distance, scaled=args.scaled)
-    criterion = DFPLoss(beta=args.beta, sigma=args.sigma)
+    criterion = DFPLoss(alpha=args.alpha, beta=args.beta)
     optimizer = optim.SGD(net.parameters(), lr=args.stage1_lr, momentum=0.9, weight_decay=5e-4)
 
     net = net.to(device)
