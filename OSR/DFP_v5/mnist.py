@@ -196,9 +196,6 @@ def stage1_train(net, trainloader, optimizer, criterion, device):
     total = 0
     for batch_idx, (inputs, targets) in enumerate(trainloader):
         inputs, targets = inputs.to(device), targets.to(device)
-        if batch_idx==1:
-            print(targets)
-            print(targets.shape)
         optimizer.zero_grad()
         out = net(inputs)
         loss_dict = criterion(out, targets)
