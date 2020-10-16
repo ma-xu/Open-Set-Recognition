@@ -22,6 +22,7 @@ from Utils import adjust_learning_rate, progress_bar, Logger, mkdir_p, Evaluatio
 from DFPLoss import DFPLoss
 from DFPNet import DFPNet
 from MyPlotter import plot_feature, plot_distance
+from Generater import generater
 
 model_names = sorted(name for name in models.__dict__
                      if not name.startswith("__")
@@ -195,7 +196,9 @@ def stage1_train(net, trainloader, optimizer, criterion, device):
     correct = 0
     total = 0
     for batch_idx, (inputs, targets) in enumerate(trainloader):
+        inputs, targets =generater(inputs, targets)
         inputs, targets = inputs.to(device), targets.to(device)
+
         optimizer.zero_grad()
         out = net(inputs)
         loss_dict = criterion(out, targets)

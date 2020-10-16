@@ -22,7 +22,7 @@ class DFPNet(nn.Module):
                 nn.Linear(self.feat_dim, embed_dim)
             )
             self.feat_dim = embed_dim
-        self.centroids = nn.Parameter(torch.randn(num_classes, self.feat_dim))
+        self.centroids = nn.Parameter(torch.randn(num_classes+1, self.feat_dim))
         self.classifier = nn.Linear(self.feat_dim, self.num_classes)
 
         self.distance = distance
