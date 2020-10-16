@@ -57,7 +57,8 @@ class DFPNet(nn.Module):
         # calculate distance.
         DIST = Distance(scaled=self.scaled)
         normalized_centroids = F.normalize(self.centroids, dim=1, p=2)
-        dist_fea2cen = getattr(DIST, self.distance)(embed_fea_normalized, normalized_centroids)  # [n,c+1]
+        # dist_fea2cen = getattr(DIST, self.distance)(embed_fea_normalized, normalized_centroids)  # [n,c+1]
+        dist_fea2cen = getattr(DIST, self.distance)(embed_fea, self.centroids)
 
         return {
             "gap": x,
