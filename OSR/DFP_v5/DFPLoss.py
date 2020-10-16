@@ -27,7 +27,7 @@ class DFPLoss(nn.Module):
         dist_between = dist_between / (num_classes - 1.0)
 
         loss_within = self.alpha * (dist_within.sum()) / batch_size
-        loss_between = self.alpha * self.beta * (dist_between.sum()) / batch_size
+        loss_between = self.beta * (dist_between.sum()) / batch_size
 
         loss = loss_classify + loss_within + loss_between
 
