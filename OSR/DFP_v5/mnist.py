@@ -196,7 +196,7 @@ def stage1_train(net, trainloader, optimizer, criterion, device):
     correct = 0
     total = 0
     for batch_idx, (inputs, targets) in enumerate(trainloader):
-        inputs, targets =generater(inputs, targets)
+        inputs, targets =generater(inputs, targets,args.train_class_num)
         inputs, targets = inputs.to(device), targets.to(device)
 
         optimizer.zero_grad()
