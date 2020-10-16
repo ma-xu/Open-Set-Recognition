@@ -23,7 +23,7 @@ class DFPNet(nn.Module):
             )
             self.feat_dim = embed_dim
         self.centroids = nn.Parameter(torch.randn(num_classes+1, self.feat_dim))
-        self.classifier = nn.Linear(self.feat_dim, self.num_classes)
+        self.classifier = nn.Linear(self.feat_dim, self.num_classes+1)
 
         self.distance = distance
         assert self.distance in ['l1', 'l2', 'cosine']
