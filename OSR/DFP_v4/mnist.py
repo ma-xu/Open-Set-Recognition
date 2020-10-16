@@ -67,6 +67,8 @@ parser.add_argument('--stage2_lr', default=0.001, type=float, help='learning rat
 # Parameters for stage plotting
 parser.add_argument('--plot', action='store_true', help='Plotting the training set.')
 parser.add_argument('--plot_max', default=0, type=int, help='max examples to plot in each class, 0 indicates all.')
+parser.add_argument('--plot_normalized', action='store_true', help='If plot the normalized features')
+
 parser.add_argument('--plot_quality', default=200, type=int, help='DPI of plot figure')
 parser.add_argument('--bins', default=50, type=int, help='divided into n bins')
 parser.add_argument('--tail_number', default=50, type=int,
@@ -162,11 +164,13 @@ def main_stage1():
                            train_out["dis_loss_between"], train_out["accuracy"]])
             if args.plot:
                 plot_feature(net, trainloader, device, args.plotfolder1, epoch=epoch,
-                             plot_class_num=args.train_class_num, maximum=args.plot_max,plot_quality=args.plot_quality)
+                             plot_class_num=args.train_class_num, maximum=args.plot_max,
+                             plot_quality=args.plot_quality,normalized=args.plot_normalized)
     if args.plot:
         # plot the test set
         plot_feature(net, testloader, device, args.plotfolder1, epoch="test",
-                     plot_class_num=args.train_class_num + 1, maximum=args.plot_max, plot_quality=args.plot_quality)
+                     plot_class_num=args.train_class_num + 1, maximum=args.plot_max,
+                     plot_quality=args.plot_quality, normalized=args.plot_normalized)
 
     # calculating distances for last epoch
     distance_results = plot_distance(net, trainloader, device, args)

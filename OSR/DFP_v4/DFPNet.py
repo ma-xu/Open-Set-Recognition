@@ -76,4 +76,4 @@ def demo():
     print(output["embed_fea"].shape)
     print(output["dist_fea2cen"].shape)
 
-demo()
+# demo()
