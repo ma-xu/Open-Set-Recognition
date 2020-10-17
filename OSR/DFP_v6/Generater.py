@@ -18,6 +18,18 @@ def generater_input(inputs, targets, args, repeats=4, reduce=16):
     targets = targets[r]
     return inputs, targets
 
+def generater_unknown(inputs, targets, args, repeats=4, reduce=16):
+    b, c, w, h = inputs.shape
+
+    number = b // reduce if b == args.bs else b
+
+    g_data = inputs.repeat(repeats, 1, 1, 1)  # repeat examples 3 times [n*sampler, c]
+    g_data = g_data[torch.randperm(g_data.size()[0])]
+    g_data = g_data.view(-1, number, c, w, h)
+    g_data = g_data.mean(dim=0, keepdim=False)
+    return g_data
+
+
 
 def demo():
     n = 16

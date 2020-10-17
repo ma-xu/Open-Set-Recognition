@@ -22,7 +22,7 @@ from Utils import adjust_learning_rate, progress_bar, Logger, mkdir_p, Evaluatio
 from DFPLoss import DFPLoss
 from DFPNet import DFPNet
 from MyPlotter import plot_feature, plot_distance
-from Generater import generater_input
+from Generater import generater_input, generater_unknown
 
 model_names = sorted(name for name in models.__dict__
                      if not name.startswith("__")
@@ -196,11 +196,11 @@ def stage1_train(net, trainloader, optimizer, criterion, device):
     correct = 0
     total = 0
     for batch_idx, (inputs, targets) in enumerate(trainloader):
-        inputs, targets =generater_input(inputs, targets, args)
-        inputs, targets = inputs.to(device), targets.to(device)
+        generates =generater_unknown(inputs, targets, args)
+        inputs, targets, generates = inputs.to(device), targets.to(device), generates.to(device)
 
         optimizer.zero_grad()
-        out = net(inputs)
+        out = net(inputs,generates)
         loss_dict = criterion(out, targets)
         loss = loss_dict["total"]
         loss.backward()
@@ -243,123 +243,6 @@ def stage1_test(net,testloader, device):
     print("\nTesting results is {:.2f}%".format(100. * correct / total))
 
 
-def main_stage2(stage1_dict):
-    net1 = stage1_dict["net"]
-    thresholds = stage1_dict["distance"]["thresholds"]
-
-    print(f"\n===> Start Stage-2 training...\n")
-    start_epoch = 0
-    print('==> Building model..')
-    # net2 = DFPNet(backbone=args.arch, num_classes=args.train_class_num, embed_dim=args.embed_dim,
-    #              distance=args.distance, scaled=args.scaled, cosine_weight=args.cosine_weight,thresholds=thresholds)
-    net2 = DFPNet(backbone=args.arch, num_classes=args.train_class_num, embed_dim=args.embed_dim,
-                  distance=args.distance, scaled=args.scaled, cosine_weight=args.cosine_weight, thresholds=thresholds)
-    net2 = net2.to(device)
-
-    criterion_dis = DFPLossGeneral(beta=args.beta, sigma=args.sigma,gamma=args.gamma)
-    optimizer = optim.SGD(net2.parameters(), lr=args.stage2_lr, momentum=0.9, weight_decay=5e-4)
-
-    if not args.evaluate:
-        init_stage2_model(net1, net2)
-    if device == 'cuda':
-        net2 = torch.nn.DataParallel(net2)
-        cudnn.benchmark = True
-
-    if args.stage2_resume:
-        # Load checkpoint.
-        if os.path.isfile(args.stage2_resume):
-            print('==> Resuming from checkpoint..')
-            checkpoint = torch.load(args.stage1_resume)
-            net2.load_state_dict(checkpoint['net'])
-            start_epoch = checkpoint['epoch']
-            logger = Logger(os.path.join(args.checkpoint, 'log_stage2.txt'), resume=True)
-        else:
-            print("=> no checkpoint found at '{}'".format(args.resume))
-    else:
-        logger = Logger(os.path.join(args.checkpoint, 'log_stage2.txt'))
-        logger.set_names(['Epoch', 'Train Loss', 'Within Loss', 'Between Loss', 'Within-Gen Loss', 'Between-Gen Loss',
-                          'Random loss', 'Train Acc.'])
-
-    if not args.evaluate:
-        for epoch in range(start_epoch, args.stage2_es):
-            adjust_learning_rate(optimizer, epoch, args.stage2_lr, step=20)
-            print('\nStage_2 Epoch: %d | Learning rate: %f ' % (epoch + 1, optimizer.param_groups[0]['lr']))
-            train_out = stage2_train(net2, trainloader, optimizer, criterion_dis, device)
-            save_model(net2, epoch, os.path.join(args.checkpoint, 'stage_2_last_model.pth'))
-            # ['Epoch', 'Train Loss', 'Softmax Loss', 'Distance Loss',
-            # 'Within Loss', 'Between Loss','Cen2cen loss', 'Train Acc.']
-            logger.append([epoch + 1, train_out["dis_loss_total"], train_out["dis_loss_within"],
-                           train_out["dis_loss_between"],train_out["dis_loss_within_gen"],
-                           train_out["dis_loss_between_gen"], train_out["dis_loss_cen2cen"], train_out["accuracy"]])
-            if args.plot:
-                plot_feature(net2, trainloader, device, args.plotfolder2, epoch=epoch,
-                             plot_class_num=args.train_class_num, maximum=args.plot_max, plot_quality=args.plot_quality)
-    if args.plot:
-        # plot the test set
-        plot_feature(net2, testloader, device, args.plotfolder2, epoch="test",
-                     plot_class_num=args.train_class_num + 1, maximum=args.plot_max, plot_quality=args.plot_quality)
-
-    # calculating distances for last epoch
-    # distance_results = plot_distance(net2, trainloader, device, args)
-
-    logger.close()
-    print(f"\nFinish Stage-2 training...\n")
-    print("===> Evaluating ...")
-    stage1_test(net2, testloader, device)
-    return net2
-
-# Training
-def stage2_train(net, trainloader, optimizer, criterion_dis, device):
-    net.train()
-    train_loss = 0
-    cls_loss = 0
-    dis_loss_total = 0
-    dis_loss_within = 0
-    dis_loss_between = 0
-    dis_loss_within_gen = 0
-    dis_loss_between_gen = 0
-    dis_loss_cen2cen = 0
-    correct = 0
-    total = 0
-    for batch_idx, (inputs, targets) in enumerate(trainloader):
-        inputs, targets = inputs.to(device), targets.to(device)
-        optimizer.zero_grad()
-        out = net(inputs)
-        # loss_cls = criterion_cls(out["logits"], targets)
-        loss_dis = criterion_dis(out, targets)
-        # loss = loss_cls + args.alpha * (loss_dis["total"])
-        loss = args.alpha * (loss_dis["total"])
-        loss.backward()
-        optimizer.step()
-
-        train_loss += loss.item()
-        cls_loss += 0
-        dis_loss_total += loss_dis["total"].item()
-        dis_loss_within += loss_dis["within"].item()
-        dis_loss_between += loss_dis["between"].item()
-        dis_loss_within_gen += loss_dis["within_gen"].item()
-        dis_loss_between_gen += loss_dis["between_gen"].item()
-        dis_loss_cen2cen += loss_dis["cen2cen"].item()
-
-        _, predicted = (out["dist_fea2cen"]).min(1)
-        total += targets.size(0)
-        correct += predicted.eq(targets).sum().item()
-
-        progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
-                     % (train_loss / (batch_idx + 1), 100. * correct / total, correct, total))
-    return {
-        "train_loss": train_loss / (batch_idx + 1),
-        # "cls_loss": cls_loss / (batch_idx + 1),
-        "dis_loss_total": dis_loss_total / (batch_idx + 1),
-        "dis_loss_within": dis_loss_within / (batch_idx + 1),
-        "dis_loss_between": dis_loss_between / (batch_idx + 1),
-        "dis_loss_within_gen": dis_loss_within_gen / (batch_idx + 1),
-        "dis_loss_between_gen": dis_loss_between_gen / (batch_idx + 1),
-        "dis_loss_cen2cen": dis_loss_cen2cen / (batch_idx + 1),
-        "accuracy": correct / total
-    }
-
-
 def save_model(net, epoch, path, **kwargs):
     state = {
         'net': net.state_dict(),
@@ -369,19 +252,6 @@ def save_model(net, epoch, path, **kwargs):
         state[key] = value
     torch.save(state, path)
 
-
-def init_stage2_model(net1, net2):
-    # net1: net from stage 1.
-    # net2: net from stage 2.
-    dict1 = net1.state_dict()
-    dict2 = net2.state_dict()
-    for k, v in dict1.items():
-        if k.startswith("module.1."):
-            k = k[9:]   # remove module.1.
-        if k.startswith("module."):
-            k = k[7:]   # remove module.1.
-        dict2[k] = v
-    net2.load_state_dict(dict2)
 
 if __name__ == '__main__':
     main()
