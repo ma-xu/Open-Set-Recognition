@@ -56,7 +56,7 @@ parser.add_argument('--p_value', default=0.01, type=float, help='default statist
 
 # Parameters for stage 1
 parser.add_argument('--stage1_resume', default='', type=str, metavar='PATH', help='path to latest checkpoint')
-parser.add_argument('--stage1_es', default=50, type=int, help='epoch size')
+parser.add_argument('--stage1_es', default=35, type=int, help='epoch size')
 parser.add_argument('--stage1_lr', default=0.01, type=float, help='learning rate') # works for MNIST
 
 # Parameters for stage 2
@@ -157,7 +157,7 @@ def main_stage1():
 
     if not args.evaluate:
         for epoch in range(start_epoch, args.stage1_es):
-            adjust_learning_rate(optimizer, epoch, args.stage1_lr, step=15)
+            adjust_learning_rate(optimizer, epoch, args.stage1_lr, step=10)
             print('\nStage_1 Epoch: %d | Learning rate: %f ' % (epoch + 1, optimizer.param_groups[0]['lr']))
             train_out = stage1_train(net, trainloader, optimizer, criterion, device)
             save_model(net, epoch, os.path.join(args.checkpoint,'stage_1_last_model.pth'))
