@@ -48,7 +48,7 @@ class DFPNet(nn.Module):
         else:
             return last_layer.out_channels
 
-    def forward(self, x, generates):
+    def forward(self, x, generates=None):
         x = self.backbone(x)
         gap = (F.adaptive_avg_pool2d(x, 1)).view(x.size(0), -1)
         embed_fea = self.embeddingLayer(gap) if hasattr(self, 'embeddingLayer') else gap
