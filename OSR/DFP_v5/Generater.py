@@ -1,7 +1,7 @@
 import torch
 
 
-def generater_input(inputs, targets, args, repeats=3, reduce=8):
+def generater_input(inputs, targets, args, repeats=4, reduce=16):
     b, c, w, h = inputs.shape
     if b != args.bs:
         return inputs, targets
