@@ -85,4 +85,4 @@ def demo():
     print(output["dist_fea2cen"].shape)
     print(output["dist_gen2cen"].shape)
 
-demo()
+# demo()
