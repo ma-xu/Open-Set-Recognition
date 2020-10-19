@@ -30,7 +30,8 @@ class DFPLoss(nn.Module):
         # generated
         dist_gen2cen = net_out["dist_gen2cen"]
         batch_size, num_classes = dist_gen2cen.shape
-        dist_within = (dist_gen2cen.index_select(1, torch.tensor([num_classes - 1]))).sum(dim=1, keepdim=True)
+        indexes = torch.tensor([num_classes - 1], device=targets.device)
+        dist_within = (dist_gen2cen.index_select(1, indexes)).sum(dim=1, keepdim=True)
         dist_between = F.relu(dist_within - dist_gen2cen, inplace=True)  # ensure within_distance greater others
         dist_between = dist_between.sum(dim=1, keepdim=False)
         dist_between = dist_between / (num_classes - 1.0)
