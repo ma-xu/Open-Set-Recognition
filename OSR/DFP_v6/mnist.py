@@ -47,6 +47,7 @@ parser.add_argument('--arch', default='LeNetPlus', choices=model_names, type=str
 parser.add_argument('--embed_dim', default=2, type=int, help='embedding feature dimension')
 parser.add_argument('--alpha', default=1.0, type=float, help='weight of total distance loss')
 parser.add_argument('--beta', default=1.0, type=float, help='wight of between-class distance loss')
+parser.add_argument('--gamma', default=1.0, type=float, help='wight of generated data distance loss')
 parser.add_argument('--distance', default='cosine', choices=['l2', 'l1', 'cosine'],
                     type=str, help='choosing distance metric')
 parser.add_argument('--scaled', default=True, action='store_true',
@@ -57,13 +58,12 @@ parser.add_argument('--p_value', default=0.01, type=float, help='default statist
 # Parameters for stage 1
 parser.add_argument('--stage1_resume', default='', type=str, metavar='PATH', help='path to latest checkpoint')
 parser.add_argument('--stage1_es', default=35, type=int, help='epoch size')
-parser.add_argument('--stage1_lr', default=0.01, type=float, help='learning rate') # works for MNIST
+parser.add_argument('--stage1_lr', default=0.01, type=float, help='learning rate')  # works for MNIST
 
 # Parameters for stage 2
 parser.add_argument('--stage2_resume', default='', type=str, metavar='PATH', help='path to latest checkpoint')
 parser.add_argument('--stage2_es', default=50, type=int, help='epoch size')
-parser.add_argument('--stage2_lr', default=0.001, type=float, help='learning rate') # works for MNIST
-
+parser.add_argument('--stage2_lr', default=0.001, type=float, help='learning rate')  # works for MNIST
 
 # Parameters for stage plotting
 parser.add_argument('--plot', action='store_true', help='Plotting the training set.')
@@ -76,38 +76,35 @@ parser.add_argument('--tail_number', default=50, type=int,
                     help='number of maximum distance we do not take into account, '
                          'which may be anomaly or wrong labeled.')
 
-
-
-
 args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-args.checkpoint = './checkpoints/mnist/' + args.arch +\
-                  '/A%s_B%s_embed%s_%s' % (args.alpha, args.beta,args.embed_dim, args.distance)
+args.checkpoint = './checkpoints/mnist/' + args.arch + \
+                  '/A%s_B%s_embed%s_%s' % (args.alpha, args.beta, args.embed_dim, args.distance)
 if not os.path.isdir(args.checkpoint):
     mkdir_p(args.checkpoint)
 
 # folder to save figures
-args.plotfolder1 = os.path.join(args.checkpoint,"plotter_Stage1")
+args.plotfolder1 = os.path.join(args.checkpoint, "plotter_Stage1")
 if not os.path.isdir(args.plotfolder1):
     mkdir_p(args.plotfolder1)
 # folder to save figures
-args.plotfolder2 = os.path.join(args.checkpoint,"plotter_Stage2")
+args.plotfolder2 = os.path.join(args.checkpoint, "plotter_Stage2")
 if not os.path.isdir(args.plotfolder2):
     mkdir_p(args.plotfolder2)
 
 print('==> Preparing data..')
 transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize((0.1307,), (0.3081,))
-    ])
+    transforms.ToTensor(),
+    transforms.Normalize((0.1307,), (0.3081,))
+])
 
 trainset = MNIST(root='../../data', train=True, download=True, transform=transform,
-                    train_class_num=args.train_class_num, test_class_num=args.test_class_num,
-                    includes_all_train_class=args.includes_all_train_class)
+                 train_class_num=args.train_class_num, test_class_num=args.test_class_num,
+                 includes_all_train_class=args.includes_all_train_class)
 
 testset = MNIST(root='../../data', train=False, download=True, transform=transform,
-                   train_class_num=args.train_class_num, test_class_num=args.test_class_num,
-                   includes_all_train_class=args.includes_all_train_class)
+                train_class_num=args.train_class_num, test_class_num=args.test_class_num,
+                includes_all_train_class=args.includes_all_train_class)
 
 # data loader
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.bs, shuffle=True, num_workers=4)
@@ -153,20 +150,22 @@ def main_stage1():
             print("=> no checkpoint found at '{}'".format(args.resume))
     else:
         logger = Logger(os.path.join(args.checkpoint, 'log_stage1.txt'))
-        logger.set_names(['Epoch', 'Train Loss', 'Softmax Loss', 'Within Loss', 'Between Loss', 'Train Acc.'])
+        logger.set_names(['Epoch', 'Train Loss', 'Softmax Loss', 'Within Loss', 'Between Loss', 'Gen_Within Loss',
+                          'Gen_Between Loss', 'Train Acc.'])
 
     if not args.evaluate:
         for epoch in range(start_epoch, args.stage1_es):
             adjust_learning_rate(optimizer, epoch, args.stage1_lr, step=10)
             print('\nStage_1 Epoch: %d | Learning rate: %f ' % (epoch + 1, optimizer.param_groups[0]['lr']))
             train_out = stage1_train(net, trainloader, optimizer, criterion, device)
-            save_model(net, epoch, os.path.join(args.checkpoint,'stage_1_last_model.pth'))
+            save_model(net, epoch, os.path.join(args.checkpoint, 'stage_1_last_model.pth'))
             logger.append([epoch + 1, train_out["train_loss"], train_out["cls_loss"], train_out["dis_loss_within"],
-                           train_out["dis_loss_between"], train_out["accuracy"]])
+                           train_out["dis_loss_between"],train_out["gen_loss_within"],
+                           train_out["gen_loss_between"], train_out["accuracy"]])
             if args.plot:
                 plot_feature(net, trainloader, device, args.plotfolder1, epoch=epoch,
                              plot_class_num=args.train_class_num, maximum=args.plot_max,
-                             plot_quality=args.plot_quality,normalized=args.plot_normalized)
+                             plot_quality=args.plot_quality, normalized=args.plot_normalized)
     if args.plot:
         # plot the test set
         plot_feature(net, testloader, device, args.plotfolder1, epoch="test",
@@ -193,14 +192,16 @@ def stage1_train(net, trainloader, optimizer, criterion, device):
     cls_loss = 0
     dis_loss_within = 0
     dis_loss_between = 0
+    gen_loss_within = 0
+    gen_loss_between = 0
     correct = 0
     total = 0
     for batch_idx, (inputs, targets) in enumerate(trainloader):
-        generates =generater_unknown(inputs, targets, args)
+        generates = generater_unknown(inputs, targets, args)
         inputs, targets, generates = inputs.to(device), targets.to(device), generates.to(device)
 
         optimizer.zero_grad()
-        out = net(inputs,generates)
+        out = net(inputs, generates)
         loss_dict = criterion(out, targets)
         loss = loss_dict["total"]
         loss.backward()
@@ -210,6 +211,8 @@ def stage1_train(net, trainloader, optimizer, criterion, device):
         cls_loss += loss_dict["classify"].item()
         dis_loss_within += loss_dict["within"].item()
         dis_loss_between += loss_dict["between"].item()
+        gen_loss_within += loss_dict["gen_within"].item()
+        gen_loss_between += loss_dict["gen_between"].item()
 
         _, predicted = (out["logits"]).max(1)
         total += targets.size(0)
@@ -222,11 +225,13 @@ def stage1_train(net, trainloader, optimizer, criterion, device):
         "cls_loss": cls_loss / (batch_idx + 1),
         "dis_loss_within": dis_loss_within / (batch_idx + 1),
         "dis_loss_between": dis_loss_between / (batch_idx + 1),
+        "gen_loss_within": gen_loss_within / (batch_idx + 1),
+        "gen_loss_between": gen_loss_between / (batch_idx + 1),
         "accuracy": correct / total
     }
 
 
-def stage1_test(net,testloader, device):
+def stage1_test(net, testloader, device):
     correct = 0
     total = 0
     with torch.no_grad():
@@ -238,7 +243,7 @@ def stage1_test(net,testloader, device):
             correct += predicted.eq(targets).sum().item()
 
             progress_bar(batch_idx, len(trainloader), '| Acc: %.3f%% (%d/%d)'
-                         % ( 100. * correct / total, correct, total))
+                         % (100. * correct / total, correct, total))
 
     print("\nTesting results is {:.2f}%".format(100. * correct / total))
 

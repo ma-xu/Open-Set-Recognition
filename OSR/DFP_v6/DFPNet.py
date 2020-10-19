@@ -10,7 +10,8 @@ from Distance import Distance
 
 
 class DFPNet(nn.Module):
-    def __init__(self, backbone='ResNet18', num_classes=1000, embed_dim=None, distance='cosine', scaled=True, thresholds=None):
+    def __init__(self, backbone='ResNet18', num_classes=1000, embed_dim=None, distance='cosine', scaled=True,
+                 thresholds=None):
         super(DFPNet, self).__init__()
         self.num_classes = num_classes
         self.backbone_name = backbone
@@ -24,7 +25,7 @@ class DFPNet(nn.Module):
             self.feat_dim = embed_dim
         self.centroids = nn.Parameter(torch.randn(num_classes, self.feat_dim))
         self.register_buffer("original", torch.zeros([1, self.feat_dim]))
-        self.classifier = nn.Linear(self.feat_dim, self.num_classes+1)
+        self.classifier = nn.Linear(self.feat_dim, self.num_classes + 1)
 
         self.distance = distance
         assert self.distance in ['l1', 'l2', 'cosine']
@@ -53,28 +54,35 @@ class DFPNet(nn.Module):
         gap = (F.adaptive_avg_pool2d(x, 1)).view(x.size(0), -1)
         embed_fea = self.embeddingLayer(gap) if hasattr(self, 'embeddingLayer') else gap
         logits = self.classifier(embed_fea)
-        embed_fea_normalized = F.normalize(embed_fea, dim=1, p=2)
-
         # calculate distance.
+        cat_centroids = torch.cat([self.centroids, self.original], dim=0)
         DIST = Distance(scaled=self.scaled)
-        normalized_centroids = F.normalize(self.centroids, dim=1, p=2)
-        # dist_fea2cen = getattr(DIST, self.distance)(embed_fea_normalized, normalized_centroids)  # [n,c+1]
-        dist_fea2cen = getattr(DIST, self.distance)(embed_fea, self.centroids)
+        dist_fea2cen = getattr(DIST, self.distance)(embed_fea, cat_centroids)
+
+        dist_gen2cen = None
+        if generates is not None:
+            generates = self.backbone(generates)
+            gap_gen = (F.adaptive_avg_pool2d(generates, 1)).view(generates.size(0), -1)
+            embed_gen = self.embeddingLayer(gap_gen) if hasattr(self, 'embeddingLayer') else gap_gen
+            dist_gen2cen = getattr(DIST, self.distance)(embed_gen, cat_centroids)
 
         return {
             "gap": x,
             "logits": logits,
             "embed_fea": embed_fea,
-            "dist_fea2cen": dist_fea2cen
+            "dist_fea2cen": dist_fea2cen,
+            "dist_gen2cen": dist_gen2cen
         }
 
 
 def demo():
     x = torch.rand([10, 3, 32, 32])
+    y = torch.rand([6, 3, 32, 32])
     net = DFPNet('ResNet18', num_classes=10, embed_dim=64, thresholds=torch.rand(11))
-    output = net(x)
+    output = net(x,y)
     print(output["logits"].shape)
     print(output["embed_fea"].shape)
     print(output["dist_fea2cen"].shape)
+    print(output["dist_gen2cen"].shape)
 
-# demo()
+demo()
