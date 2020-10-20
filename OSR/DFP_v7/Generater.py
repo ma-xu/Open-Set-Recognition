@@ -33,8 +33,7 @@ def generater_unknown(inputs, targets, args, repeats=4, reduce=16):
 
 
 def generater_gap(gap: torch.Tensor,
-                  args,
-                  batchsize=32):
+                  batchsize: int=32):
     # generated a random gap doesn't require gradient
     b, c = gap.size()
     mem = gap.clone().requires_grad_(False)
