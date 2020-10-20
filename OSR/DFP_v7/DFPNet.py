@@ -21,7 +21,9 @@ class DFPNet(nn.Module):
         if embed_dim:
             self.embeddingLayer = nn.Sequential(
                 nn.PReLU(),
-                nn.Linear(self.feat_dim, embed_dim)
+                nn.Linear(self.feat_dim, self.feat_dim//16),
+                nn.PReLU(),
+                nn.Linear(self.feat_dim//16, embed_dim)
             )
             self.feat_dim = embed_dim
         self.centroids = nn.Parameter(torch.randn(num_classes, self.feat_dim))
