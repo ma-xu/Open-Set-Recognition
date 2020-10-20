@@ -53,7 +53,7 @@ class DFPNet(nn.Module):
     def forward(self, x):
         x = self.backbone(x)
         gap = (F.adaptive_avg_pool2d(x, 1)).view(x.size(0), -1)
-        gap_gen = generater_gap(gap,32)
+        gap_gen = generater_gap(gap,batchsize=32)
         embed_fea = self.embeddingLayer(gap) if hasattr(self, 'embeddingLayer') else gap
         logits = self.classifier(embed_fea)
         # calculate distance.

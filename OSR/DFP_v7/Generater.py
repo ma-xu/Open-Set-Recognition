@@ -38,7 +38,7 @@ def generater_gap(gap,batchsize=32):
     mem = gap.clone().requires_grad_(False)
     mem = mem.view(-1)
     mem = mem[torch.randperm(mem.size()[0])]
-    mem = mem.view([b,c])
+    mem = mem.view([b, c])
     if batchsize < b:
         mem = mem[:batchsize]
     mem = mem.to(gap.device)
