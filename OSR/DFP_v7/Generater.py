@@ -56,6 +56,6 @@ def demo():
 
 def demo_gap():
     gap = torch.rand([3,6])
-    generater_gap(gap,None)
+    generater_gap(gap)
 
-demo_gap()
+# demo_gap()
