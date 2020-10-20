@@ -201,7 +201,7 @@ def stage1_train(net, trainloader, optimizer, criterion, device):
         inputs, targets, generates = inputs.to(device), targets.to(device), generates.to(device)
 
         optimizer.zero_grad()
-        out = net(inputs, generates)
+        out = net(inputs)
         loss_dict = criterion(out, targets)
         loss = loss_dict["total"]
         loss.backward()
