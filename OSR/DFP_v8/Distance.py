@@ -61,10 +61,10 @@ class Similarity(torch.nn.Module):
         centroids = centroids.unsqueeze(0)
         features = features.unsqueeze(0)
         distance = torch.cdist(features, centroids, 2).squeeze(0)
-        sim = 1/(1.0+distance)
         if self.scaled:
             scale = math.sqrt(features.size(-1))
-            sim = sim / scale
+            distance = distance / scale
+        sim = 1/(1.0+distance)
         return sim
 
     def cosine(self, features, centroids):
