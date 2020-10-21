@@ -31,7 +31,6 @@ class DFPNet(nn.Module):
         self.classifier = nn.Linear(self.feat_dim, self.num_classes + 1)
 
         self.distance = distance
-        assert self.distance in ['l1', 'l2', 'cosine']
         self.scaled = scaled
         self.register_buffer("thresholds", thresholds)
 
