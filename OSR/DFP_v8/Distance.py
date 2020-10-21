@@ -55,6 +55,18 @@ class Similarity(torch.nn.Module):
         super(Similarity, self).__init__()
         self.scaled = scaled
 
+    def l2(self, features, centroids):
+        # We can directly call torch.dist(), or cdist(), or pairwise_distance
+        _, dim_num = features.shape
+        centroids = centroids.unsqueeze(0)
+        features = features.unsqueeze(0)
+        distance = torch.cdist(features, centroids, 2).squeeze(0)
+        sim = 1/(1.0+distance)
+        if self.scaled:
+            scale = math.sqrt(features.size(-1))
+            sim = sim / scale
+        return sim
+
     def cosine(self, features, centroids):
         sample_num, dim_num = features.shape
         class_num = centroids.shape[0]
