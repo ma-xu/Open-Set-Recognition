@@ -56,7 +56,8 @@ class DFPNet(nn.Module):
         gap = (F.adaptive_avg_pool2d(x, 1)).view(x.size(0), -1)
         embed_fea = self.embeddingLayer(gap) if hasattr(self, 'embeddingLayer') else gap
         SIMI = Similarity(scaled=self.scaled)
-        sim_fea2cen = getattr(SIMI, self.distance)(embed_fea, self.centroids)
+        normalized_centroids = F.normalize(self.centroids, dim=1, p=2)
+        sim_fea2cen = getattr(SIMI, self.distance)(embed_fea, normalized_centroids)
 
         return {
             "gap": x,
