@@ -128,7 +128,7 @@ def plot_similarity(net,
                   args
                   ) -> dict:
     print("===> Calculating distances...")
-    results = {i: {"distances": []} for i in range(args.train_class_num)}
+    results = {i: {"similarities": []} for i in range(args.train_class_num)}
     threshold_list = []
     with torch.no_grad():
         for batch_idx, (inputs, targets) in tqdm(enumerate(plotloader)):
@@ -140,13 +140,13 @@ def plot_similarity(net,
             for i in range(dist_fea2cen.shape[0]):
                 label = targets[i]
                 dist = dist_fea2cen[i, label]
-                results[label.item()]["distances"].append(dist)
+                results[label.item()]["similarities"].append(dist)
 
     for i in tqdm(range(args.train_class_num)):
         # print(f"The examples number in class {i} is {len(results[i]['distances'])}")
         cls_dist = results[i]['distances']  # distance list for each class
-        cls_dist.sort()  # python sort function do not return anything.
-        results[i]['distances'] = cls_dist
+        cls_dist.sort(reverse = True)  # python sort function do not return anything.
+        results[i]['similarities'] = cls_dist
         cls_dist = cls_dist[:-(args.tail_number)]  # remove the tail examples.
 
         index = int(len(cls_dist) * (1 - args.p_value))
@@ -161,9 +161,9 @@ def plot_similarity(net,
         results[i]['max'] = max_distance
         results[i]['min'] = min_distance
         results[i]['threshold'] = threshold
-    unknown_threshold = threshold - threshold - 100.  # we set threshold for unknown to -100. (actually 0 is fine)
-    threshold_list.append(unknown_threshold)
+    # unknown_threshold = threshold - threshold - 100.  # we set threshold for unknown to -100. (actually 0 is fine)
+    # threshold_list.append(unknown_threshold)
     results['thresholds'] = torch.Tensor(threshold_list)  # the threshold for unknown is 0.
-    torch.save(results, os.path.join(args.checkpoint, 'distance.pkl'))
-    print("===> Distance saved.")
+    torch.save(results, os.path.join(args.checkpoint, 'similarity.pkl'))
+    print("===> Similarity saved.")
     return results
