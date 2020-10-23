@@ -21,7 +21,7 @@ from datasets import MNIST
 from Utils import adjust_learning_rate, progress_bar, Logger, mkdir_p, Evaluation
 from DFPLoss import DFPLoss
 from DFPNet import DFPNet
-from MyPlotter import plot_feature, plot_distance
+from MyPlotter import plot_feature, plot_distance,plot_similarity
 from Generater import generater_input, generater_unknown
 
 model_names = sorted(name for name in models.__dict__
@@ -170,7 +170,7 @@ def main_stage1():
                      plot_quality=args.plot_quality, normalized=args.plot_normalized)
 
     # calculating distances for last epoch
-    distance_results = plot_distance(net, trainloader, device, args)
+    similarity_results = plot_similarity(net, trainloader, device, args)
 
     logger.close()
     print(f"\nFinish Stage-1 training...\n")
@@ -178,7 +178,7 @@ def main_stage1():
     stage1_test(net, testloader, device)
 
     return {"net": net,
-            "distance": distance_results
+            "distance": similarity_results
             }
 
 
