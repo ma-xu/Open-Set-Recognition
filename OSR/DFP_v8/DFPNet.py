@@ -12,9 +12,11 @@ from Generater import generater_gap
 
 class DFPNet(nn.Module):
     def __init__(self, backbone='ResNet18', num_classes=1000, embed_dim=None, distance='cosine', scaled=True,
+                 norm_centroid=False,
                  thresholds=None):
         super(DFPNet, self).__init__()
         self.num_classes = num_classes
+        self.norm_centroid = norm_centroid,
         self.backbone_name = backbone
         self.backbone = models.__dict__[backbone](num_classes=num_classes, backbone_fc=False)
         self.feat_dim = self.get_backbone_last_layer_out_channel()  # get the channel number of backbone output
@@ -56,8 +58,8 @@ class DFPNet(nn.Module):
         gap = (F.adaptive_avg_pool2d(x, 1)).view(x.size(0), -1)
         embed_fea = self.embeddingLayer(gap) if hasattr(self, 'embeddingLayer') else gap
         SIMI = Similarity(scaled=self.scaled)
-        normalized_centroids = F.normalize(self.centroids, dim=1, p=2)
-        sim_fea2cen = getattr(SIMI, self.distance)(embed_fea, normalized_centroids)
+        centroids = F.normalize(self.centroids, dim=1, p=2) if self.norm_centroid else self.centroids
+        sim_fea2cen = getattr(SIMI, self.distance)(embed_fea, centroids)
 
         return {
             "gap": x,

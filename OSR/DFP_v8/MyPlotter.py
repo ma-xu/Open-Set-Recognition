@@ -11,7 +11,7 @@ from tqdm import tqdm
 
 
 def plot_feature(net, plotloader, device, dirname, epoch=0, plot_class_num=10, maximum=500, plot_quality=150,
-                 normalized=True):
+                 norm_centroid=False):
     plot_features = []
     plot_labels = []
     with torch.no_grad():
@@ -19,8 +19,6 @@ def plot_feature(net, plotloader, device, dirname, epoch=0, plot_class_num=10, m
             inputs, targets = inputs.to(device), targets.to(device)
             out = net(inputs)
             embed_fea = out["embed_fea"]
-            if normalized:
-                embed_fea = F.normalize(embed_fea, dim=1, p=2)
             try:
                 embed_fea = embed_fea.data.cpu().numpy()
                 targets = targets.data.cpu().numpy()
@@ -37,9 +35,8 @@ def plot_feature(net, plotloader, device, dirname, epoch=0, plot_class_num=10, m
     net_dict = net.state_dict()
     centroids = net_dict['module.centroids'] if isinstance(net, nn.DataParallel) \
         else net_dict['centroids']
-    if normalized:
+    if norm_centroid:
         centroids = F.normalize(centroids, dim=1, p=2)
-
     try:
         centroids = centroids.data.cpu().numpy()
     except:
@@ -144,7 +141,7 @@ def plot_similarity(net,
 
     for i in tqdm(range(args.train_class_num)):
         # print(f"The examples number in class {i} is {len(results[i]['distances'])}")
-        cls_dist = results[i]['distances']  # distance list for each class
+        cls_dist = results[i]['similarities']  # distance list for each class
         cls_dist.sort(reverse = True)  # python sort function do not return anything.
         results[i]['similarities'] = cls_dist
         cls_dist = cls_dist[:-(args.tail_number)]  # remove the tail examples.

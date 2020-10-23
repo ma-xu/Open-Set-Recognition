@@ -45,13 +45,11 @@ parser.add_argument('--evaluate', action='store_true', help='Evaluate without tr
 # General MODEL parameters
 parser.add_argument('--arch', default='LeNetPlus', choices=model_names, type=str, help='choosing network')
 parser.add_argument('--embed_dim', default=2, type=int, help='embedding feature dimension')
-parser.add_argument('--alpha', default=1.0, type=float, help='weight of total distance loss')
-parser.add_argument('--beta', default=1.0, type=float, help='wight of between-class distance loss')
-parser.add_argument('--gamma', default=1.0, type=float, help='wight of generated data distance loss')
 parser.add_argument('--distance', default='cosine', choices=['l2', 'l1', 'cosine','dotproduct'],
                     type=str, help='choosing distance metric')
 parser.add_argument('--scaled', default=True, action='store_true',
                     help='If scale distance by sqrt(embed_dim)')
+parser.add_argument('--norm_centroid', action='store_true', help='If nomalize the centroid for calculation similarities')
 parser.add_argument('--p_value', default=0.01, type=float, help='default statistical p_value threshold,'
                                                                 ' usually 0.05. 0.01')
 
@@ -68,7 +66,7 @@ parser.add_argument('--stage2_lr', default=0.001, type=float, help='learning rat
 # Parameters for stage plotting
 parser.add_argument('--plot', action='store_true', help='Plotting the training set.')
 parser.add_argument('--plot_max', default=0, type=int, help='max examples to plot in each class, 0 indicates all.')
-parser.add_argument('--plot_normalized', action='store_true', help='If plot the normalized features')
+
 
 parser.add_argument('--plot_quality', default=200, type=int, help='DPI of plot figure')
 parser.add_argument('--bins', default=50, type=int, help='divided into n bins')
@@ -78,8 +76,8 @@ parser.add_argument('--tail_number', default=50, type=int,
 
 args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-args.checkpoint = './checkpoints/mnist/' + args.arch + \
-                  '/A%s_B%s_G%s_embed%s_%s' % (args.alpha, args.beta,args.gamma, args.embed_dim, args.distance)
+args.checkpoint = './checkpoints/mnist_' + args.arch + \
+                  '/embed%s_%s_norm%s' % (args.embed_dim, args.distance, args.norm_centroid)
 if not os.path.isdir(args.checkpoint):
     mkdir_p(args.checkpoint)
 
@@ -88,9 +86,9 @@ args.plotfolder1 = os.path.join(args.checkpoint, "plotter_Stage1")
 if not os.path.isdir(args.plotfolder1):
     mkdir_p(args.plotfolder1)
 # folder to save figures
-args.plotfolder2 = os.path.join(args.checkpoint, "plotter_Stage2")
-if not os.path.isdir(args.plotfolder2):
-    mkdir_p(args.plotfolder2)
+# args.plotfolder2 = os.path.join(args.checkpoint, "plotter_Stage2")
+# if not os.path.isdir(args.plotfolder2):
+#     mkdir_p(args.plotfolder2)
 
 print('==> Preparing data..')
 transform = transforms.Compose([
@@ -162,12 +160,12 @@ def main_stage1():
             if args.plot:
                 plot_feature(net, trainloader, device, args.plotfolder1, epoch=epoch,
                              plot_class_num=args.train_class_num, maximum=args.plot_max,
-                             plot_quality=args.plot_quality, normalized=args.plot_normalized)
+                             plot_quality=args.plot_quality, norm_centroid=args.norm_centroid)
     if args.plot:
         # plot the test set
         plot_feature(net, testloader, device, args.plotfolder1, epoch="test",
                      plot_class_num=args.train_class_num + 1, maximum=args.plot_max,
-                     plot_quality=args.plot_quality, normalized=args.plot_normalized)
+                     plot_quality=args.plot_quality, norm_centroid=args.norm_centroid)
 
     # calculating distances for last epoch
     similarity_results = plot_similarity(net, trainloader, device, args)
