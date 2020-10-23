@@ -76,7 +76,7 @@ parser.add_argument('--tail_number', default=50, type=int,
 
 args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-args.checkpoint = './checkpoints/mnist_' + args.arch + \
+args.checkpoint = './checkpoints/mnist/' + args.arch + \
                   '/embed%s_%s_norm%s' % (args.embed_dim, args.distance, args.norm_centroid)
 if not os.path.isdir(args.checkpoint):
     mkdir_p(args.checkpoint)
