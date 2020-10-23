@@ -49,7 +49,6 @@ parser.add_argument('--distance', default='cosine', choices=['l2', 'l1', 'cosine
                     type=str, help='choosing distance metric')
 parser.add_argument('--scaled', default=True, action='store_true',
                     help='If scale distance by sqrt(embed_dim)')
-parser.add_argument('--norm_centroid', action='store_true', help='If nomalize the centroid for calculation similarities')
 parser.add_argument('--p_value', default=0.01, type=float, help='default statistical p_value threshold,'
                                                                 ' usually 0.05. 0.01')
 
@@ -127,7 +126,7 @@ def main_stage1():
     # Model
     print('==> Building model..')
     net = DFPNet(backbone=args.arch, num_classes=args.train_class_num, embed_dim=args.embed_dim,
-                 distance=args.distance,norm_centroid=args.norm_centroid, scaled=args.scaled)
+                 distance=args.distance, scaled=args.scaled)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(net.parameters(), lr=args.stage1_lr, momentum=0.9, weight_decay=5e-4)
 
