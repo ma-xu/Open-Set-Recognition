@@ -206,7 +206,7 @@ def stage1_train(net, trainloader, optimizer, criterion, device):
 
         train_loss += loss.item()
         loss_similarity += (loss_dict['similarity']).item()
-        loss_distance += (loss_dict['similarity']).item()
+        loss_distance += (loss_dict['distance']).item()
 
         _, predicted = (out['sim_fea2cen']).max(1)
         total += targets.size(0)
