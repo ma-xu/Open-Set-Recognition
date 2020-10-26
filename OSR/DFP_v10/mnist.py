@@ -53,6 +53,9 @@ parser.add_argument('--alpha', default=1.0, type=float, help='weight of distance
 parser.add_argument('--scaled', default=True, action='store_true',
                     help='If scale distance by sqrt(embed_dim)')
 parser.add_argument('--norm_centroid', action='store_true', help='Normalize the centroid using L2-normailization')
+
+# for model threshold
+parser.add_argument('--tail_number', default=20, type=int, help='number of maximum distance not take into account')
 parser.add_argument('--p_value', default=0.01, type=float, help='default statistical p_value threshold,'
                                                                 ' usually 0.05. 0.01')
 
@@ -72,9 +75,7 @@ parser.add_argument('--plot_max', default=0, type=int, help='max examples to plo
 
 parser.add_argument('--plot_quality', default=200, type=int, help='DPI of plot figure')
 parser.add_argument('--bins', default=50, type=int, help='divided into n bins')
-parser.add_argument('--tail_number', default=50, type=int,
-                    help='number of maximum distance we do not take into account, '
-                         'which may be anomaly or wrong labeled.')
+
 
 args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -172,7 +173,7 @@ def main_stage1():
                      plot_quality=args.plot_quality, norm_centroid=args.norm_centroid)
 
     # calculating distances for last epoch
-    # similarity_results = plot_similarity(net, trainloader, device, args)
+    distance_results = plot_distance(net, trainloader, device, args)
 
     logger.close()
     print(f"\nFinish Stage-1 training...\n")
@@ -180,7 +181,7 @@ def main_stage1():
     stage1_test(net, testloader, device)
 
     return {"net": net,
-            # "distance": similarity_results
+            "distance": distance_results
             }
 
 
