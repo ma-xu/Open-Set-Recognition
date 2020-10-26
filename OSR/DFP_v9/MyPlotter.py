@@ -82,7 +82,7 @@ def plot_distance(net,
         for batch_idx, (inputs, targets) in enumerate(plotloader):
             inputs, targets = inputs.to(device), targets.to(device)
             out = net(inputs)
-            dist_fea2cen = out["dist_fea2cen"]  # [n, class_num]
+            dist_fea2cen = out["dis_fea2cen"]  # [n, class_num]
 
 
             for i in range(dist_fea2cen.shape[0]):
@@ -90,7 +90,7 @@ def plot_distance(net,
                 dist = dist_fea2cen[i, label]
                 results[label.item()]["distances"].append(dist)
 
-    for i in range(args.train_class_num):
+    for i in tqdm(range(args.train_class_num)):
         # print(f"The examples number in class {i} is {len(results[i]['distances'])}")
         cls_dist = results[i]['distances']  # distance list for each class
         cls_dist.sort()  # python sort function do not return anything.
