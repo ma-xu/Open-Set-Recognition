@@ -180,7 +180,7 @@ def main_stage1():
     stage1_test(net, testloader, device)
 
     return {"net": net,
-            "distance": similarity_results
+            # "distance": similarity_results
             }
 
 
