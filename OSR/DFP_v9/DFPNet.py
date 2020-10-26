@@ -6,24 +6,25 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import backbones.cifar as models
-from Distance import Similarity
+from Distance import Similarity, Distance
 from Generater import generater_gap
 
 
 class DFPNet(nn.Module):
-    def __init__(self, backbone='ResNet18', num_classes=1000, embed_dim=None, distance='cosine', scaled=True,
-                 thresholds=None):
+    def __init__(self, backbone='ResNet18', num_classes=1000, embed_dim=None, distance='l2',
+                 similarity="dotproduct", scaled=True,thresholds=None,norm_centroid=False):
         super(DFPNet, self).__init__()
         self.num_classes = num_classes
         self.backbone_name = backbone
+        self.norm_centroid = norm_centroid
         self.backbone = models.__dict__[backbone](num_classes=num_classes, backbone_fc=False)
         self.feat_dim = self.get_backbone_last_layer_out_channel()  # get the channel number of backbone output
         if embed_dim:
             self.embeddingLayer = nn.Sequential(
                 nn.PReLU(),
-                nn.Linear(self.feat_dim, self.feat_dim//16),
+                nn.Linear(self.feat_dim, self.feat_dim // 16),
                 nn.PReLU(),
-                nn.Linear(self.feat_dim//16, embed_dim)
+                nn.Linear(self.feat_dim // 16, embed_dim)
             )
             self.feat_dim = embed_dim
         self.centroids = nn.Parameter(torch.randn(num_classes, self.feat_dim))
@@ -31,6 +32,7 @@ class DFPNet(nn.Module):
         self.classifier = nn.Linear(self.feat_dim, self.num_classes + 1)
 
         self.distance = distance
+        self.similarity = similarity
         self.scaled = scaled
         self.register_buffer("thresholds", thresholds)
 
@@ -55,14 +57,18 @@ class DFPNet(nn.Module):
         x = self.backbone(x)
         gap = (F.adaptive_avg_pool2d(x, 1)).view(x.size(0), -1)
         embed_fea = self.embeddingLayer(gap) if hasattr(self, 'embeddingLayer') else gap
-        SIMI = Similarity(scaled=self.scaled)
         centroids = F.normalize(self.centroids, dim=1, p=2) if self.norm_centroid else self.centroids
-        sim_fea2cen = getattr(SIMI, self.distance)(embed_fea, centroids)
+        SIMI = Similarity(scaled=self.scaled)
+        sim_fea2cen = getattr(SIMI, self.similarity)(embed_fea, centroids)
+        DIST = Distance(scaled=self.scaled)
+        dis_fea2cen = getattr(DIST, self.distance)(embed_fea, centroids)
+
 
         return {
             "gap": x,
             "embed_fea": embed_fea,
-            "sim_fea2cen": sim_fea2cen
+            "sim_fea2cen": sim_fea2cen,
+            "dis_fea2cen":dis_fea2cen
         }
 
 
@@ -74,6 +80,5 @@ def demo():
     print(output["gap"].shape)
     print(output["embed_fea"].shape)
     print(output["sim_fea2cen"].shape)
-
 
 # demo()

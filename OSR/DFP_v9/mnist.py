@@ -21,7 +21,7 @@ from datasets import MNIST
 from Utils import adjust_learning_rate, progress_bar, Logger, mkdir_p, Evaluation
 from DFPLoss import DFPLoss
 from DFPNet import DFPNet
-from MyPlotter import plot_feature, plot_distance,plot_similarity
+from MyPlotter import plot_feature, plot_distance, plot_similarity
 from Generater import generater_input, generater_unknown
 
 model_names = sorted(name for name in models.__dict__
@@ -45,10 +45,14 @@ parser.add_argument('--evaluate', action='store_true', help='Evaluate without tr
 # General MODEL parameters
 parser.add_argument('--arch', default='LeNetPlus', choices=model_names, type=str, help='choosing network')
 parser.add_argument('--embed_dim', default=2, type=int, help='embedding feature dimension')
-parser.add_argument('--distance', default='cosine', choices=['l2', 'l1', 'cosine','dotproduct'],
+parser.add_argument('--distance', default='l2', choices=['l2', 'l1', 'cosine', 'dotproduct'],
                     type=str, help='choosing distance metric')
+parser.add_argument('--similarity', default='dotproduct', choices=['l2', 'l1', 'cosine', 'dotproduct'],
+                    type=str, help='choosing distance metric')
+parser.add_argument('--alpha', default=1.0, type=float, help='weight of distance loss')
 parser.add_argument('--scaled', default=True, action='store_true',
                     help='If scale distance by sqrt(embed_dim)')
+parser.add_argument('--norm_centroid', action='store_true', help='Normalize the centroid using L2-normailization')
 parser.add_argument('--p_value', default=0.01, type=float, help='default statistical p_value threshold,'
                                                                 ' usually 0.05. 0.01')
 
@@ -66,7 +70,6 @@ parser.add_argument('--stage2_lr', default=0.001, type=float, help='learning rat
 parser.add_argument('--plot', action='store_true', help='Plotting the training set.')
 parser.add_argument('--plot_max', default=0, type=int, help='max examples to plot in each class, 0 indicates all.')
 
-
 parser.add_argument('--plot_quality', default=200, type=int, help='DPI of plot figure')
 parser.add_argument('--bins', default=50, type=int, help='divided into n bins')
 parser.add_argument('--tail_number', default=50, type=int,
@@ -76,7 +79,7 @@ parser.add_argument('--tail_number', default=50, type=int,
 args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 args.checkpoint = './checkpoints/mnist/' + args.arch + \
-                  '/embed%s_%s_norm%s' % (args.embed_dim, args.distance, args.norm_centroid)
+                  '/%s_%s_D%s_S%s_%s' % (args.alpha, args.embed_dim, args.distance,args.similarity, args.norm_centroid)
 if not os.path.isdir(args.checkpoint):
     mkdir_p(args.checkpoint)
 
@@ -126,8 +129,9 @@ def main_stage1():
     # Model
     print('==> Building model..')
     net = DFPNet(backbone=args.arch, num_classes=args.train_class_num, embed_dim=args.embed_dim,
-                 distance=args.distance, scaled=args.scaled)
-    criterion = nn.CrossEntropyLoss()
+                 distance=args.distance, similarity=args.similarity, scaled=args.scaled,
+                 norm_centroid=args.norm_centroid)
+    criterion = DFPLoss(alpha=args.alpha)
     optimizer = optim.SGD(net.parameters(), lr=args.stage1_lr, momentum=0.9, weight_decay=5e-4)
 
     net = net.to(device)
@@ -147,7 +151,7 @@ def main_stage1():
             print("=> no checkpoint found at '{}'".format(args.resume))
     else:
         logger = Logger(os.path.join(args.checkpoint, 'log_stage1.txt'))
-        logger.set_names(['Epoch', 'Train Loss', 'Train Acc.'])
+        logger.set_names(['Epoch', 'Train Loss', 'Similarity Loss', 'Distance Loss', 'Train Acc.'])
 
     if not args.evaluate:
         for epoch in range(start_epoch, args.stage1_es):
@@ -155,7 +159,8 @@ def main_stage1():
             print('\nStage_1 Epoch: %d | Learning rate: %f ' % (epoch + 1, optimizer.param_groups[0]['lr']))
             train_out = stage1_train(net, trainloader, optimizer, criterion, device)
             save_model(net, epoch, os.path.join(args.checkpoint, 'stage_1_last_model.pth'))
-            logger.append([epoch + 1, train_out["train_loss"], train_out["accuracy"]])
+            logger.append([epoch + 1, train_out["train_loss"],train_out["loss_similarity"],
+                           train_out["loss_distance"], train_out["accuracy"]])
             if args.plot:
                 plot_feature(net, trainloader, device, args.plotfolder1, epoch=epoch,
                              plot_class_num=args.train_class_num, maximum=args.plot_max,
@@ -167,7 +172,7 @@ def main_stage1():
                      plot_quality=args.plot_quality, norm_centroid=args.norm_centroid)
 
     # calculating distances for last epoch
-    similarity_results = plot_similarity(net, trainloader, device, args)
+    # similarity_results = plot_similarity(net, trainloader, device, args)
 
     logger.close()
     print(f"\nFinish Stage-1 training...\n")
@@ -183,6 +188,8 @@ def main_stage1():
 def stage1_train(net, trainloader, optimizer, criterion, device):
     net.train()
     train_loss = 0
+    loss_similarity = 0
+    loss_distance = 0
     correct = 0
     total = 0
     for batch_idx, (inputs, targets) in enumerate(trainloader):
@@ -190,11 +197,16 @@ def stage1_train(net, trainloader, optimizer, criterion, device):
 
         optimizer.zero_grad()
         out = net(inputs)
-        loss = criterion(out['sim_fea2cen'], targets)
+        loss_dict = criterion(out, targets)
+        loss = loss_dict['total']
+        # loss = loss_dict['similarity']
+        # loss = loss_dict['distance']
         loss.backward()
         optimizer.step()
 
         train_loss += loss.item()
+        loss_similarity += (loss_dict['similarity']).item()
+        loss_distance += (loss_dict['similarity']).item()
 
         _, predicted = (out['sim_fea2cen']).max(1)
         total += targets.size(0)
@@ -204,6 +216,8 @@ def stage1_train(net, trainloader, optimizer, criterion, device):
                      % (train_loss / (batch_idx + 1), 100. * correct / total, correct, total))
     return {
         "train_loss": train_loss / (batch_idx + 1),
+        "loss_similarity":loss_similarity/ (batch_idx + 1),
+        "loss_distance": loss_distance/ (batch_idx + 1),
         "accuracy": correct / total
     }
 
