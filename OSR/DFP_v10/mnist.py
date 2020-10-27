@@ -19,7 +19,7 @@ sys.path.append("../..")
 import backbones.cifar as models
 from datasets import MNIST
 from Utils import adjust_learning_rate, progress_bar, Logger, mkdir_p, Evaluation
-from DFPLoss import DFPLoss
+from DFPLoss import DFPLoss, DFPLoss2
 from DFPNet import DFPNet
 from MyPlotter import plot_feature, plot_distance, plot_similarity
 from Generater import generater_input, generater_unknown
@@ -50,6 +50,10 @@ parser.add_argument('--distance', default='l2', choices=['l2', 'l1', 'cosine', '
 parser.add_argument('--similarity', default='dotproduct', choices=['l2', 'l1', 'cosine', 'dotproduct'],
                     type=str, help='choosing distance metric')
 parser.add_argument('--alpha', default=1.0, type=float, help='weight of distance loss')
+parser.add_argument('--beta', default=1.0, type=float, help='weight of generated data loss')
+parser.add_argument('--theta', default=0.5, type=float, help='slope for input data distance within/out thresholds,'
+                                                             'in the range of (0,1), default 0.2.')
+
 parser.add_argument('--scaled', default=True, action='store_true',
                     help='If scale distance by sqrt(embed_dim)')
 parser.add_argument('--norm_centroid', action='store_true', help='Normalize the centroid using L2-normailization')
@@ -90,9 +94,9 @@ args.plotfolder1 = os.path.join(args.checkpoint, "plotter_Stage1")
 if not os.path.isdir(args.plotfolder1):
     mkdir_p(args.plotfolder1)
 # folder to save figures
-# args.plotfolder2 = os.path.join(args.checkpoint, "plotter_Stage2")
-# if not os.path.isdir(args.plotfolder2):
-#     mkdir_p(args.plotfolder2)
+args.plotfolder2 = os.path.join(args.checkpoint, "plotter_Stage2")
+if not os.path.isdir(args.plotfolder2):
+    mkdir_p(args.plotfolder2)
 
 print('==> Preparing data..')
 transform = transforms.Compose([
@@ -274,10 +278,10 @@ def main_stage2(stage1_dict):
             print("=> no checkpoint found at '{}'".format(args.resume))
     else:
         logger = Logger(os.path.join(args.checkpoint, 'log_stage2.txt'))
-        logger.set_names(['Epoch', 'Learning Rate', 'Train Loss', 'Train Acc.'])
+        logger.set_names(['Epoch', 'Train Loss', 'Similarity Loss', 'Distance Loss', 'Train Acc.'])
 
     # after resume
-    criterion = DFPLoss(alpha=args.alpha)
+    criterion = DFPLoss2(alpha=args.alpha, beta=args.beta, theta=args.theta)
     optimizer = optim.SGD(net2.parameters(), lr=args.stage1_lr, momentum=0.9, weight_decay=5e-4)
 
     if not args.evaluate:
@@ -287,12 +291,64 @@ def main_stage2(stage1_dict):
             adjust_learning_rate(optimizer, epoch, args.lr, step=20)
             train_out = stage2_train(net2, trainloader, optimizer, criterion, device)
             save_model(net2, epoch, os.path.join(args.checkpoint, 'stage_2_last_model.pth'))
-            logger.append([epoch + 1, optimizer.param_groups[0]['lr']])
+            logger.append([epoch + 1, train_out["train_loss"], train_out["loss_similarity"],
+                           train_out["loss_distance"], train_out["accuracy"]])
+            if args.plot:
+                plot_feature(net2, trainloader, device, args.plotfolder2, epoch=epoch,
+                             plot_class_num=args.train_class_num, maximum=args.plot_max,
+                             plot_quality=args.plot_quality, norm_centroid=args.norm_centroid)
+        if args.plot:
+            # plot the test set
+            plot_feature(net2, testloader, device, args.plotfolder1, epoch="test",
+                         plot_class_num=args.train_class_num + 1, maximum=args.plot_max,
+                         plot_quality=args.plot_quality, norm_centroid=args.norm_centroid)
         print(f"\nFinish Stage-2 training...\n")
+
+
     logger.close()
 
-    test2(net2, testloader, device)
+    # test2(net2, testloader, device)
     return net2
+
+
+def stage2_train(net2, trainloader, optimizer, criterion, device):
+    net2.train()
+    train_loss = 0
+    loss_similarity = 0
+    loss_distance = 0
+    correct = 0
+    total = 0
+    for batch_idx, (inputs, targets) in enumerate(trainloader):
+        inputs, targets = inputs.to(device), targets.to(device)
+
+        optimizer.zero_grad()
+        out = net2(inputs)
+        loss_dict = criterion(out, targets)
+        loss = loss_dict['total']
+        # loss = loss_dict['similarity']
+        # loss = loss_dict['distance']
+        loss.backward()
+        optimizer.step()
+
+        train_loss += loss.item()
+        loss_similarity += (loss_dict['similarity']).item()
+        loss_distance += (loss_dict['distance']).item()
+
+        _, predicted = (out['sim_fea2cen']).max(1)
+        total += targets.size(0)
+        correct += predicted.eq(targets).sum().item()
+
+        progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
+                     % (train_loss / (batch_idx + 1), 100. * correct / total, correct, total))
+    return {
+        "train_loss": train_loss / (batch_idx + 1),
+        "loss_similarity":loss_similarity/ (batch_idx + 1),
+        "loss_distance": loss_distance/ (batch_idx + 1),
+        "accuracy": correct / total
+    }
+
+
+
 
 def save_model(net, epoch, path, **kwargs):
     state = {
