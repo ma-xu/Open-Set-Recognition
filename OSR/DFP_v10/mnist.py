@@ -68,6 +68,7 @@ parser.add_argument('--stage1_lr', default=0.01, type=float, help='learning rate
 parser.add_argument('--stage2_resume', default='', type=str, metavar='PATH', help='path to latest checkpoint')
 parser.add_argument('--stage2_es', default=50, type=int, help='epoch size')
 parser.add_argument('--stage2_lr', default=0.001, type=float, help='learning rate')  # works for MNIST
+parser.add_argument('--amplifier', default=1.1, type=float, help='learning rate')
 
 # Parameters for stage plotting
 parser.add_argument('--plot', action='store_true', help='Plotting the training set.')
@@ -132,8 +133,6 @@ def main_stage1():
     net = DFPNet(backbone=args.arch, num_classes=args.train_class_num, embed_dim=args.embed_dim,
                  distance=args.distance, similarity=args.similarity, scaled=args.scaled,
                  norm_centroid=args.norm_centroid)
-    criterion = DFPLoss(alpha=args.alpha)
-    optimizer = optim.SGD(net.parameters(), lr=args.stage1_lr, momentum=0.9, weight_decay=5e-4)
 
     net = net.to(device)
     if device == 'cuda':
@@ -153,6 +152,10 @@ def main_stage1():
     else:
         logger = Logger(os.path.join(args.checkpoint, 'log_stage1.txt'))
         logger.set_names(['Epoch', 'Train Loss', 'Similarity Loss', 'Distance Loss', 'Train Acc.'])
+
+    # after resume
+    criterion = DFPLoss(alpha=args.alpha)
+    optimizer = optim.SGD(net.parameters(), lr=args.stage1_lr, momentum=0.9, weight_decay=5e-4)
 
     if not args.evaluate:
         for epoch in range(start_epoch, args.stage1_es):
@@ -240,6 +243,57 @@ def stage1_test(net, testloader, device):
     print("\nTesting results is {:.2f}%".format(100. * correct / total))
 
 
+def main_stage2(stage1_dict):
+    net1 = stage1_dict['net']
+    thresholds = stage1_dict['distance']['thresholds']
+    print(f"\n===> Start Stage-2 training...\n")
+    start_epoch = 0  # start from epoch 0 or last checkpoint epoch
+    print('==> Building model..')
+    net2 = DFPNet(backbone=args.arch, num_classes=args.train_class_num, embed_dim=args.embed_dim,
+                 distance=args.distance, similarity=args.similarity, scaled=args.scaled,thresholds=thresholds,
+                 norm_centroid=args.norm_centroid, amplifier=args.amplifier)
+    net2 = net2.to(device)
+    if not args.evaluate and not os.path.isdir(args.stage2_resume):
+        init_stage2_model(net1, net2)
+
+    if device == 'cuda':
+        net2 = torch.nn.DataParallel(net2)
+        cudnn.benchmark = True
+
+    if args.stage2_resume:
+        # Load checkpoint.
+        if os.path.isfile(args.stage2_resume):
+            print('==> Resuming from checkpoint..')
+            checkpoint = torch.load(args.stage2_resume)
+            net2.load_state_dict(checkpoint['net'])
+            # best_acc = checkpoint['acc']
+            # print("BEST_ACCURACY: "+str(best_acc))
+            start_epoch = checkpoint['epoch']
+            logger = Logger(os.path.join(args.checkpoint, 'log_stage2.txt'), resume=True)
+        else:
+            print("=> no checkpoint found at '{}'".format(args.resume))
+    else:
+        logger = Logger(os.path.join(args.checkpoint, 'log_stage2.txt'))
+        logger.set_names(['Epoch', 'Learning Rate', 'Train Loss', 'Train Acc.'])
+
+    # after resume
+    criterion = DFPLoss(alpha=args.alpha)
+    optimizer = optim.SGD(net2.parameters(), lr=args.stage1_lr, momentum=0.9, weight_decay=5e-4)
+
+    if not args.evaluate:
+        for epoch in range(start_epoch, args.stage2_es):
+            print('\nStage_2 Epoch: %d   Learning rate: %f' % (epoch + 1, optimizer.param_groups[0]['lr']))
+            # Here, I didn't set optimizers respectively, just for simplicity. Performance did not vary a lot.
+            adjust_learning_rate(optimizer, epoch, args.lr, step=20)
+            train_out = stage2_train(net2, trainloader, optimizer, criterion, device)
+            save_model(net2, epoch, os.path.join(args.checkpoint, 'stage_2_last_model.pth'))
+            logger.append([epoch + 1, optimizer.param_groups[0]['lr']])
+        print(f"\nFinish Stage-2 training...\n")
+    logger.close()
+
+    test2(net2, testloader, device)
+    return net2
+
 def save_model(net, epoch, path, **kwargs):
     state = {
         'net': net.state_dict(),
@@ -248,6 +302,19 @@ def save_model(net, epoch, path, **kwargs):
     for key, value in kwargs.items():
         state[key] = value
     torch.save(state, path)
+
+def init_stage2_model(net1, net2):
+    # net1: net from stage 1.
+    # net2: net from stage 2.
+    dict1 = net1.state_dict()
+    dict2 = net2.state_dict()
+    for k, v in dict1.items():
+        if k.startswith("module.1."):
+            k = k[9:]  # remove module.1.
+        if k.startswith("module."):
+            k = k[7:]  # remove module.1.
+        dict2[k] = v
+    net2.load_state_dict(dict2)
 
 
 if __name__ == '__main__':

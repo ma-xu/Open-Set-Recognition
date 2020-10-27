@@ -12,7 +12,7 @@ from Generater import generater_gap
 
 class DFPNet(nn.Module):
     def __init__(self, backbone='ResNet18', num_classes=1000, embed_dim=None, distance='l2',
-                 similarity="dotproduct", scaled=True,thresholds=None,norm_centroid=False):
+                 similarity="dotproduct", scaled=True,thresholds=None,norm_centroid=False, amplifier=1.0):
         super(DFPNet, self).__init__()
         self.num_classes = num_classes
         self.backbone_name = backbone
@@ -34,7 +34,9 @@ class DFPNet(nn.Module):
         self.distance = distance
         self.similarity = similarity
         self.scaled = scaled
-        self.register_buffer("thresholds", thresholds)
+        if thresholds:
+            self.register_buffer("thresholds", thresholds)
+            self.amplifier = amplifier
 
     def get_backbone_last_layer_out_channel(self):
         if self.backbone_name == "LeNetPlus":
@@ -55,30 +57,40 @@ class DFPNet(nn.Module):
 
     def forward(self, x):
         x = self.backbone(x)
+        dis_gen2cen,amplified_threshold =None, None
         gap = (F.adaptive_avg_pool2d(x, 1)).view(x.size(0), -1)
+        if hasattr(self, 'thresholds'):
+            gen = generater_gap(gap)
+            embed_gen = self.embeddingLayer(gen) if hasattr(self, 'embeddingLayer') else gen
+            amplified_thresholds = self.thresholds * self.amplifier
         embed_fea = self.embeddingLayer(gap) if hasattr(self, 'embeddingLayer') else gap
         centroids = F.normalize(self.centroids, dim=1, p=2) if self.norm_centroid else self.centroids
         SIMI = Similarity(scaled=self.scaled)
         sim_fea2cen = getattr(SIMI, self.similarity)(embed_fea, centroids)
         DIST = Distance(scaled=self.scaled)
         dis_fea2cen = getattr(DIST, self.distance)(embed_fea, centroids)
+        if hasattr(self, 'thresholds'):
+            dis_gen2cen = getattr(DIST, self.distance)(embed_gen, centroids)
 
 
         return {
             "gap": x,
             "embed_fea": embed_fea,
             "sim_fea2cen": sim_fea2cen,
-            "dis_fea2cen":dis_fea2cen
+            "dis_fea2cen":dis_fea2cen,
+            "dis_gen2cen": dis_gen2cen,
+            "amplified_thresholds": amplified_thresholds,
+            "thresholds": self.thresholds
         }
 
 
 def demo():
     x = torch.rand([10, 3, 32, 32])
     y = torch.rand([6, 3, 32, 32])
-    net = DFPNet('ResNet18', num_classes=10, embed_dim=64, thresholds=torch.rand(11))
+    net = DFPNet('ResNet18', num_classes=10, embed_dim=64)
     output = net(x)
     print(output["gap"].shape)
     print(output["embed_fea"].shape)
     print(output["sim_fea2cen"].shape)
 
-# demo()
+demo()
