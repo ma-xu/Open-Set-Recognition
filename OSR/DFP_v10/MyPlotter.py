@@ -83,8 +83,6 @@ def plot_distance(net,
             inputs, targets = inputs.to(device), targets.to(device)
             out = net(inputs)
             dist_fea2cen = out["dis_fea2cen"]  # [n, class_num]
-
-
             for i in range(dist_fea2cen.shape[0]):
                 label = targets[i]
                 dist = dist_fea2cen[i, label]
@@ -109,8 +107,6 @@ def plot_distance(net,
         results[i]['max'] = max_distance
         results[i]['min'] = min_distance
         results[i]['threshold'] = threshold
-    unknown_threshold = threshold - threshold - 100.  # we set threshold for unknown to -100. (actually 0 is fine)
-    threshold_list.append(unknown_threshold)
     results['thresholds'] = torch.Tensor(threshold_list)  # the threshold for unknown is 0.
     torch.save(results, os.path.join(args.checkpoint, 'distance.pkl'))
     print("===> Distance saved.")
