@@ -182,5 +182,6 @@ def IQR(distances):
     Q1 = distances[int(length*0.25)]
     Q3 = distances[int(length*0.75)]
     Qr = Q3-Q1
-    threshold = Q3+1.5*Qr
+    # 1.5 is outlier; 3 is extreme outlier.
+    threshold = Q3+3*Qr
     return threshold

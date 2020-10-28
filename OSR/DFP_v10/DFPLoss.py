@@ -31,7 +31,7 @@ class DFPLoss(nn.Module):
 
 
 class DFPLoss2(nn.Module):
-    def __init__(self, alpha=1, beta=1, theta=0.5):
+    def __init__(self, alpha=1, beta=1, theta=2):
         super(DFPLoss2, self).__init__()
         self.alpha = alpha
         self.beta = beta
@@ -54,8 +54,10 @@ class DFPLoss2(nn.Module):
         labels = targets.unsqueeze(1).expand(batch_size, num_classes)
         mask = labels.eq(classes.expand(batch_size, num_classes))
         dist_within = dist_fea2cen * mask.float()
-        mask_in = (1.0-self.theta) * ((dist_within <= thresholds.unsqueeze(dim=0)).float())
-        mask_out = (1.0+self.theta) * ((dist_within > thresholds.unsqueeze(dim=0)).float())
+        # mask_in = (1.0-self.theta) * ((dist_within <= thresholds.unsqueeze(dim=0)).float())
+        # mask_out = (1.0+self.theta) * ((dist_within > thresholds.unsqueeze(dim=0)).float())
+        mask_in = (dist_within <= thresholds.unsqueeze(dim=0)).float()
+        mask_out = self.theta * ((dist_within > thresholds.unsqueeze(dim=0)).float())
         mask_threshold = mask_in + mask_out
         dist_within = (dist_within * mask_threshold).sum(dim=1, keepdim=False)
         loss_distance = self.alpha * (dist_within.sum()) / batch_size

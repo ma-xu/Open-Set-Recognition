@@ -51,7 +51,7 @@ parser.add_argument('--similarity', default='dotproduct', choices=['l2', 'l1', '
                     type=str, help='choosing distance metric')
 parser.add_argument('--alpha', default=1.0, type=float, help='weight of distance loss')
 parser.add_argument('--beta', default=1.0, type=float, help='weight of generated data loss')
-parser.add_argument('--theta', default=0.5, type=float, help='slope for input data distance within/out thresholds,'
+parser.add_argument('--theta', default=2.0, type=float, help='slope for input data distance within/out thresholds,'
                                                              'in the range of (0,1), default 0.2.')
 
 parser.add_argument('--scaled', default=True, action='store_true',
