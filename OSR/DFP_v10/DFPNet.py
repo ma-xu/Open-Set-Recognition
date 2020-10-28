@@ -34,7 +34,7 @@ class DFPNet(nn.Module):
         self.distance = distance
         self.similarity = similarity
         self.scaled = scaled
-        if thresholds:
+        if thresholds is not None:
             self.register_buffer("thresholds", thresholds)
             self.amplifier = amplifier
 
