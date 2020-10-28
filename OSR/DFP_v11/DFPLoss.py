@@ -65,10 +65,10 @@ class DFPLoss2(nn.Module):
 
         #  distance loss for generated data
         # TO Implement
-        loss_generate = dist_gen2ori.mean()
+        # loss_generate = dist_gen2ori.mean()
         dist_gen_within = F.relu((amplified_thresholds.unsqueeze(dim=0) - dist_gen2cen), inplace=True)
         loss_generate_within = self.theta * (dist_gen_within.sum()) / (dist_gen_within.shape[0])
-        loss_generate = self.beta * (loss_generate + loss_generate_within)
+        loss_generate = self.beta * loss_generate_within
 
         loss = loss_similarity + loss_distance + loss_generate
 
