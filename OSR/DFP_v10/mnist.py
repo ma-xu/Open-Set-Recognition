@@ -81,11 +81,11 @@ parser.add_argument('--plot_max', default=0, type=int, help='max examples to plo
 parser.add_argument('--plot_quality', default=200, type=int, help='DPI of plot figure')
 parser.add_argument('--bins', default=50, type=int, help='divided into n bins')
 
-
 args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 args.checkpoint = './checkpoints/mnist/' + args.arch + \
-                  '/%s_%s_D%s_S%s_%s' % (args.alpha, args.embed_dim, args.distance,args.similarity, args.norm_centroid)
+                  '/%s_%s_%s_%s_D%s_S%s_%s' % (args.alpha, args.beta, args.theta,
+                                               args.embed_dim, args.distance, args.similarity, args.norm_centroid)
 if not os.path.isdir(args.checkpoint):
     mkdir_p(args.checkpoint)
 
@@ -167,7 +167,7 @@ def main_stage1():
             print('\nStage_1 Epoch: %d | Learning rate: %f ' % (epoch + 1, optimizer.param_groups[0]['lr']))
             train_out = stage1_train(net, trainloader, optimizer, criterion, device)
             save_model(net, epoch, os.path.join(args.checkpoint, 'stage_1_last_model.pth'))
-            logger.append([epoch + 1, train_out["train_loss"],train_out["loss_similarity"],
+            logger.append([epoch + 1, train_out["train_loss"], train_out["loss_similarity"],
                            train_out["loss_distance"], train_out["accuracy"]])
             if args.plot:
                 plot_feature(net, trainloader, device, args.plotfolder1, epoch=epoch,
@@ -224,8 +224,8 @@ def stage1_train(net, trainloader, optimizer, criterion, device):
                      % (train_loss / (batch_idx + 1), 100. * correct / total, correct, total))
     return {
         "train_loss": train_loss / (batch_idx + 1),
-        "loss_similarity":loss_similarity/ (batch_idx + 1),
-        "loss_distance": loss_distance/ (batch_idx + 1),
+        "loss_similarity": loss_similarity / (batch_idx + 1),
+        "loss_distance": loss_distance / (batch_idx + 1),
         "accuracy": correct / total
     }
 
@@ -254,8 +254,8 @@ def main_stage2(stage1_dict):
     start_epoch = 0  # start from epoch 0 or last checkpoint epoch
     print('==> Building model..')
     net2 = DFPNet(backbone=args.arch, num_classes=args.train_class_num, embed_dim=args.embed_dim,
-                 distance=args.distance, similarity=args.similarity, scaled=args.scaled,thresholds=thresholds,
-                 norm_centroid=args.norm_centroid, amplifier=args.amplifier)
+                  distance=args.distance, similarity=args.similarity, scaled=args.scaled, thresholds=thresholds,
+                  norm_centroid=args.norm_centroid, amplifier=args.amplifier)
     net2 = net2.to(device)
     if not args.evaluate and not os.path.isdir(args.stage2_resume):
         init_stage2_model(net1, net2)
@@ -304,7 +304,6 @@ def main_stage2(stage1_dict):
                          plot_quality=args.plot_quality, norm_centroid=args.norm_centroid)
         print(f"\nFinish Stage-2 training...\n")
 
-
     logger.close()
 
     # test2(net2, testloader, device)
@@ -342,12 +341,10 @@ def stage2_train(net2, trainloader, optimizer, criterion, device):
                      % (train_loss / (batch_idx + 1), 100. * correct / total, correct, total))
     return {
         "train_loss": train_loss / (batch_idx + 1),
-        "loss_similarity":loss_similarity/ (batch_idx + 1),
-        "loss_distance": loss_distance/ (batch_idx + 1),
+        "loss_similarity": loss_similarity / (batch_idx + 1),
+        "loss_distance": loss_distance / (batch_idx + 1),
         "accuracy": correct / total
     }
-
-
 
 
 def save_model(net, epoch, path, **kwargs):
@@ -358,6 +355,7 @@ def save_model(net, epoch, path, **kwargs):
     for key, value in kwargs.items():
         state[key] = value
     torch.save(state, path)
+
 
 def init_stage2_model(net1, net2):
     # net1: net from stage 1.
