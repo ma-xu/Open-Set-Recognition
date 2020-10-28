@@ -12,7 +12,7 @@ from Generater import generater_gap
 
 class DFPNet(nn.Module):
     def __init__(self, backbone='ResNet18', num_classes=1000, embed_dim=None, distance='l2',
-                 similarity="dotproduct", scaled=True,thresholds=None,norm_centroid=False, amplifier=1.0):
+                 similarity="dotproduct", scaled=True, thresholds=None, norm_centroid=False, amplifier=1.0):
         super(DFPNet, self).__init__()
         self.num_classes = num_classes
         self.backbone_name = backbone
@@ -57,9 +57,10 @@ class DFPNet(nn.Module):
 
     def forward(self, x):
         x = self.backbone(x)
-        dis_gen2cen,amplified_thresholds =None, None
+        dis_gen2cen, thresholds, amplified_thresholds = None, None, None
         gap = (F.adaptive_avg_pool2d(x, 1)).view(x.size(0), -1)
         if hasattr(self, 'thresholds'):
+            thresholds = self.thresholds
             gen = generater_gap(gap)
             embed_gen = self.embeddingLayer(gen) if hasattr(self, 'embeddingLayer') else gen
             amplified_thresholds = self.thresholds * self.amplifier
@@ -72,15 +73,14 @@ class DFPNet(nn.Module):
         if hasattr(self, 'thresholds'):
             dis_gen2cen = getattr(DIST, self.distance)(embed_gen, centroids)
 
-
         return {
             "gap": x,
             "embed_fea": embed_fea,
             "sim_fea2cen": sim_fea2cen,
-            "dis_fea2cen":dis_fea2cen,
+            "dis_fea2cen": dis_fea2cen,
             "dis_gen2cen": dis_gen2cen,
             "amplified_thresholds": amplified_thresholds,
-            "thresholds": self.thresholds
+            "thresholds": thresholds
         }
 
 
@@ -92,5 +92,6 @@ def demo():
     print(output["gap"].shape)
     print(output["embed_fea"].shape)
     print(output["sim_fea2cen"].shape)
+
 
 demo()
