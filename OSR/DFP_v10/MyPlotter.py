@@ -108,10 +108,10 @@ def plot_distance(net,
         cls_dist = results[i]['distances']  # distance list for each class
         cls_dist.sort()  # python sort function do not return anything.
         results[i]['distances'] = cls_dist
-        cls_dist = cls_dist[:-(args.tail_number)]  # remove the tail examples.
-
-        index = int(len(cls_dist) * (1 - args.p_value))
-        threshold = cls_dist[index].item()
+        # cls_dist = cls_dist[:-(args.tail_number)]  # remove the tail examples.
+        # index = int(len(cls_dist) * (1 - args.p_value))
+        # threshold = cls_dist[index].item()
+        threshold = IQR(cls_dist)
         threshold_list.append(threshold)
         # cls_dist = cls_dist / (max(cls_dist))  # normalized to 0-1, we consider min as 0.
         # min_distance = min(cls_dist)
@@ -175,3 +175,12 @@ def plot_similarity(net,
     torch.save(results, os.path.join(args.checkpoint, 'similarity.pkl'))
     print("===> Similarity saved.")
     return results
+
+# Inter-Quartile Range
+def IQR(distances):
+    len = len(distances)
+    Q1 = distances[int(len*0.25)]
+    Q3 = distances[int(len*0.75)]
+    Qr = Q3-Q1
+    threshold = Q3+1.5*Qr
+    return threshold
