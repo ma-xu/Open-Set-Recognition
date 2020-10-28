@@ -116,4 +116,4 @@ def demo2():
     print(dist_loss['distance'])
 
 
-demo2()
+# demo2()
