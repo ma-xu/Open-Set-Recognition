@@ -56,7 +56,7 @@ class DFPNet(nn.Module):
 
     def forward(self, x):
         x = self.backbone(x)
-        dis_gen2cen, dis_gen2ori, thresholds, amplified_thresholds = None, None, None, None
+        dis_gen2cen, dis_gen2ori, thresholds, amplified_thresholds, embed_gen = None, None, None, None, None
         gap = (F.adaptive_avg_pool2d(x, 1)).view(x.size(0), -1)
         if hasattr(self, 'thresholds'):
             thresholds = self.thresholds
@@ -76,6 +76,7 @@ class DFPNet(nn.Module):
         return {
             "gap": x,
             "embed_fea": embed_fea,
+            "embed_gen": embed_gen,
             "sim_fea2cen": sim_fea2cen,
             "dis_fea2cen": dis_fea2cen,
             "dis_gen2cen": dis_gen2cen,

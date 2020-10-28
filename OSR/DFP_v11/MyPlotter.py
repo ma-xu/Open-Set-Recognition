@@ -13,12 +13,14 @@ from tqdm import tqdm
 def plot_feature(net, args, plotloader, device, dirname, epoch=0, plot_class_num=10, maximum=500, plot_quality=150,
                  norm_centroid=False, thresholds=None):
     plot_features = []
+    plot_generates = []
     plot_labels = []
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(plotloader):
             inputs, targets = inputs.to(device), targets.to(device)
             out = net(inputs)
             embed_fea = out["embed_fea"]
+            embed_gen = out["embed_gen"]
             try:
                 embed_fea = embed_fea.data.cpu().numpy()
                 targets = targets.data.cpu().numpy()
@@ -28,9 +30,16 @@ def plot_feature(net, args, plotloader, device, dirname, epoch=0, plot_class_num
 
             plot_features.append(embed_fea)
             plot_labels.append(targets)
+            if embed_gen is not None:
+                try:
+                    embed_gen = embed_gen.data.cpu().numpy()
+                except:
+                    embed_gen = embed_gen.data.numpy()
+                plot_generates.append(embed_gen)
 
     plot_features = np.concatenate(plot_features, 0)
     plot_labels = np.concatenate(plot_labels, 0)
+
 
     net_dict = net.state_dict()
     centroids = net_dict['module.centroids'] if isinstance(net, nn.DataParallel) \
@@ -50,6 +59,15 @@ def plot_feature(net, args, plotloader, device, dirname, epoch=0, plot_class_num
             features[0:maximum, 0],
             features[0:maximum, 1],
             c=colors[label_idx],
+            s=1,
+        )
+    if len(plot_generates) > 0:
+        plot_generates = np.concatenate(plot_generates, 0)
+        plt.scatter(
+            plot_generates[:, 0],
+            plot_generates[:, 1],
+            # c=colors[label_idx],
+            c=colors[plot_class_num],
             s=1,
         )
     plt.scatter(
