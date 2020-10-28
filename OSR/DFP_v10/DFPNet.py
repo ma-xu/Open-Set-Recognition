@@ -57,7 +57,7 @@ class DFPNet(nn.Module):
 
     def forward(self, x):
         x = self.backbone(x)
-        dis_gen2cen,amplified_threshold =None, None
+        dis_gen2cen,amplified_thresholds =None, None
         gap = (F.adaptive_avg_pool2d(x, 1)).view(x.size(0), -1)
         if hasattr(self, 'thresholds'):
             gen = generater_gap(gap)
