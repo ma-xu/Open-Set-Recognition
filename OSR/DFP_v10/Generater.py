@@ -32,7 +32,7 @@ def generater_unknown(inputs, targets, args, repeats=4, reduce=16):
 
 
 
-def generater_gap(gap,batchsize=32):
+def generater_gap(gap,batchsize=64):
     # generated a random gap doesn't require gradient
     b, c = gap.size()
     mem = gap.clone().detach()
