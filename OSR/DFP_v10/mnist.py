@@ -121,7 +121,7 @@ def main():
     print(device)
 
     stage1_dict = main_stage1()
-    # main_stage2(stage1_dict)
+    main_stage2(stage1_dict)
 
     #     centroids = cal_centroids(net1, device)
     # main_stage2(net1, centroids)
