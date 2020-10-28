@@ -170,12 +170,12 @@ def main_stage1():
             logger.append([epoch + 1, train_out["train_loss"], train_out["loss_similarity"],
                            train_out["loss_distance"], train_out["accuracy"]])
             if args.plot:
-                plot_feature(net, trainloader, device, args.plotfolder1, epoch=epoch,
+                plot_feature(net, args, trainloader, device, args.plotfolder1, epoch=epoch,
                              plot_class_num=args.train_class_num, maximum=args.plot_max,
                              plot_quality=args.plot_quality, norm_centroid=args.norm_centroid)
     if args.plot:
         # plot the test set
-        plot_feature(net, testloader, device, args.plotfolder1, epoch="test",
+        plot_feature(net, args, testloader, device, args.plotfolder1, epoch="test",
                      plot_class_num=args.train_class_num + 1, maximum=args.plot_max,
                      plot_quality=args.plot_quality, norm_centroid=args.norm_centroid)
 
@@ -294,12 +294,12 @@ def main_stage2(stage1_dict):
             logger.append([epoch + 1, train_out["train_loss"], train_out["loss_similarity"],
                            train_out["loss_distance"], train_out["accuracy"]])
             if args.plot:
-                plot_feature(net2, trainloader, device, args.plotfolder2, epoch=epoch,
+                plot_feature(net2, args, trainloader, device, args.plotfolder2, epoch=epoch,
                              plot_class_num=args.train_class_num, maximum=args.plot_max,
                              plot_quality=args.plot_quality, norm_centroid=args.norm_centroid, thresholds=thresholds)
         if args.plot:
             # plot the test set
-            plot_feature(net2, testloader, device, args.plotfolder2, epoch="test",
+            plot_feature(net2, args, testloader, device, args.plotfolder2, epoch="test",
                          plot_class_num=args.train_class_num + 1, maximum=args.plot_max,
                          plot_quality=args.plot_quality, norm_centroid=args.norm_centroid, thresholds=thresholds)
         print(f"\nFinish Stage-2 training...\n")

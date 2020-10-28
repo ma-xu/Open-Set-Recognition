@@ -10,7 +10,7 @@ import torch.nn.functional as F
 from tqdm import tqdm
 
 
-def plot_feature(net, plotloader, device, dirname, epoch=0, plot_class_num=10, maximum=500, plot_quality=150,
+def plot_feature(net, args, plotloader, device, dirname, epoch=0, plot_class_num=10, maximum=500, plot_quality=150,
                  norm_centroid=False, thresholds=None):
     plot_features = []
     plot_labels = []
@@ -66,7 +66,7 @@ def plot_feature(net, plotloader, device, dirname, epoch=0, plot_class_num=10, m
             thresholds = thresholds.data.cpu().numpy()
         except:
             thresholds = thresholds.data.numpy()
-        for label_idx in range(plot_class_num):
+        for label_idx in range(args.train_class_num):
             circle = plt.Circle(
                 xy=(centroids[label_idx, 0], centroids[label_idx, 1]),
                 radius=thresholds[label_idx],
