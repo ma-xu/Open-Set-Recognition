@@ -70,6 +70,7 @@ def plot_feature(net, plotloader, device, dirname, epoch=0, plot_class_num=10, m
             circle = plt.Circle(
                 xy=(centroids[label_idx, 0], centroids[label_idx, 1]),
                 radius=thresholds[label_idx],
+                fill=False,
                 color='black')
             plt.gcf().gca().add_artist(circle)
 
