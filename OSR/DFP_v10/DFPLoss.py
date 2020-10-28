@@ -57,6 +57,7 @@ class DFPLoss2(nn.Module):
         mask_in = (1.0-self.theta) * ((dist_within <= thresholds.unsqueeze(dim=0)).float())
         mask_out = (1.0+self.theta) * ((dist_within > thresholds.unsqueeze(dim=0)).float())
         mask_threshold = mask_in + mask_out
+        print(f"\n {mask_threshold}\n")
         dist_within = (dist_fea2cen * mask_threshold).sum(dim=1, keepdim=False)
         loss_distance = self.alpha * (dist_within.sum()) / batch_size
 
