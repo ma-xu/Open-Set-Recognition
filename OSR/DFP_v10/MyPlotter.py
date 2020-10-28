@@ -178,9 +178,9 @@ def plot_similarity(net,
 
 # Inter-Quartile Range
 def IQR(distances):
-    len = len(distances)
-    Q1 = distances[int(len*0.25)]
-    Q3 = distances[int(len*0.75)]
+    length = len(distances)
+    Q1 = distances[int(length*0.25)]
+    Q3 = distances[int(length*0.75)]
     Qr = Q3-Q1
     threshold = Q3+1.5*Qr
     return threshold
