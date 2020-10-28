@@ -1,0 +1,6 @@
+loss = loss_distance + loss_similarity
+
+loss_distance could be l2 distance
+loss_similarity could be softmax loss on dot-product similarity
+
+results are pretty good,  seperatable, and gather to centroids.
