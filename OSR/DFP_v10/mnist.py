@@ -181,6 +181,7 @@ def main_stage1():
 
     # calculating distances for last epoch
     distance_results = plot_distance(net, trainloader, device, args)
+    print(f"the distance thresholds are\n {distance_results['thresholds']}\n")
 
     logger.close()
     print(f"\nFinish Stage-1 training...\n")
