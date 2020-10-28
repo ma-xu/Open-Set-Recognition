@@ -70,7 +70,7 @@ parser.add_argument('--stage1_lr', default=0.01, type=float, help='learning rate
 
 # Parameters for stage 2
 parser.add_argument('--stage2_resume', default='', type=str, metavar='PATH', help='path to latest checkpoint')
-parser.add_argument('--stage2_es', default=50, type=int, help='epoch size')
+parser.add_argument('--stage2_es', default=25, type=int, help='epoch size')
 parser.add_argument('--stage2_lr', default=0.001, type=float, help='learning rate')  # works for MNIST
 parser.add_argument('--amplifier', default=1.1, type=float, help='learning rate')
 
@@ -288,7 +288,7 @@ def main_stage2(stage1_dict):
         for epoch in range(start_epoch, args.stage2_es):
             print('\nStage_2 Epoch: %d   Learning rate: %f' % (epoch + 1, optimizer.param_groups[0]['lr']))
             # Here, I didn't set optimizers respectively, just for simplicity. Performance did not vary a lot.
-            adjust_learning_rate(optimizer, epoch, args.lr, step=20)
+            adjust_learning_rate(optimizer, epoch, args.stage2_lr, step=10)
             train_out = stage2_train(net2, trainloader, optimizer, criterion, device)
             save_model(net2, epoch, os.path.join(args.checkpoint, 'stage_2_last_model.pth'))
             logger.append([epoch + 1, train_out["train_loss"], train_out["loss_similarity"],
