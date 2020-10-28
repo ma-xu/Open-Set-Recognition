@@ -11,7 +11,7 @@ from tqdm import tqdm
 
 
 def plot_feature(net, plotloader, device, dirname, epoch=0, plot_class_num=10, maximum=500, plot_quality=150,
-                 norm_centroid=False):
+                 norm_centroid=False, thresholds=None):
     plot_features = []
     plot_labels = []
     with torch.no_grad():
@@ -61,6 +61,17 @@ def plot_feature(net, plotloader, device, dirname, epoch=0, plot_class_num=10, m
         s=5,
     )
 
+    if thresholds is not None:
+        try:
+            thresholds = thresholds.data.cpu().numpy()
+        except:
+            thresholds = thresholds.data.numpy()
+        for label_idx in range(plot_class_num):
+            circle = plt.Circle(
+                xy=(centroids[label_idx, 0], centroids[label_idx, 1]),
+                radius=thresholds[label_idx],
+                color='black')
+            plt.gcf().gca().add_artist(circle)
 
 
     # currently only support 10 classes, for a good visualization.
