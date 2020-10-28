@@ -279,7 +279,7 @@ def main_stage2(stage1_dict):
             print("=> no checkpoint found at '{}'".format(args.resume))
     else:
         logger = Logger(os.path.join(args.checkpoint, 'log_stage2.txt'))
-        logger.set_names(['Epoch', 'Train Loss', 'Similarity Loss', 'Distance Loss', 'Train Acc.'])
+        logger.set_names(['Epoch', 'Train Loss', 'Similarity Loss', 'Distance Loss', 'Generate Loss', 'Train Acc.'])
 
     # after resume
     criterion = DFPLoss2(alpha=args.alpha, beta=args.beta, theta=args.theta)
@@ -293,7 +293,7 @@ def main_stage2(stage1_dict):
             train_out = stage2_train(net2, trainloader, optimizer, criterion, device)
             save_model(net2, epoch, os.path.join(args.checkpoint, 'stage_2_last_model.pth'))
             logger.append([epoch + 1, train_out["train_loss"], train_out["loss_similarity"],
-                           train_out["loss_distance"], train_out["accuracy"]])
+                           train_out["loss_distance"],train_out["loss_generate"], train_out["accuracy"]])
             if args.plot:
                 plot_feature(net2, args, trainloader, device, args.plotfolder2, epoch=epoch,
                              plot_class_num=args.train_class_num, maximum=args.plot_max,
@@ -316,6 +316,7 @@ def stage2_train(net2, trainloader, optimizer, criterion, device):
     train_loss = 0
     loss_similarity = 0
     loss_distance = 0
+    loss_generate = 0
     correct = 0
     total = 0
     for batch_idx, (inputs, targets) in enumerate(trainloader):
@@ -333,6 +334,7 @@ def stage2_train(net2, trainloader, optimizer, criterion, device):
         train_loss += loss.item()
         loss_similarity += (loss_dict['similarity']).item()
         loss_distance += (loss_dict['distance']).item()
+        loss_generate += (loss_dict['generate']).item()
 
         _, predicted = (out['sim_fea2cen']).max(1)
         total += targets.size(0)
@@ -344,6 +346,7 @@ def stage2_train(net2, trainloader, optimizer, criterion, device):
         "train_loss": train_loss / (batch_idx + 1),
         "loss_similarity": loss_similarity / (batch_idx + 1),
         "loss_distance": loss_distance / (batch_idx + 1),
+        "loss_generate": loss_generate / (batch_idx + 1),
         "accuracy": correct / total
     }
 

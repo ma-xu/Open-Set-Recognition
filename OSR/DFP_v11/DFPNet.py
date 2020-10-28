@@ -56,7 +56,7 @@ class DFPNet(nn.Module):
 
     def forward(self, x):
         x = self.backbone(x)
-        dis_gen2cen,dis_gen2ori, thresholds, amplified_thresholds = None, None, None, None
+        dis_gen2cen, dis_gen2ori, thresholds, amplified_thresholds = None, None, None, None
         gap = (F.adaptive_avg_pool2d(x, 1)).view(x.size(0), -1)
         if hasattr(self, 'thresholds'):
             thresholds = self.thresholds
@@ -71,7 +71,7 @@ class DFPNet(nn.Module):
         dis_fea2cen = getattr(DIST, self.distance)(embed_fea, centroids)
         if hasattr(self, 'thresholds'):
             dis_gen2cen = getattr(DIST, self.distance)(embed_gen, centroids)
-            dis_gen2ori = getattr(DIST,self.distance)(embed_gen, self.origin)
+            dis_gen2ori = getattr(DIST, self.distance)(embed_gen, self.origin)
 
         return {
             "gap": x,
@@ -88,11 +88,14 @@ class DFPNet(nn.Module):
 def demo():
     x = torch.rand([10, 3, 32, 32])
     y = torch.rand([6, 3, 32, 32])
-    net = DFPNet('ResNet18', num_classes=10, embed_dim=64)
+    threshold = torch.rand([10])
+    net = DFPNet('ResNet18', num_classes=10, embed_dim=64, thresholds=threshold)
     output = net(x)
     print(output["gap"].shape)
     print(output["embed_fea"].shape)
     print(output["sim_fea2cen"].shape)
+    print(output["dis_gen2cen"].shape)
+    print(output["dis_gen2ori"].shape)
 
 
-demo()
+# demo()

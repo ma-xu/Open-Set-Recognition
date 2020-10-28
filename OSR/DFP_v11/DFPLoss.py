@@ -42,6 +42,7 @@ class DFPLoss2(nn.Module):
         sim_fea2cen = net_out["sim_fea2cen"]
         dist_fea2cen = net_out["dis_fea2cen"]
         dist_gen2cen = net_out["dis_gen2cen"]
+        dist_gen2ori = net_out["dis_gen2ori"]
         thresholds = net_out["thresholds"]  # [class_num]
         amplified_thresholds = net_out["amplified_thresholds"]
 
@@ -64,14 +65,18 @@ class DFPLoss2(nn.Module):
 
         #  distance loss for generated data
         # TO Implement
+        loss_generate = dist_gen2ori.mean()
+        dist_gen_within = F.relu((thresholds.unsqueeze(dim=0) - dist_gen2cen), inplace=True)
+        loss_generate_within = self.theta * (dist_gen_within.sum()) / (dist_gen_within.shape[0])
+        loss_generate = self.beta * (loss_generate + loss_generate_within)
 
-
-        loss = loss_similarity + loss_distance
+        loss = loss_similarity + loss_distance + loss_generate
 
         return {
             "total": loss,
             "similarity": loss_similarity,
-            "distance": loss_distance
+            "distance": loss_distance,
+            "generate": loss_generate
         }
 
 
@@ -100,6 +105,7 @@ def demo2():
     dist_fea2cen = torch.rand([n, c])
     dist_gen2cen = torch.rand([n, c])
     thresholds = torch.rand([c])
+    dist_gen2ori = torch.rand([c, 1])
     amplified_thresholds = thresholds * 1.1
 
     label = torch.empty(3, dtype=torch.long).random_(5)
@@ -109,6 +115,7 @@ def demo2():
         "sim_fea2cen": dist_gen2cen,
         "dis_fea2cen": dist_fea2cen,
         "dis_gen2cen": dist_gen2cen,
+        "dis_gen2ori": dist_gen2ori,
         "thresholds": thresholds,
         "amplified_thresholds": amplified_thresholds
     }
@@ -116,6 +123,7 @@ def demo2():
     print(dist_loss['total'])
     print(dist_loss['similarity'])
     print(dist_loss['distance'])
+    print(dist_loss['generate'])
 
 
 # demo2()
