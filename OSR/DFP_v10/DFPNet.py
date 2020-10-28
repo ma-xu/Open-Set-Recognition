@@ -94,4 +94,4 @@ def demo():
     print(output["sim_fea2cen"].shape)
 
 
-demo()
+# demo()
