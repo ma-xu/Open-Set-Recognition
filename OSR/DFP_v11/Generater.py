@@ -1,5 +1,7 @@
 import torch
+import numpy as np
 import torch.nn.functional as F
+from random import shuffle
 
 
 def generater_input(inputs, targets, args, repeats=4, reduce=16):
@@ -58,6 +60,26 @@ def generater_gap2(gap):
     generate = gap + mem - gap
     return generate
 
+def generater_gap3(gap,shuffle_rate=16):
+    # generated a random gap doesn't require gradient
+    b, c = gap.size()
+    mem = gap.clone().detach()
+    mem = mem.permute(1,0)  #c,b
+    mem = mem.tolist()
+    selected_num = max (4, c//shuffle_rate)
+    selected_channels = torch.empty(selected_num, dtype=torch.long).random_(c)
+    for i in selected_channels:
+        m = mem[i]
+        shuffle(m)
+        mem[i] = m
+
+    mem = torch.Tensor(mem)
+    mem = mem.permute(1,0)
+    mem = mem.to(gap.device)
+    # directly passing the gradient.
+    generate = gap + mem - gap
+    return generate
+
 
 def demo():
     n = 16
@@ -74,11 +96,13 @@ def demo_gap():
 
 # demo_gap()
 
+def demo_shuffle():
+    gap = torch.arange(1,11,dtype=float).unsqueeze(dim=-1).expand(10,64)
+    gap.requires_grad = True
 
-def demo_gap2():
-    gap = torch.rand([3,6],requires_grad=True)
-    generate = generater_gap2(gap)
-    print(generate.requires_grad)
+    generate = generater_gap3(gap)
+
     print(generate)
+    print(generate.requires_grad)
 
-demo_gap2()
+# demo_shuffle()
