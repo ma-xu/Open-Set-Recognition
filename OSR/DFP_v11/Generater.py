@@ -45,6 +45,20 @@ def generater_gap(gap,batchsize=32):
     return mem
 
 
+def generater_gap2(gap):
+    # generated a random gap doesn't require gradient
+    b, c = gap.size()
+    mem = gap.clone().detach()
+    mem = mem.view(-1)
+    mem = mem[torch.randperm(mem.size()[0])]
+    mem = mem.view([b, c])
+
+    mem = mem.to(gap.device)
+    # directly passing the gradient.
+    generate = gap + mem - gap
+    return generate
+
+
 def demo():
     n = 16
     c = 5
@@ -58,4 +72,13 @@ def demo_gap():
     gap = torch.rand([3,6],requires_grad=True)
     generater_gap(gap)
 
-demo_gap()
+# demo_gap()
+
+
+def demo_gap2():
+    gap = torch.rand([3,6],requires_grad=True)
+    generate = generater_gap2(gap)
+    print(generate.requires_grad)
+    print(generate)
+
+demo_gap2()
