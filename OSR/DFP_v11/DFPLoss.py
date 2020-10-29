@@ -68,7 +68,9 @@ class DFPLoss2(nn.Module):
         # loss_generate = dist_gen2ori.mean()
         dist_gen_within = F.relu((amplified_thresholds.unsqueeze(dim=0) - dist_gen2cen), inplace=True)
         loss_generate_within = self.theta * (dist_gen_within.sum()) / (dist_gen_within.shape[0])
-        loss_generate = self.beta * loss_generate_within
+        loss_generate_discriminate = dist_gen2ori/(dist_gen2cen.sum(dim=1,keepdim=False)+dist_gen2ori)
+        loss_generate_discriminate = loss_generate_discriminate.mean()
+        loss_generate = self.beta * (loss_generate_within+ loss_generate_discriminate)
 
         loss = loss_similarity + loss_distance + loss_generate
 
