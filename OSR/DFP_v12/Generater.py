@@ -99,14 +99,35 @@ def generater_gap4(gap):
     return generate
 
 
+def generater_gap5(gap, ratio=0.7):
+    # generated a random gap doesn't require gradient
+    b, c = gap.size()
+    mem = gap.clone().detach()
+    mem = mem.permute(1, 0)
+    shuffle_c = int(c*ratio)
+    rand_perm = torch.rand(shuffle_c, b)
+    rand_perm = rand_perm.argsort(dim=1)
+    supp = torch.arange(0, b).unsqueeze(dim=0).expand(c - shuffle_c, b)
+    rand_perm = torch.cat([rand_perm,supp],dim=0)
+    rand_perm = rand_perm[torch.randperm(c)]
+    rand_perm = (torch.arange(0, c) * b).unsqueeze(dim=-1) + rand_perm
+    rand_perm = rand_perm.view(-1)
+    mem = mem.reshape(-1)
+    mem = mem[rand_perm]
+    mem = mem.reshape([c, b]).permute(1, 0)
+    mem = mem.to(gap.device)
+    generate = gap + mem - gap
+    return generate
+
+
 def demo_shuffle():
-    b = 3
-    c = 7
+    b = 5
+    c = 10
     gap = torch.arange(1, b + 1, dtype=float).unsqueeze(dim=-1).expand(b, c)
     print(gap)
     gap.requires_grad = True
 
-    generate = generater_gap4(gap)
+    generate = generater_gap5(gap)
 
     print(generate)
     print(generate.requires_grad)

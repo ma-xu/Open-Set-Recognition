@@ -7,7 +7,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import backbones.cifar as models
 from Distance import Similarity, Distance
-from Generater import generater_gap4
+from Generater import generater_gap5
 
 
 class DFPNet(nn.Module):
@@ -60,7 +60,7 @@ class DFPNet(nn.Module):
         gap = (F.adaptive_avg_pool2d(x, 1)).view(x.size(0), -1)
         if hasattr(self, 'thresholds'):
             thresholds = self.thresholds
-            gen = generater_gap4(gap)
+            gen = generater_gap5(gap)
             embed_gen = self.embeddingLayer(gen) if hasattr(self, 'embeddingLayer') else gen
             amplified_thresholds = self.thresholds * self.amplifier
         embed_fea = self.embeddingLayer(gap) if hasattr(self, 'embeddingLayer') else gap
