@@ -21,6 +21,7 @@ def generater_input(inputs, targets, args, repeats=4, reduce=16):
     targets = targets[r]
     return inputs, targets
 
+
 def generater_unknown(inputs, targets, args, repeats=4, reduce=16):
     b, c, w, h = inputs.shape
 
@@ -33,8 +34,7 @@ def generater_unknown(inputs, targets, args, repeats=4, reduce=16):
     return g_data
 
 
-
-def generater_gap(gap,batchsize=32):
+def generater_gap(gap, batchsize=32):
     # generated a random gap doesn't require gradient
     b, c = gap.size()
     mem = gap.clone().detach()
@@ -60,13 +60,14 @@ def generater_gap2(gap):
     generate = gap + mem - gap
     return generate
 
-def generater_gap3(gap,shuffle_rate=2):
+
+def generater_gap3(gap, shuffle_rate=2):
     # generated a random gap doesn't require gradient
     b, c = gap.size()
     mem = gap.clone().detach()
-    mem = mem.permute(1,0)  #c,b
+    mem = mem.permute(1, 0)  # c,b
     mem = mem.tolist()
-    selected_num = max (4, c//shuffle_rate)
+    selected_num = max(4, c // shuffle_rate)
     selected_channels = torch.empty(selected_num, dtype=torch.long).random_(c)
     for i in selected_channels:
         m = mem[i]
@@ -74,34 +75,34 @@ def generater_gap3(gap,shuffle_rate=2):
         mem[i] = m
 
     mem = torch.Tensor(mem)
-    mem = mem.permute(1,0)
+    mem = mem.permute(1, 0)
     mem = mem.to(gap.device)
     # directly passing the gradient.
     generate = gap + mem - gap
     return generate
 
+
 def generater_gap4(gap):
     # generated a random gap doesn't require gradient
     b, c = gap.size()
     mem = gap.clone().detach()
-    mem = mem.permute(1,0)
-    rand = torch.rand(c,b)
+    mem = mem.permute(1, 0)
+    rand = torch.rand(c, b)
     rand_perm = rand.argsort(dim=1)
-    rand_perm = (torch.arange(0,c)*b).unsqueeze(dim=-1) + rand_perm
-    rand_perm =rand_perm.view(-1)
+    rand_perm = (torch.arange(0, c) * b).unsqueeze(dim=-1) + rand_perm
+    rand_perm = rand_perm.view(-1)
     mem = mem.reshape(-1)
     mem = mem[rand_perm]
-    mem = mem.reshape([c,b]).permute(1,0)
+    mem = mem.reshape([c, b]).permute(1, 0)
     mem = mem.to(gap.device)
     generate = gap + mem - gap
     return generate
 
 
-
 def demo_shuffle():
-    b=3
-    c=7
-    gap = torch.arange(1, b+1, dtype=float).unsqueeze(dim=-1).expand(b,c)
+    b = 3
+    c = 7
+    gap = torch.arange(1, b + 1, dtype=float).unsqueeze(dim=-1).expand(b, c)
     print(gap)
     gap.requires_grad = True
 
