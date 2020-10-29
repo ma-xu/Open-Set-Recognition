@@ -60,7 +60,7 @@ def generater_gap2(gap):
     generate = gap + mem - gap
     return generate
 
-def generater_gap3(gap,shuffle_rate=16):
+def generater_gap3(gap,shuffle_rate=2):
     # generated a random gap doesn't require gradient
     b, c = gap.size()
     mem = gap.clone().detach()
