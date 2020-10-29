@@ -159,9 +159,11 @@ def plot_gap(net,
             inputs, targets = inputs.to(device), targets.to(device)
             out = net(inputs)
             batch_gap = out["gap"]  # [n, channel]
+            print(f"batch_gap.shape[0]: {batch_gap.shape[0]}")
             for i in range(batch_gap.shape[0]):
                 label = targets[i]
                 gap = batch_gap[i]
+                print(f"gap: {gap.shape}")
                 results[label.item()]["gaps"].append(gap)
     for i in tqdm(range(args.train_class_num)):
         gaps = results[i]['gaps']
