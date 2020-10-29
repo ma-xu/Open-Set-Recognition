@@ -318,8 +318,10 @@ def stage2_train(net2, trainloader, optimizer, criterion, device):
     net2.train()
     train_loss = 0
     loss_similarity = 0
-    loss_distance = 0
-    loss_generate = 0
+    distance_in = 0
+    distance_out = 0
+    generate_within = 0
+    generate_2orign = 0
     correct = 0
     total = 0
     for batch_idx, (inputs, targets) in enumerate(trainloader):
@@ -336,8 +338,10 @@ def stage2_train(net2, trainloader, optimizer, criterion, device):
 
         train_loss += loss.item()
         loss_similarity += (loss_dict['similarity']).item()
-        loss_distance += (loss_dict['distance']).item()
-        loss_generate += (loss_dict['generate']).item()
+        distance_in += (loss_dict['distance_in']).item()
+        distance_out += (loss_dict['distance_out']).item()
+        generate_within += (loss_dict['generate_within']).item()
+        generate_2orign += (loss_dict['generate_2orign']).item()
 
         _, predicted = (out['sim_fea2cen']).max(1)
         total += targets.size(0)
@@ -348,8 +352,10 @@ def stage2_train(net2, trainloader, optimizer, criterion, device):
     return {
         "train_loss": train_loss / (batch_idx + 1),
         "loss_similarity": loss_similarity / (batch_idx + 1),
-        "loss_distance": loss_distance / (batch_idx + 1),
-        "loss_generate": loss_generate / (batch_idx + 1),
+        "distance_in": distance_in / (batch_idx + 1),
+        "distance_out": distance_out / (batch_idx + 1),
+        "generate_within": generate_within / (batch_idx + 1),
+        "generate_2orign": generate_2orign / (batch_idx + 1),
         "accuracy": correct / total
     }
 
