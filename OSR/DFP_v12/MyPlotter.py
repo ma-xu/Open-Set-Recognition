@@ -165,7 +165,7 @@ def plot_gap(net,
                 results[label.item()]["gaps"].append(gap)
     for i in tqdm(range(args.train_class_num)):
         gaps = results[i]['gaps']
-        gaps = torch.as_tensor(gaps)
+        gaps = torch.cat(gaps,dim=0)
         print(f"Class {i} GAPs shape: {gaps.shape}")
 
 
