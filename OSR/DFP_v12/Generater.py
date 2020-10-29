@@ -110,4 +110,4 @@ def demo_shuffle():
     print(generate)
     print(generate.requires_grad)
 
-demo_shuffle()
+# demo_shuffle()
