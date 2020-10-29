@@ -279,7 +279,8 @@ def main_stage2(stage1_dict):
             print("=> no checkpoint found at '{}'".format(args.resume))
     else:
         logger = Logger(os.path.join(args.checkpoint, 'log_stage2.txt'))
-        logger.set_names(['Epoch', 'Train Loss', 'Similarity Loss', 'Distance Loss', 'Generate Loss', 'Train Acc.'])
+        logger.set_names(['Epoch', 'Train Loss', 'Similarity Loss', 'Distance in', 'Distance out',
+                          'Generate within', 'Generate 2origin', 'Train Acc.'])
 
     # after resume
     criterion = DFPLoss2(alpha=args.alpha, beta=args.beta, theta=args.theta)
@@ -293,7 +294,9 @@ def main_stage2(stage1_dict):
             train_out = stage2_train(net2, trainloader, optimizer, criterion, device)
             save_model(net2, epoch, os.path.join(args.checkpoint, 'stage_2_last_model.pth'))
             logger.append([epoch + 1, train_out["train_loss"], train_out["loss_similarity"],
-                           train_out["loss_distance"],train_out["loss_generate"], train_out["accuracy"]])
+                           train_out["distance_in"], train_out["distance_out"],
+                           train_out["generate_within"], train_out["generate_2orign"],
+                           train_out["accuracy"]])
             if args.plot:
                 plot_feature(net2, args, trainloader, device, args.plotfolder2, epoch=epoch,
                              plot_class_num=args.train_class_num, maximum=args.plot_max,

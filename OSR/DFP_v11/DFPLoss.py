@@ -55,30 +55,28 @@ class DFPLoss2(nn.Module):
         labels = targets.unsqueeze(1).expand(batch_size, num_classes)
         mask = labels.eq(classes.expand(batch_size, num_classes))
         dist_within = dist_fea2cen * mask.float()
-        # mask_in = (1.0-self.theta) * ((dist_within <= thresholds.unsqueeze(dim=0)).float())
-        # mask_out = (1.0+self.theta) * ((dist_within > thresholds.unsqueeze(dim=0)).float())
         mask_in = (dist_within <= thresholds.unsqueeze(dim=0)).float()
         mask_out = self.theta * ((dist_within > thresholds.unsqueeze(dim=0)).float())
-        mask_threshold = mask_in + mask_out
-        dist_within = (dist_within * mask_threshold).sum(dim=1, keepdim=False)
-        loss_distance = self.alpha * (dist_within.sum()) / batch_size
+        loss_distance_in = (dist_within * mask_in).sum(dim=1, keepdim=False)
+        loss_distance_in = self.alpha * (loss_distance_in.sum()) / batch_size
+        loss_distance_out = (dist_within * mask_out).sum(dim=1, keepdim=False)
+        loss_distance_out = self.alpha * (loss_distance_out.sum()) / batch_size
 
         #  distance loss for generated data
-        # TO Implement
-        # loss_generate = dist_gen2ori.mean()
-        dist_gen_within = F.relu((amplified_thresholds.unsqueeze(dim=0) - dist_gen2cen), inplace=True)
-        loss_generate_within = self.theta * (dist_gen_within.sum()) / (dist_gen_within.shape[0])
-        loss_generate_discriminate = dist_gen2ori/(dist_gen2cen.sum(dim=1,keepdim=False)+dist_gen2ori)
-        loss_generate_discriminate = loss_generate_discriminate.mean()
-        loss_generate = self.beta * (loss_generate_within+ loss_generate_discriminate)
+        loss_generate_within = F.relu((amplified_thresholds.unsqueeze(dim=0) - dist_gen2cen), inplace=True)
+        loss_generate_within = self.beta * self.theta * (loss_generate_within.sum()) / (loss_generate_within.shape[0])
+        loss_generate_2orign = dist_gen2ori / (dist_gen2cen.sum(dim=1, keepdim=False) + dist_gen2ori)
+        loss_generate_2orign = self.beta * loss_generate_2orign.mean()
 
-        loss = loss_similarity + loss_distance + loss_generate
+        loss = loss_similarity + loss_distance_in + loss_distance_out + loss_generate_within + loss_generate_2orign
 
         return {
             "total": loss,
             "similarity": loss_similarity,
-            "distance": loss_distance,
-            "generate": loss_generate
+            "distance_in": loss_distance_in,
+            "distance_out": loss_distance_out,
+            "generate_within": loss_generate_within,
+            "generate_2orign": loss_generate_2orign
         }
 
 
@@ -124,8 +122,6 @@ def demo2():
     dist_loss = loss(netout, label)
     print(dist_loss['total'])
     print(dist_loss['similarity'])
-    print(dist_loss['distance'])
-    print(dist_loss['generate'])
 
 
 # demo2()
