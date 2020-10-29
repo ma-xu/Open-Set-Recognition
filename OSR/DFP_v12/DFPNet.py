@@ -74,7 +74,7 @@ class DFPNet(nn.Module):
             dis_gen2ori = getattr(DIST, self.distance)(embed_gen, self.origin)
 
         return {
-            "gap": x,
+            "gap": gap,
             "embed_fea": embed_fea,
             "embed_gen": embed_gen,
             "sim_fea2cen": sim_fea2cen,

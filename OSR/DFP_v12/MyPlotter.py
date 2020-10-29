@@ -158,7 +158,7 @@ def plot_gap(net,
         for batch_idx, (inputs, targets) in enumerate(plotloader):
             inputs, targets = inputs.to(device), targets.to(device)
             out = net(inputs)
-            batch_gap = out["gap"]  # [n, channel]
+            batch_gap = (out["gap"]).unsqueeze(dim=1)  # [n,1, channel]
             print(f"batch_gap.shape[0]: {batch_gap.shape[0]}")
             for i in range(batch_gap.shape[0]):
                 label = targets[i]
