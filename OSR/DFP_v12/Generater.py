@@ -92,7 +92,7 @@ def generater_gap4(gap):
     mem = mem.reshape(-1)
     mem = mem[rand_perm]
     mem = mem.reshape([c,b]).permute(1,0)
-
+    mem = mem.to(gap.device)
     generate = gap + mem - gap
     return generate
 
