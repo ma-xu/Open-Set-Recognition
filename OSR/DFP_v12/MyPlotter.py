@@ -147,6 +147,27 @@ def plot_distance(net,
 
 
 
+def plot_gap(net,
+              plotloader: torch.utils.data.DataLoader,
+              device: str,
+              args
+              ) -> dict:
+    print("===> Calculating GAP vectors...")
+    results = {i: {"gaps": []} for i in range(args.train_class_num)}
+    with torch.no_grad():
+        for batch_idx, (inputs, targets) in enumerate(plotloader):
+            inputs, targets = inputs.to(device), targets.to(device)
+            out = net(inputs)
+            batch_gap = out["gap"]  # [n, channel]
+            for i in range(batch_gap.shape[0]):
+                label = targets[i]
+                gap = batch_gap[i]
+                results[label.item()]["gaps"].append(gap)
+    for i in tqdm(range(args.train_class_num)):
+        gaps = results[i]['gaps']
+        gaps = torch.Tensor(gaps)
+        print(f"Class {i} GAPs shape: {gaps.shape}")
+
 
 def plot_similarity(net,
                   plotloader: torch.utils.data.DataLoader,

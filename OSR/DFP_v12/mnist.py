@@ -21,7 +21,7 @@ from datasets import MNIST
 from Utils import adjust_learning_rate, progress_bar, Logger, mkdir_p, Evaluation
 from DFPLoss import DFPLoss, DFPLoss2
 from DFPNet import DFPNet
-from MyPlotter import plot_feature, plot_distance
+from MyPlotter import plot_feature, plot_distance,plot_gap
 
 model_names = sorted(name for name in models.__dict__
                      if not name.startswith("__")
@@ -181,6 +181,7 @@ def main_stage1():
     # calculating distances for last epoch
     distance_results = plot_distance(net, trainloader, device, args)
     print(f"the distance thresholds are\n {distance_results['thresholds']}\n")
+    plot_gap(net, trainloader, device, args)
 
     logger.close()
     print(f"\nFinish Stage-1 training...\n")
