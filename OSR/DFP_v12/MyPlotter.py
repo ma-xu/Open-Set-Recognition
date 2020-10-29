@@ -159,16 +159,19 @@ def plot_gap(net,
             inputs, targets = inputs.to(device), targets.to(device)
             out = net(inputs)
             batch_gap = (out["gap"]).unsqueeze(dim=1)  # [n,1, channel]
-            print(f"batch_gap.shape[0]: {batch_gap.shape[0]}")
             for i in range(batch_gap.shape[0]):
                 label = targets[i]
                 gap = batch_gap[i]
-                print(f"gap: {gap.shape}")
                 results[label.item()]["gaps"].append(gap)
     for i in tqdm(range(args.train_class_num)):
         gaps = results[i]['gaps']
         gaps = torch.cat(gaps,dim=0)
+        results[i]['gaps'] = gaps
+        results[i]['channel_mean'] = gaps.mean(dim=0)
+        results[i]['channel_std'] = gaps.std(dim=0)
         print(f"Class {i} GAPs shape: {gaps.shape}")
+        print(f"Class {i} MEAN shape: {(results[i]['channel_mean']).shape}")
+        print(f"Class {i} STD shape: {(results[i]['channel_std']).shape}")
 
 
 def plot_similarity(net,
