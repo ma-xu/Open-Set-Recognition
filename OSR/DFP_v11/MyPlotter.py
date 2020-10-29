@@ -11,7 +11,7 @@ from tqdm import tqdm
 
 
 def plot_feature(net, args, plotloader, device, dirname, epoch=0, plot_class_num=10, maximum=500, plot_quality=150,
-                 norm_centroid=False, thresholds=None):
+                 norm_centroid=False, thresholds=None, testmode=False):
     plot_features = []
     plot_generates = []
     plot_labels = []
@@ -30,7 +30,7 @@ def plot_feature(net, args, plotloader, device, dirname, epoch=0, plot_class_num
 
             plot_features.append(embed_fea)
             plot_labels.append(targets)
-            if embed_gen is not None:
+            if embed_gen is not None and not testmode:
                 try:
                     embed_gen = embed_gen.data.cpu().numpy()
                 except:
