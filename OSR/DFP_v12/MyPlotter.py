@@ -170,9 +170,9 @@ def plot_gap(net,
         # results[i]['gaps'] = "Not saved"
         results[i]['channel_mean'] = gaps.mean(dim=0)
         results[i]['channel_std'] = gaps.std(dim=0)
-        print(f"Class {i} GAPs shape: {gaps.shape}")
-        print(f"Class {i} MEAN shape: {(results[i]['channel_mean']).shape}")
-        print(f"Class {i} STD shape: {(results[i]['channel_std']).shape}")
+        # print(f"Class {i} GAPs shape: {gaps.shape}")
+        # print(f"Class {i} MEAN shape: {(results[i]['channel_mean']).shape}")
+        # print(f"Class {i} STD shape: {(results[i]['channel_std']).shape}")
     torch.save(results, os.path.join(args.checkpoint, 'gap.pkl'))
     print("===> GAP statistics saved.")
 
