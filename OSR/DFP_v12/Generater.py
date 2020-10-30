@@ -149,15 +149,35 @@ def CGD_estimator(gap_results):
         "channel_mean_mean": channel_mean_mean,
         "channel_mean_std": channel_mean_std,
         "channel_std_mean":channel_std_mean,
-        "channel_std_std":channel_std_std,
-        "estimator_class": 4,
-        "estimator_batch": 32,
+        "channel_std_std":channel_std_std
     }
+
+
+def estimator_generator(estimator, gap):
+    channel_mean_mean = estimator["channel_mean_mean"]
+    channel_mean_std = estimator["channel_mean_std"]
+    # channel_std_mean = estimator["channel_std_mean"]
+    # channel_std_std = estimator["channel_std_std"]
+    # estimator_class = estimator["estimator_class"]
+    # estimator_batch = estimator["estimator_batch"]
+    channel = channel_mean_mean.size()[0]
+
+
+    data = torch.randn(gap.size()[0],channel)
+    data = (data - data.mean(dim=0,keepdim=True))/(data.std(dim=0,keepdim=True))
+    data = data*channel_mean_std +channel_mean_mean
+    data = gap + data - gap
+    return data
+
+
+
+
 
 
 def demoestimator():
     filepath = "/Users/melody/Downloads/gap.pkl"
     DICT = torch.load(filepath,map_location=torch.device('cpu'))
     estimator = CGD_estimator(DICT)
+    estimator_generator(estimator,torch.rand(4))
 
 # demoestimator()

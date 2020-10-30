@@ -73,8 +73,6 @@ parser.add_argument('--stage2_resume', default='', type=str, metavar='PATH', hel
 parser.add_argument('--stage2_es', default=25, type=int, help='epoch size')
 parser.add_argument('--stage2_lr', default=0.001, type=float, help='learning rate')  # works for MNIST
 parser.add_argument('--amplifier', default=1.1, type=float, help='learning rate')
-parser.add_argument('--estimator_class', default=8, type=int, help='Estimator generated class number')
-parser.add_argument('--estimator_batch', default=16, type=int, help='Estimator generated batch number for each class')
 
 
 # Parameters for stage plotting
@@ -187,8 +185,6 @@ def main_stage1():
     # print(f"the distance thresholds are\n {distance_results['thresholds']}\n")
     gap_results = plot_gap(net, trainloader, device, args)
     estimator =CGD_estimator(gap_results)
-    estimator['estimator_class'] = args.estimator_class
-    estimator['estimator_batch'] = args.estimator_batch
 
     logger.close()
     print(f"\nFinish Stage-1 training...\n")
@@ -259,12 +255,13 @@ def stage1_test(net, testloader, device):
 def main_stage2(stage1_dict):
     net1 = stage1_dict['net']
     thresholds = stage1_dict['distance']['thresholds']
+    estimator = stage1_dict['estimator']
     print(f"\n===> Start Stage-2 training...\n")
     start_epoch = 0  # start from epoch 0 or last checkpoint epoch
     print('==> Building model..')
     net2 = DFPNet(backbone=args.arch, num_classes=args.train_class_num, embed_dim=args.embed_dim,
                   distance=args.distance, similarity=args.similarity, scaled=args.scaled, thresholds=thresholds,
-                  norm_centroid=args.norm_centroid, amplifier=args.amplifier)
+                  norm_centroid=args.norm_centroid, amplifier=args.amplifier, estimator = estimator)
     net2 = net2.to(device)
     if not args.evaluate and not os.path.isdir(args.stage2_resume):
         init_stage2_model(net1, net2)
