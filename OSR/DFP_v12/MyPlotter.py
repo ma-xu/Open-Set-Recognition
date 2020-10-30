@@ -166,8 +166,8 @@ def plot_gap(net,
     for i in tqdm(range(args.train_class_num)):
         gaps = results[i]['gaps']
         gaps = torch.cat(gaps,dim=0)
-        # results[i]['gaps'] = gaps
-        results[i]['gaps'] = "Not saved"
+        results[i]['gaps'] = gaps
+        # results[i]['gaps'] = "Not saved"
         results[i]['channel_mean'] = gaps.mean(dim=0)
         results[i]['channel_std'] = gaps.std(dim=0)
         print(f"Class {i} GAPs shape: {gaps.shape}")
