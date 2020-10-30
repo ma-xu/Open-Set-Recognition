@@ -133,3 +133,8 @@ def demo_shuffle():
     print(generate.requires_grad)
 
 # demo_shuffle()
+
+
+def CGD_generator(gap_results, args):
+    "Conditional Gaussian distribution"
+    return None
