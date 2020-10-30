@@ -135,6 +135,29 @@ def demo_shuffle():
 # demo_shuffle()
 
 
-def CGD_generator(gap_results, args):
+def CGD_estimator(gap_results):
     "Conditional Gaussian distribution"
-    return None
+    channel_mean = gap_results["channel_mean_all"]  # [class_number, channel]
+    channel_std = gap_results["channel_std_all"]  # [class_number, channel]
+
+    channel_mean_mean = channel_mean.mean(dim=0)
+    channel_mean_std = channel_mean.std(dim=0)
+    channel_std_mean = channel_std.mean(dim=0)
+    channel_std_std = channel_std.std(dim=0)
+
+    return {
+        "channel_mean_mean": channel_mean_mean,
+        "channel_mean_std": channel_mean_std,
+        "channel_std_mean":channel_std_mean,
+        "channel_std_std":channel_std_std,
+        "estimator_class": 4,
+        "estimator_batch": 32,
+    }
+
+
+def demoestimator():
+    filepath = "/Users/melody/Downloads/gap.pkl"
+    DICT = torch.load(filepath,map_location=torch.device('cpu'))
+    estimator = CGD_estimator(DICT)
+
+# demoestimator()

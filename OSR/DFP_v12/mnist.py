@@ -22,6 +22,7 @@ from Utils import adjust_learning_rate, progress_bar, Logger, mkdir_p, Evaluatio
 from DFPLoss import DFPLoss, DFPLoss2
 from DFPNet import DFPNet
 from MyPlotter import plot_feature, plot_distance,plot_gap
+from Generater import CGD_estimator
 
 model_names = sorted(name for name in models.__dict__
                      if not name.startswith("__")
@@ -72,6 +73,9 @@ parser.add_argument('--stage2_resume', default='', type=str, metavar='PATH', hel
 parser.add_argument('--stage2_es', default=25, type=int, help='epoch size')
 parser.add_argument('--stage2_lr', default=0.001, type=float, help='learning rate')  # works for MNIST
 parser.add_argument('--amplifier', default=1.1, type=float, help='learning rate')
+parser.add_argument('--estimator_class', default=8, type=int, help='Estimator generated class number')
+parser.add_argument('--estimator_batch', default=16, type=int, help='Estimator generated batch number for each class')
+
 
 # Parameters for stage plotting
 parser.add_argument('--plot', action='store_true', help='Plotting the training set.')
@@ -182,6 +186,9 @@ def main_stage1():
     distance_results = plot_distance(net, trainloader, device, args)
     # print(f"the distance thresholds are\n {distance_results['thresholds']}\n")
     gap_results = plot_gap(net, trainloader, device, args)
+    estimator =CGD_estimator(gap_results)
+    estimator['estimator_class'] = args.estimator_class
+    estimator['estimator_batch'] = args.estimator_batch
 
     logger.close()
     print(f"\nFinish Stage-1 training...\n")
@@ -189,7 +196,8 @@ def main_stage1():
     stage1_test(net, testloader, device)
 
     return {"net": net,
-            "distance": distance_results
+            "distance": distance_results,
+            "estimator": estimator
             }
 
 
