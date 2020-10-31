@@ -2,6 +2,7 @@ import torch
 import numpy as np
 import torch.nn.functional as F
 from random import shuffle
+from math import ceil
 
 
 def generater_input(inputs, targets, args, repeats=4, reduce=16):
@@ -146,6 +147,8 @@ def CGD_estimator(gap_results):
     channel_std_std = channel_std.std(dim=0)
 
     return {
+        "channel_mean": channel_mean,
+        "channel_std": channel_std,
         "channel_mean_mean": channel_mean_mean,
         "channel_mean_std": channel_mean_std,
         "channel_std_mean":channel_std_mean,
@@ -172,6 +175,30 @@ def estimator_generator(estimator, gap):
 
 
 
+def whitennoise_generator(estimator, gap):
+    batch_size=gap.size()[0]
+    channel_mean = estimator["channel_mean"]
+    channel_std = estimator["channel_std"]
+    class_num,channel_num= channel_mean.size()
+
+
+    n = max(ceil(batch_size/class_num),3)
+    noise = torch.randn(n,class_num*channel_num).to(gap.device)
+    channel_mean = channel_mean.view(-1)
+    channel_std = channel_std.view(-1)
+    noise = (noise - noise.mean(dim=0,keepdim=True))/(noise.std(dim=0,keepdim=True))
+    noise = noise*channel_std +channel_mean
+
+    noise = noise.reshape([n,class_num, channel_num])
+    noise = noise.reshape([n*class_num, channel_num])
+    noise = noise[torch.randperm(noise.size()[0])]
+    noise = noise[0:batch_size]
+    generate = (noise+gap)/2.0
+    generate = generate.clone().detach()
+    # data = gap + data - gap
+    return generate
+
+
 
 
 
@@ -179,6 +206,6 @@ def demoestimator():
     filepath = "/Users/melody/Downloads/gap.pkl"
     DICT = torch.load(filepath,map_location=torch.device('cpu'))
     estimator = CGD_estimator(DICT)
-    estimator_generator(estimator,torch.rand(4))
+    whitennoise_generator(estimator,torch.rand(256,1152))
 
-# demoestimator()
+demoestimator()
