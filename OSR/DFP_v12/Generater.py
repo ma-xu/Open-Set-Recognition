@@ -208,4 +208,4 @@ def demoestimator():
     estimator = CGD_estimator(DICT)
     whitennoise_generator(estimator,torch.rand(256,1152))
 
-demoestimator()
+# demoestimator()
