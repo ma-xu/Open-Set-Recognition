@@ -193,7 +193,7 @@ def whitennoise_generator(estimator, gap):
     noise = noise.reshape([n*class_num, channel_num])
     noise = noise[torch.randperm(noise.size()[0])]
     noise = noise[0:batch_size]
-    generate = (0.2*noise+gap)/1.2
+    generate = 0.8*noise+0.2gap
     generate = generate.clone().detach()
     # data = gap + data - gap
     return generate
@@ -208,4 +208,4 @@ def demoestimator():
     estimator = CGD_estimator(DICT)
     whitennoise_generator(estimator,torch.rand(256,1152))
 
-# demoestimator()
+demoestimator()
