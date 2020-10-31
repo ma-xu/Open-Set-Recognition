@@ -211,9 +211,9 @@ def guassian_generator(estimator, gap):
 
     noise = torch.randn(batch_size, channel_num).to(gap.device)
     noise = (noise - noise.mean(dim=0, keepdim=True)) / (noise.std(dim=0, keepdim=True))
-    noise = 1.41421*noise * channel_mean_std + channel_mean_mean
+    noise = noise * channel_mean_std + channel_mean_mean
 
-    generate = 0.5 * noise + 0.5 * gap
+    generate = 1.0 * noise + 0.0 * gap
     generate = generate.clone().detach()
     # data = gap + data - gap
     return generate
