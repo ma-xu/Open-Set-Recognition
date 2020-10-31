@@ -193,7 +193,7 @@ def whitennoise_generator(estimator, gap):
     noise = noise.reshape([n*class_num, channel_num])
     noise = noise[torch.randperm(noise.size()[0])]
     noise = noise[0:batch_size]
-    generate = (noise+gap)/2.0
+    generate = (0.2*noise+gap)/1.2
     generate = generate.clone().detach()
     # data = gap + data - gap
     return generate
