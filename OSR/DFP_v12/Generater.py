@@ -199,6 +199,24 @@ def whitennoise_generator(estimator, gap):
     return generate
 
 
+def guassian_generator(estimator, gap):
+
+    channel_mean = estimator["channel_mean"]
+    channel_std = estimator["channel_std"]
+    channel_mean_mean = estimator["channel_mean_mean"]
+    channel_mean_std = estimator["channel_mean_std"]
+    channel_std_std = estimator["channel_std_std"]
+    class_num, channel_num = channel_mean.size()
+    batch_size = gap.size()[0]
+
+    noise = torch.randn(batch_size, channel_num).to(gap.device)
+    noise = (noise - noise.mean(dim=0, keepdim=True)) / (noise.std(dim=0, keepdim=True))
+    noise = noise * channel_mean_std + channel_mean_mean
+
+    generate = 0.5 * noise + 0.5 * gap
+    generate = generate.clone().detach()
+    # data = gap + data - gap
+    return generate
 
 
 
@@ -206,6 +224,6 @@ def demoestimator():
     filepath = "/Users/melody/Downloads/gap.pkl"
     DICT = torch.load(filepath,map_location=torch.device('cpu'))
     estimator = CGD_estimator(DICT)
-    whitennoise_generator(estimator,torch.rand(256,1152))
+    guassian_generator(estimator,torch.rand(256,1152))
 
 # demoestimator()
