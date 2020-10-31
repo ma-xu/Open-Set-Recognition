@@ -167,7 +167,7 @@ def estimator_generator(estimator, gap):
     data = (data - data.mean(dim=0,keepdim=True))/(data.std(dim=0,keepdim=True))
     data = data*channel_mean_std +channel_mean_mean
     data = data.clone().detach()
-    data = gap + data - gap
+    # data = gap + data - gap
     return data
 
 
