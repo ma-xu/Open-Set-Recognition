@@ -72,7 +72,7 @@ parser.add_argument('--stage1_lr', default=0.01, type=float, help='learning rate
 parser.add_argument('--stage2_resume', default='', type=str, metavar='PATH', help='path to latest checkpoint')
 parser.add_argument('--stage2_es', default=25, type=int, help='epoch size')
 parser.add_argument('--stage2_lr', default=0.001, type=float, help='learning rate')  # works for MNIST
-parser.add_argument('--amplifier', default=1.1, type=float, help='learning rate')
+parser.add_argument('--amplifier', default=5, type=float, help='learning rate')
 
 
 # Parameters for stage plotting
