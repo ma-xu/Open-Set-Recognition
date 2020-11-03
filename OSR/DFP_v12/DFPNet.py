@@ -62,7 +62,7 @@ class DFPNet(nn.Module):
         gap = (F.adaptive_avg_pool2d(x, 1)).view(x.size(0), -1)
         if hasattr(self, 'thresholds'):
             thresholds = self.thresholds
-            gen = guassian_generator(self.estimator, gap)
+            gen = whitennoise_generator(self.estimator, gap)
             embed_gen = self.embeddingLayer(gen) if hasattr(self, 'embeddingLayer') else gen
             amplified_thresholds = self.thresholds * self.amplifier
         embed_fea = self.embeddingLayer(gap) if hasattr(self, 'embeddingLayer') else gap
