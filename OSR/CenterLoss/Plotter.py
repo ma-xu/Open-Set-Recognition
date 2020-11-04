@@ -7,7 +7,7 @@ import numpy as np
 import os
 
 
-def plot_feature(net,criterion_centerloss, plotloader, device,dirname, epoch=0,plot_class_num=10, maximum=500, plot_quality=150):
+def plot_feature(net,criterion_centerloss, plotloader, device,dirname, epoch=0,plot_class_num=10, plot_quality=150):
     plot_features = []
     plot_labels = []
     with torch.no_grad():
@@ -41,8 +41,8 @@ def plot_feature(net,criterion_centerloss, plotloader, device,dirname, epoch=0,p
         features = plot_features[plot_labels == label_idx,:]
         maximum = min(maximum, len(features)) if maximum>0 else len(features)
         plt.scatter(
-            features[0:maximum, 0],
-            features[0:maximum, 1],
+            features[:, 0],
+            features[:, 1],
             c=colors[label_idx],
             s=1,
         )

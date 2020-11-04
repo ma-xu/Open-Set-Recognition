@@ -41,7 +41,7 @@ parser.add_argument('--includes_all_train_class', default=True, action='store_tr
 # Others
 parser.add_argument('--lr', default=0.01, type=float, help='learning rate')
 parser.add_argument('--bs', default=256, type=int, help='batch size')
-parser.add_argument('--es', default=100, type=int, help='epoch size')
+parser.add_argument('--es', default=50, type=int, help='epoch size')
 parser.add_argument('--evaluate', action='store_true', help='Evaluate without training')
 parser.add_argument('--resume', default='', type=str, metavar='PATH', help='path to latest checkpoint (default: none)')
 
@@ -129,7 +129,7 @@ def main():
         logger.set_names(['Epoch', 'Total Loss','Softmax Loss', 'Center Loss', 'train Acc.'])
 
     if not args.evaluate:
-        scheduler = lr_scheduler.StepLR(optimizer_softmax, step_size=30, gamma=0.1)
+        scheduler = lr_scheduler.StepLR(optimizer_softmax, step_size=20, gamma=0.1)
         for epoch in range(start_epoch, start_epoch + args.es):
             print('\nEpoch: %d   Learning rate: %f' % (epoch + 1, optimizer_softmax.param_groups[0]['lr']))
             train_loss, softmax_loss, center_loss, train_acc = train(net, trainloader, optimizer_softmax,
@@ -144,7 +144,11 @@ def main():
             logger.append([epoch + 1, train_loss, softmax_loss, center_loss, train_acc])
             scheduler.step()
 
+
     test(net, testloader, device)
+    if args.plot:
+        plot_feature(net, criterion_centerloss, testloader, device, args.plotfolder, epoch="test",
+                     plot_class_num=args.train_class_num, maximum=args.plot_max, plot_quality=args.plot_quality)
     logger.close()
 
 

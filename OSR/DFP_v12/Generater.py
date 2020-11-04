@@ -189,7 +189,7 @@ def whitennoise_generator(estimator, gap):
     noise = (noise - noise.mean(dim=0,keepdim=True))/(noise.std(dim=0,keepdim=True))
     noise = noise*channel_std +channel_mean
 
-    noise = noise.reshape([n,class_num, channel_num])
+    noise = noise.reshape([n, class_num, channel_num])
     noise = noise.reshape([n*class_num, channel_num])
     noise = noise[torch.randperm(noise.size()[0])]
     noise = noise[0:batch_size]
