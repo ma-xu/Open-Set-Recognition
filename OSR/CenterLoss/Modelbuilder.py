@@ -14,8 +14,8 @@ class Network(nn.Module):
         self.dim = self.get_backbone_last_layer_out_channel()
         if embed_dim:
             self.embeddingLayer =nn.Sequential(
-                # nn.PReLU(),
-                nn.Linear(self.dim, embed_dim)
+                nn.Linear(self.dim, embed_dim),
+                nn.PReLU(),
             )
             self.dim = embed_dim
         self.classifier = nn.Linear(self.dim, num_classes)
