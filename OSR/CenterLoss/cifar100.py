@@ -36,6 +36,7 @@ parser.add_argument('--resume', default='', type=str, metavar='PATH', help='path
 parser.add_argument('--arch', default='ResNet18', choices=model_names, type=str, help='choosing network')
 parser.add_argument('--bs', default=256, type=int, help='batch size')
 parser.add_argument('--es', default=100, type=int, help='epoch size')
+
 parser.add_argument('--train_class_num', default=50, type=int, help='Classes used in training')
 parser.add_argument('--test_class_num', default=100, type=int, help='Classes used in testing')
 parser.add_argument('--includes_all_train_class', default=True,  action='store_true',
@@ -45,6 +46,7 @@ parser.add_argument('--evaluate', action='store_true',
 parser.add_argument('--centerloss_weight', default=0.003, type=float, help='center loss weight')
 parser.add_argument('--center_lr', default=0.1, type=float, help='learning rate for center loss')
 parser.add_argument('--threshold', default=0.1, type=float, help='threshold for center-loss probability')
+parser.add_argument('--embed_dim', default=256, type=int, help='embedding feature dimension')
 
 
 args = parser.parse_args()
@@ -87,7 +89,7 @@ def main():
 
     # Model
     print('==> Building model..')
-    net = Network(backbone=args.arch, num_classes=args.train_class_num)
+    net = Network(backbone=args.arch, num_classes=args.train_class_num,embed_dim=args.embed_dim)
     fea_dim = net.classifier.in_features
     net = net.to(device)
 
