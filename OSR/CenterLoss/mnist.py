@@ -97,7 +97,7 @@ def main():
     testloader = torch.utils.data.DataLoader(testset, batch_size=args.bs, shuffle=False, num_workers=4)
 
     print('==> Building model..')
-    net = Network(backbone=args.arch, num_classes=args.train_class_num)
+    net = Network(backbone=args.arch, num_classes=args.train_class_num,embed_dim=args.embed_dim)
     fea_dim = net.classifier.in_features
     net = net.to(device)
 
