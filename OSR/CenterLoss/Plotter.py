@@ -39,7 +39,6 @@ def plot_feature(net,criterion_centerloss, plotloader, device,dirname, epoch=0,p
     colors = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9']
     for label_idx in range(plot_class_num):
         features = plot_features[plot_labels == label_idx,:]
-        maximum = min(maximum, len(features)) if maximum>0 else len(features)
         plt.scatter(
             features[:, 0],
             features[:, 1],
