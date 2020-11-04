@@ -39,7 +39,7 @@ parser.add_argument('--includes_all_train_class', default=True, action='store_tr
                     help='If required all known classes included in testing')
 
 # Others
-parser.add_argument('--lr', default=0.001, type=float, help='learning rate')
+parser.add_argument('--lr', default=0.01, type=float, help='learning rate')
 parser.add_argument('--bs', default=128, type=int, help='batch size')
 parser.add_argument('--es', default=50, type=int, help='epoch size')
 parser.add_argument('--evaluate', action='store_true', help='Evaluate without training')
