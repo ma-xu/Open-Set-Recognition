@@ -148,7 +148,7 @@ def main():
     test(net, testloader, device)
     if args.plot:
         plot_feature(net, criterion_centerloss, testloader, device, args.plotfolder, epoch="test",
-                     plot_class_num=args.train_class_num, maximum=args.plot_max, plot_quality=args.plot_quality)
+                     plot_class_num=args.train_class_num+1, maximum=args.plot_max, plot_quality=args.plot_quality)
     logger.close()
 
 
