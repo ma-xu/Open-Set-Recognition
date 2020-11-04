@@ -139,7 +139,7 @@ def main():
             # plot the training data
             if args.plot:
                 plot_feature(net,criterion_centerloss, trainloader, device, args.plotfolder, epoch=epoch,
-                         plot_class_num=args.train_class_num,maximum=args.plot_max, plot_quality=args.plot_quality)
+                         plot_class_num=args.train_class_num, plot_quality=args.plot_quality)
 
             logger.append([epoch + 1, train_loss, softmax_loss, center_loss, train_acc])
             scheduler.step()
@@ -148,7 +148,7 @@ def main():
     test(net, testloader, device)
     if args.plot:
         plot_feature(net, criterion_centerloss, testloader, device, args.plotfolder, epoch="test",
-                     plot_class_num=args.train_class_num, maximum=args.plot_max, plot_quality=args.plot_quality)
+                     plot_class_num=args.train_class_num,  plot_quality=args.plot_quality)
     logger.close()
 
 
