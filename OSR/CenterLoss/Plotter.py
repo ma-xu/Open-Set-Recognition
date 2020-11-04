@@ -7,7 +7,7 @@ import numpy as np
 import os
 
 
-def plot_feature(net,criterion_centerloss, plotloader, device,dirname, epoch=0,plot_class_num=10, plot_quality=150):
+def plot_feature(net,criterion_centerloss, plotloader, device,dirname, epoch=0,plot_class_num=10, maximum=500, plot_quality=150):
     plot_features = []
     plot_labels = []
     with torch.no_grad():
@@ -39,9 +39,10 @@ def plot_feature(net,criterion_centerloss, plotloader, device,dirname, epoch=0,p
     colors = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9']
     for label_idx in range(plot_class_num):
         features = plot_features[plot_labels == label_idx,:]
+        maximum = min(maximum, len(features)) if maximum>0 else len(features)
         plt.scatter(
-            features[:, 0],
-            features[:, 1],
+            features[0:maximum, 0],
+            features[0:maximum, 1],
             c=colors[label_idx],
             s=1,
         )
