@@ -49,8 +49,11 @@ class Network(nn.Module):
 
 def demo():
     # this demo didn't test metaembedding, should works if defined the centroids.
-    x = torch.rand([1, 3, 32, 32])
-    net = Network('ResNet18',  50)
+    # x = torch.rand([1, 3, 32, 32])
+    # net = Network('ResNet18',  50)
+
+    x = torch.rand([1,1, 28, 28])
+    net = Network('LeNetPlus',  50,2)
     feature, logits = net(x)
     print(feature.shape)
     print(logits.shape)
