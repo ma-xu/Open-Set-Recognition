@@ -13,7 +13,10 @@ class Network(nn.Module):
         self.backbone = models.__dict__[backbone](num_classes=num_classes,backbone_fc=False)
         self.dim = self.get_backbone_last_layer_out_channel()
         if embed_dim:
-            self.embeddingLayer = nn.Linear(self.dim, embed_dim)
+            self.embeddingLayer =nn.Sequential(
+                nn.PReLU(),
+                nn.Linear(self.dim, embed_dim)
+            )
             self.dim = embed_dim
         self.classifier = nn.Linear(self.dim, num_classes)
 
@@ -37,7 +40,7 @@ class Network(nn.Module):
     def forward(self, x):
         feature = self.backbone(x)
         feature = F.adaptive_avg_pool2d(feature,1)
-        feature = F.relu(feature.view(x.size(0), -1),inplace=True)
+        feature = feature.view(x.size(0), -1)
         # if includes embedding layer.
         feature = self.embeddingLayer(feature) if hasattr(self, 'embeddingLayer') else feature
         logits = self.classifier(feature)
