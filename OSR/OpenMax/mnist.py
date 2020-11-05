@@ -50,6 +50,11 @@ parser.add_argument('--weibull_alpha', default=3, type=int, help='Classes used i
 parser.add_argument('--weibull_threshold', default=0.9, type=float, help='Classes used in testing')
 
 
+# Parameters for stage plotting
+parser.add_argument('--plot', default=True, action='store_true', help='Plotting the training set.')
+parser.add_argument('--plot_max', default=0, type=int, help='max examples to plot in each class, 0 indicates all.')
+parser.add_argument('--plot_quality', default=200, type=int, help='DPI of plot figure')
+
 
 args = parser.parse_args()
 
