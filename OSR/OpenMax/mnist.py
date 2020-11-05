@@ -122,7 +122,7 @@ def main():
     if not args.evaluate:
         for epoch in range(start_epoch, start_epoch + args.es):
             print('\nEpoch: %d   Learning rate: %f' % (epoch+1, optimizer.param_groups[0]['lr']))
-            adjust_learning_rate(optimizer, epoch, args.lr)
+            adjust_learning_rate(optimizer, epoch, args.lr, step=20)
             train_loss, train_acc = train(net,trainloader,optimizer,criterion,device)
             save_model(net, None, epoch, os.path.join(args.checkpoint,'last_model.pth'))
             test_loss, test_acc = 0, 0
