@@ -125,7 +125,7 @@ def main():
     # test(0, net, trainloader, testloader, criterion, device)
     epoch=0
     if not args.evaluate:
-        for epoch in range(start_epoch, start_epoch + args.es):
+        for epoch in range(start_epoch, args.es):
             print('\nEpoch: %d   Learning rate: %f' % (epoch+1, optimizer.param_groups[0]['lr']))
             adjust_learning_rate(optimizer, epoch, args.lr, step=20)
             train_loss, train_acc = train(net,trainloader,optimizer,criterion,device)
@@ -177,7 +177,7 @@ def test(epoch, net,trainloader,  testloader,criterion, device):
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
-            outputs = net(inputs)
+            _, outputs = net(inputs)
             # loss = criterion(outputs, targets)
             # test_loss += loss.item()
             # _, predicted = outputs.max(1)
