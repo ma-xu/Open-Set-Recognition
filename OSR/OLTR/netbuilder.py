@@ -15,6 +15,7 @@ class Network(nn.Module):
         assert backbone_fc == False # For OLTR, we remove the backbone_FC layer.
         # here for backbone
         self.use_fc = use_fc
+        self.backbone_name = backbone
         self.backbone = models.__dict__[backbone](num_classes=embed_dim,backbone_fc=backbone_fc)
         feat_dim = self.get_backbone_last_layer_out_channel()
         # here for attmodule
