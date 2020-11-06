@@ -36,6 +36,8 @@ class Network(nn.Module):
         self.classifier = classifier_map[classifier]
 
     def get_backbone_last_layer_out_channel(self):
+        if self.backbone_name == "LeNetPlus":
+            return 128 * 3 * 3
         last_layer = list(self.backbone.children())[-1]
         while (not isinstance(last_layer, nn.Conv2d)) and \
                 (not isinstance(last_layer, nn.Linear)) and \
