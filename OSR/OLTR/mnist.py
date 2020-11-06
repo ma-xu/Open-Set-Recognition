@@ -118,7 +118,7 @@ def main_stage1():
     # Model
     print('==> Building model..')
     net = Network(backbone=args.arch, embed_dim=args.stage1_feature_dim, num_classes=args.train_class_num,
-                 use_fc=False, attmodule=False, classifier='dotproduct', backbone_fc=False, data_shape=4)
+                 use_fc=True, attmodule=False, classifier='dotproduct', backbone_fc=False, data_shape=4)
     # net = models.__dict__[args.arch](num_classes=args.train_class_num) # CIFAR 100
     net = net.to(device)
 
@@ -152,8 +152,8 @@ def main_stage1():
         save_model(net, None, epoch, os.path.join(args.checkpoint,'stage_1_last_model.pth'))
         logger.append([epoch+1, optimizer.param_groups[0]['lr'], train_loss, train_acc])
 
-        plot_feature(net, None, trainloader, device, args.plotfolder, epoch="stage1_"+str(epoch),
-                     plot_class_num=args.train_class_num, maximum=args.plot_max, plot_quality=args.plot_quality)
+        # plot_feature(net, None, trainloader, device, args.plotfolder, epoch="stage1_"+str(epoch),
+        #              plot_class_num=args.train_class_num, maximum=args.plot_max, plot_quality=args.plot_quality)
 
     logger.close()
     print(f"\nFinish Stage-1 training...\n")

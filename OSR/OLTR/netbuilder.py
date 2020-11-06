@@ -24,7 +24,7 @@ class Network(nn.Module):
 
         # here for use fc
         if self.use_fc:
-            self.fc_add = nn.Linear(feat_dim, 512)
+            self.fc_add = nn.Linear(feat_dim, embed_dim)
             feat_dim = embed_dim
 
 
@@ -74,9 +74,9 @@ class Network(nn.Module):
 def demo():
     # this demo didn't test metaembedding, should works if defined the centroids.
     x = torch.rand([1, 3, 32, 32])
-    net = Network('ResNet18', 512, 50, use_fc=True, attmodule=True)
+    net = Network('ResNet18', 2, 50, use_fc=False, attmodule=True)
     y, fea, feature_maps,x = net(x)
     print(y.shape)
 
 
-demo()
+# demo()
