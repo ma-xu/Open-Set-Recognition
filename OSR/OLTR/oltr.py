@@ -17,7 +17,7 @@ class ModulatedAttLayer(nn.Module):
         self.width = width
         self.in_channels = in_channels
         self.reduction = reduction
-        self.inter_channels = in_channels // reduction
+        self.inter_channels = max(in_channels // reduction,2)
         self.mode = mode
         assert mode in ['embedded_gaussian']
 

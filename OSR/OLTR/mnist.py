@@ -17,10 +17,11 @@ import sys
 #from models import *
 sys.path.append("../..")
 import backbones.cifar as models
-from datasets import CIFAR100
+from datasets import CIFAR100, MNIST
 from Utils import adjust_learning_rate, progress_bar, Logger, mkdir_p, Evaluation
 from netbuilder import Network
 from DiscCentroidsLoss import DiscCentroidsLoss
+from Plotter import plot_feature
 
 model_names = sorted(name for name in models.__dict__
     if not name.startswith("__")
@@ -68,7 +69,7 @@ parser.add_argument('--plot_quality', default=200, type=int, help='DPI of plot f
 
 args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-args.checkpoint = './checkpoints/cifar/' + args.arch
+args.checkpoint = './checkpoints/mnist/' + args.arch
 if not os.path.isdir(args.checkpoint):
     mkdir_p(args.checkpoint)
 
@@ -113,13 +114,10 @@ def main():
 def main_stage1():
     print(f"\nStart Stage-1 training...\n")
     start_epoch = 0  # start from epoch 0 or last checkpoint epoch
-    # data loader
-    trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.bs, shuffle=True, num_workers=4)
-    # testloader = torch.utils.data.DataLoader(testset, batch_size=args.bs, shuffle=False, num_workers=4)
 
     # Model
     print('==> Building model..')
-    net = Network(backbone=args.arch, embed_dim=512, num_classes=args.train_class_num,
+    net = Network(backbone=args.arch, embed_dim=args.stage1_feature_dim, num_classes=args.train_class_num,
                  use_fc=False, attmodule=False, classifier='dotproduct', backbone_fc=False, data_shape=4)
     # net = models.__dict__[args.arch](num_classes=args.train_class_num) # CIFAR 100
     net = net.to(device)
@@ -153,6 +151,10 @@ def main_stage1():
         train_loss, train_acc = stage1_train(net,trainloader,optimizer,criterion,device)
         save_model(net, None, epoch, os.path.join(args.checkpoint,'stage_1_last_model.pth'))
         logger.append([epoch+1, optimizer.param_groups[0]['lr'], train_loss, train_acc])
+
+        plot_feature(net, None, trainloader, device, args.plotfolder, epoch="stage1_"+str(epoch),
+                     plot_class_num=args.train_class_num, maximum=args.plot_max, plot_quality=args.plot_quality)
+
     logger.close()
     print(f"\nFinish Stage-1 training...\n")
     return net
@@ -279,13 +281,15 @@ def main_stage2(net1, centroids):
             save_model(net2, None, epoch, os.path.join(args.checkpoint, 'stage_2_last_model.pth'))
             logger.append([epoch + 1, optimizer.param_groups[0]['lr'], train_loss, train_acc])
             pass_centroids(net2, fea_criterion, init_centroids=None)
+            plot_feature(net2, fea_criterion, trainloader, device, args.plotfolder, epoch="stage2_" + str(epoch),
+                         plot_class_num=args.train_class_num, maximum=args.plot_max, plot_quality=args.plot_quality)
         print(f"\nFinish Stage-2 training...\n")
     logger.close()
 
 
-
-    testloader = torch.utils.data.DataLoader(testset, batch_size=args.bs, shuffle=False, num_workers=4)
     test(net2, testloader, device)
+    plot_feature(net2, fea_criterion, testloader, device, args.plotfolder, epoch="test",
+                 plot_class_num=args.train_class_num+1, maximum=args.plot_max, plot_quality=args.plot_quality)
     return net2
 
 
