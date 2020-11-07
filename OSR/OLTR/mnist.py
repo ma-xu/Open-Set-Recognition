@@ -194,6 +194,7 @@ def stage2_train(net,trainloader,optimizer,criterion, fea_criterion, device):
         outputs, _, _, features = net(inputs)
         loss = criterion(outputs, targets)
         loss_fea = fea_criterion(features, targets)
+        print(f"loss: {loss} loss_fea: {loss_fea}")
         loss += loss_fea*args.stage2_fea_loss_weight
         loss.backward()
         optimizer.step()
