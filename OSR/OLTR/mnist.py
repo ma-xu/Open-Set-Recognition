@@ -193,12 +193,13 @@ def stage2_train(net,trainloader,optimizer,optimizer2, criterion, fea_criterion,
         optimizer.zero_grad()
         optimizer2.zero_grad()
         outputs, _, _, features = net(inputs)
-        loss = criterion(outputs, targets)
+        loss_cls = criterion(outputs, targets)
         loss_fea = fea_criterion(features, targets)
-        print(f"loss: {loss} loss_fea: {loss_fea}")
-        loss += loss_fea*args.stage2_fea_loss_weight
-        loss.backward()
+        print(f"loss_cls: {loss_cls} loss_fea: {loss_fea}")
+        loss =loss_cls+ loss_fea*args.stage2_fea_loss_weight
+        loss_cls.backward()
         optimizer.step()
+        loss_fea.backward()
         optimizer2.step()
 
         train_loss += loss.item()
