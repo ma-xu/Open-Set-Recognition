@@ -117,7 +117,7 @@ class MetaEmbedding_Classifier(nn.Module):
 
         logits = self.cosnorm_classifier(x)
 
-        return logits, [direct_feature, infused_feature]
+        return logits, [direct_feature, infused_feature, x]
 
 
 # def create_model(feat_dim=2048, num_classes=1000, stage1_weights=False, dataset=None, test=False, *args):

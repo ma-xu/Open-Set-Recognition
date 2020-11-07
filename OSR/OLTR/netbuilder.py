@@ -79,9 +79,9 @@ def demo():
     # print(y.shape)
 
     x = torch.rand([1, 1, 28, 28])
-    net = Network('LeNetPlus', 2, 50, use_fc=False, attmodule=False)
+    net = Network('LeNetPlus', 2, 50, use_fc=False, attmodule=False,classifier='metaembedding')
     y, fea, feature_maps,x = net(x)
     print(y.shape)
 
 
-# demo()
+demo()

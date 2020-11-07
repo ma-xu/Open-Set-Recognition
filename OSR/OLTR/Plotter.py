@@ -14,6 +14,7 @@ def plot_feature(net,criterion, plotloader, device,dirname, epoch=0,plot_class_n
         for batch_idx, (inputs, targets) in enumerate(plotloader):
             inputs, targets = inputs.to(device), targets.to(device)
             _,embed_fea,_, _ = net(inputs)
+            embed_fea = embed_fea[2]
             try:
                 embed_fea = embed_fea.data.cpu().numpy()
                 targets = targets.data.cpu().numpy()
