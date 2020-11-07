@@ -183,7 +183,7 @@ def stage1_train(net,trainloader,optimizer,criterion,device):
     return train_loss/(batch_idx+1), correct/total
 
 
-def stage2_train(net,trainloader,optimizer,criterion, fea_criterion, device):
+def stage2_train(net,trainloader,optimizer,optimizer2, criterion, fea_criterion, device):
     net.train()
     train_loss = 0
     correct = 0
@@ -191,6 +191,7 @@ def stage2_train(net,trainloader,optimizer,criterion, fea_criterion, device):
     for batch_idx, (inputs, targets) in enumerate(trainloader):
         inputs, targets = inputs.to(device), targets.to(device)
         optimizer.zero_grad()
+        optimizer2.zero_grad()
         outputs, _, _, features = net(inputs)
         loss = criterion(outputs, targets)
         loss_fea = fea_criterion(features, targets)
@@ -198,6 +199,7 @@ def stage2_train(net,trainloader,optimizer,criterion, fea_criterion, device):
         loss += loss_fea*args.stage2_fea_loss_weight
         loss.backward()
         optimizer.step()
+        optimizer2.step()
 
         train_loss += loss.item()
         _, predicted = outputs.max(1)
@@ -248,6 +250,7 @@ def main_stage2(net1, centroids):
     fea_criterion = DiscCentroidsLoss(args.train_class_num, args.stage1_feature_dim)
     fea_criterion = fea_criterion.to(device)
     optimizer = optim.SGD(net2.parameters(), lr=args.lr*0.1, momentum=0.9, weight_decay=5e-4)
+    optimizer_criterion = optim.SGD(fea_criterion.parameters(), lr=args.lr*0.1, momentum=0.9, weight_decay=5e-4)
 
     # passing centroids data.
     if not args.evaluate:
@@ -278,7 +281,8 @@ def main_stage2(net1, centroids):
             print('\nStage_2 Epoch: %d   Learning rate: %f' % (epoch + 1, optimizer.param_groups[0]['lr']))
             # Here, I didn't set optimizers respectively, just for simplicity. Performance did not vary a lot.
             adjust_learning_rate(optimizer, epoch, args.lr, step=20)
-            train_loss, train_acc = stage2_train(net2, trainloader, optimizer, criterion, fea_criterion, device)
+            train_loss, train_acc = stage2_train(net2, trainloader, optimizer,optimizer_criterion,
+                                                 criterion, fea_criterion, device)
             save_model(net2, None, epoch, os.path.join(args.checkpoint, 'stage_2_last_model.pth'))
             logger.append([epoch + 1, optimizer.param_groups[0]['lr'], train_loss, train_acc])
             pass_centroids(net2, fea_criterion, init_centroids=None)
