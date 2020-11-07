@@ -238,7 +238,7 @@ def main_stage2(net1, centroids):
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.bs, shuffle=True,  num_workers=4)
     print('==> Building model..')
     net2 = Network(backbone=args.arch, embed_dim=args.stage1_feature_dim, num_classes=args.train_class_num,
-                  use_fc=True, attmodule=True, classifier='metaembedding', backbone_fc=False, data_shape=4)
+                  use_fc=True, attmodule=False, classifier='metaembedding', backbone_fc=False, data_shape=4)
     net2 = net2.to(device)
     if not args.evaluate:
         init_stage2_model(net1, net2)
