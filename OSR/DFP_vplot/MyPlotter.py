@@ -56,7 +56,7 @@ def plot_feature(net, args, plotloader, device, dirname, epoch=0, plot_class_num
         features = plot_features[plot_labels == label_idx, :]
         if str(epoch)=='34' and label_idx==0:
             for feature in features:
-                print(f"{str(feature[0])[0:5]}\t{str(feature[1])[0:5]}")
+                print(f"{str(feature[0])[0:8]}\t{str(feature[1])[0:8]}")
         maximum = min(maximum, len(features)) if maximum > 0 else len(features)
         plt.scatter(
             features[0:maximum, 0],
