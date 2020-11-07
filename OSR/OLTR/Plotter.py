@@ -15,7 +15,7 @@ def plot_feature(net,criterion, plotloader, device,dirname, epoch=0,plot_class_n
             inputs, targets = inputs.to(device), targets.to(device)
             _,embed_fea,_, _ = net(inputs)
             embed_fea = embed_fea[2]
-            print(embed_fea.shape)
+
             try:
                 embed_fea = embed_fea.data.cpu().numpy()
                 targets = targets.data.cpu().numpy()
@@ -26,6 +26,7 @@ def plot_feature(net,criterion, plotloader, device,dirname, epoch=0,plot_class_n
             plot_features.append(embed_fea)
             plot_labels.append(targets)
 
+        print(embed_fea)
     plot_features = np.concatenate(plot_features, 0)
     plot_labels = np.concatenate(plot_labels, 0)
 
