@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import argparse
 import os
 import time
-from keras.utils import to_categorical
+# from keras.utils import to_categorical
 from model import LVAE
 from omniglot import OmniglotLoader
 
@@ -65,14 +65,14 @@ use_cuda = torch.cuda.is_available() and True
 device = torch.device("cuda" if use_cuda else "cpu")
 
 # data loader
-train_dataset = datasets.MNIST('data/mnist', download=False, train=True,
+train_dataset = datasets.MNIST('data/mnist', download=True, train=True,
                                transform=transforms.Compose([
 
                                    transforms.ToTensor(),
                                    transforms.Normalize((0.1307,), (0.3081,))]))
 train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=4)
 
-val_dataset = datasets.MNIST('data/mnist', download=False, train=False,
+val_dataset = datasets.MNIST('data/mnist', download=True, train=False,
                               transform=transforms.Compose([
 
                                   transforms.ToTensor(),
