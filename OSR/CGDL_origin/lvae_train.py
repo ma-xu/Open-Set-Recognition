@@ -79,7 +79,7 @@ val_dataset = datasets.MNIST('data/mnist', download=True, train=False,
                                   transforms.Normalize((0.1307,), (0.3081,))]))
 val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=True, num_workers=4)
 
-omn_loader = OmniglotLoader(batch_size=args.batch_size, train=False, drop_last=False)
+# omn_loader = OmniglotLoader(batch_size=args.batch_size, train=False, drop_last=False)
 
 # Model
 lvae.cuda()
@@ -268,40 +268,40 @@ def train(args, lvae):
                         np.savetxt(l_test, rec_test, fmt='%f', delimiter=' ', newline='\r')
                         l_test.write(b'\n')
 # omn_test
-                i_omn = 0
-                for data_omn, target_omn in omn_loader:
-                    i_omn += 1
-                    tar_omn = torch.from_numpy(args.num_classes * np.ones(target_omn.shape[0]))
-                    if i_omn<=158: #158*64=10112>10000
-                        if args.cuda:
-                            data_omn = data_omn.cuda()
-                        with torch.no_grad():
-                            data_omn = Variable(data_omn)
-                    else:
-                        break
-
-                    mu_omn, output_omn, de_omn = lvae.test(data_omn, target_test_en)
-                    output_omn = torch.exp(output_omn)
-                    prob_omn = output_omn.max(1)[0]  # get the value of the max probability
-                    pre_omn = output_omn.max(1, keepdim=True)[1]  # get the index of the max log-probability
-                    rec_omn = (de_omn - data_omn).pow(2).sum((3, 2, 1))
-                    mu_omn = torch.Tensor.cpu(mu_omn).detach().numpy()
-                    tar_omn = torch.Tensor.cpu(tar_omn).detach().numpy()
-                    pre_omn = torch.Tensor.cpu(pre_omn).detach().numpy()
-                    rec_omn = torch.Tensor.cpu(rec_omn).detach().numpy()
-
-                    with open('lvae%d/omn_fea.txt' % args.lamda, 'ab') as f_test:
-                        np.savetxt(f_test, mu_omn, fmt='%f', delimiter=' ', newline='\r')
-                        f_test.write(b'\n')
-                    with open('lvae%d/omn_tar.txt' % args.lamda, 'ab') as t_test:
-                        np.savetxt(t_test, tar_omn, fmt='%d', delimiter=' ', newline='\r')
-                        t_test.write(b'\n')
-                    with open('lvae%d/omn_pre.txt' % args.lamda, 'ab') as p_test:
-                        np.savetxt(p_test, pre_omn, fmt='%d', delimiter=' ', newline='\r')
-                        p_test.write(b'\n')
-                    with open('lvae%d/omn_rec.txt' % args.lamda, 'ab') as l_test:
-                        np.savetxt(l_test, rec_omn, fmt='%f', delimiter=' ', newline='\r')
-                        l_test.write(b'\n')
+#                 i_omn = 0
+#                 for data_omn, target_omn in omn_loader:
+#                     i_omn += 1
+#                     tar_omn = torch.from_numpy(args.num_classes * np.ones(target_omn.shape[0]))
+#                     if i_omn<=158: #158*64=10112>10000
+#                         if args.cuda:
+#                             data_omn = data_omn.cuda()
+#                         with torch.no_grad():
+#                             data_omn = Variable(data_omn)
+#                     else:
+#                         break
+#
+#                     mu_omn, output_omn, de_omn = lvae.test(data_omn, target_test_en)
+#                     output_omn = torch.exp(output_omn)
+#                     prob_omn = output_omn.max(1)[0]  # get the value of the max probability
+#                     pre_omn = output_omn.max(1, keepdim=True)[1]  # get the index of the max log-probability
+#                     rec_omn = (de_omn - data_omn).pow(2).sum((3, 2, 1))
+#                     mu_omn = torch.Tensor.cpu(mu_omn).detach().numpy()
+#                     tar_omn = torch.Tensor.cpu(tar_omn).detach().numpy()
+#                     pre_omn = torch.Tensor.cpu(pre_omn).detach().numpy()
+#                     rec_omn = torch.Tensor.cpu(rec_omn).detach().numpy()
+#
+#                     with open('lvae%d/omn_fea.txt' % args.lamda, 'ab') as f_test:
+#                         np.savetxt(f_test, mu_omn, fmt='%f', delimiter=' ', newline='\r')
+#                         f_test.write(b'\n')
+#                     with open('lvae%d/omn_tar.txt' % args.lamda, 'ab') as t_test:
+#                         np.savetxt(t_test, tar_omn, fmt='%d', delimiter=' ', newline='\r')
+#                         t_test.write(b'\n')
+#                     with open('lvae%d/omn_pre.txt' % args.lamda, 'ab') as p_test:
+#                         np.savetxt(p_test, pre_omn, fmt='%d', delimiter=' ', newline='\r')
+#                         p_test.write(b'\n')
+#                     with open('lvae%d/omn_rec.txt' % args.lamda, 'ab') as l_test:
+#                         np.savetxt(l_test, rec_omn, fmt='%f', delimiter=' ', newline='\r')
+#                         l_test.write(b'\n')
 # mnist_noise_test
                 for data_test, target_test in val_loader:
                     tar_mnist_noise = torch.from_numpy(args.num_classes * np.ones(target_test.shape[0]))
