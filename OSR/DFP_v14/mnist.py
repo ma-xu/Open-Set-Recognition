@@ -300,7 +300,7 @@ def main_stage2(stage1_dict):
             train_out = stage2_train(net2, trainloader, optimizer, criterion, device)
             save_model(net2, epoch, os.path.join(args.checkpoint, 'stage_2_last_model.pth'))
 
-            get_stat(net2, testloader, device, args)
+            get_stat(net2, trainloader, device, args)
 
             logger.append([epoch + 1, train_out["train_loss"], train_out["loss_similarity"],
                            train_out["distance_in"], train_out["distance_out"],
