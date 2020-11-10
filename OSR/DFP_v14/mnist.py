@@ -23,7 +23,7 @@ from DFPLoss import DFPLoss, DFPLoss2
 from DFPNet import DFPNet
 from MyPlotter import plot_feature, plot_distance,plot_gap
 from Generater import CGD_estimator
-from helper import get_stat
+from helper import get_gap_stat
 
 model_names = sorted(name for name in models.__dict__
                      if not name.startswith("__")
@@ -185,7 +185,7 @@ def main_stage1():
     distance_results = plot_distance(net, trainloader, device, args)
     # print(f"the distance thresholds are\n {distance_results['thresholds']}\n")
     # gap_results = plot_gap(net, trainloader, device, args)
-    stat = get_stat(net, trainloader, device, args)
+    stat = get_gap_stat(net, trainloader, device, args)
     # estimator =CGD_estimator(gap_results)
 
     logger.close()
@@ -303,7 +303,7 @@ def main_stage2(stage1_dict):
 
             train_out = stage2_train(net2, trainloader, optimizer, criterion, device, stat)
             save_model(net2, epoch, os.path.join(args.checkpoint, 'stage_2_last_model.pth'))
-            stat = get_stat(net2, trainloader, device, args)
+            stat = get_gap_stat(net2, trainloader, device, args)
 
             logger.append([epoch + 1, train_out["train_loss"], train_out["loss_similarity"],
                            train_out["distance_in"], train_out["distance_out"],
