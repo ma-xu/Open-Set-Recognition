@@ -9,9 +9,19 @@ def get_stat(net, testloader, device, args):
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
             out = net(inputs)
-            out = out['embed_fea']
-            for target in targets:
-                print(f"{type(target)}, {target}, {type(out)}, , {out.shape}")
+            out = (out['embed_fea']).unsqueeze(dim=1)
+            for i in targets:
+                target = targets[i]
+                print(f"{type(target)}, {target}, {type(out)}, {out.shape}")
+                (Features[target]).append(out[i])
+
+        for i in range(args.train_class_num):
+            feature = torch.cat(Features[i], dim=0)
+            print("____"*5)
+            print(torch.std(feature,dim=2))
+            print(torch.mean(feature, dim=2))
+
+
                 # label = targets==i
                 # label =
                 # dist = dist_fea2cen[i, label]
