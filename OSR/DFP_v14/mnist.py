@@ -256,13 +256,13 @@ def stage1_test(net, testloader, device):
 def main_stage2(stage1_dict):
     net1 = stage1_dict['net']
     thresholds = stage1_dict['distance']['thresholds']
-    estimator = stage1_dict['estimator']
+    # estimator = stage1_dict['estimator']
     print(f"\n===> Start Stage-2 training...\n")
     start_epoch = 0  # start from epoch 0 or last checkpoint epoch
     print('==> Building model..')
     net2 = DFPNet(backbone=args.arch, num_classes=args.train_class_num, embed_dim=args.embed_dim,
                   distance=args.distance, similarity=args.similarity, scaled=args.scaled, thresholds=thresholds,
-                  norm_centroid=args.norm_centroid, amplifier=args.amplifier, estimator = estimator)
+                  norm_centroid=args.norm_centroid, amplifier=args.amplifier, estimator = None)
     net2 = net2.to(device)
     if not args.evaluate and not os.path.isdir(args.stage2_resume):
         init_stage2_model(net1, net2)
