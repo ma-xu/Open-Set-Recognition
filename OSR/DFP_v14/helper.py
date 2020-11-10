@@ -17,8 +17,8 @@ def get_stat(net, testloader, device, args):
         for i in range(args.train_class_num):
             feature = torch.cat(Features[i], dim=0)
             print("____"*5)
-            print(torch.std(feature,dim=2))
-            print(torch.mean(feature, dim=2))
+            print(torch.std(feature,dim=1))
+            print(torch.mean(feature, dim=1))
 
 
                 # label = targets==i
