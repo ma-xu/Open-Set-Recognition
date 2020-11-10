@@ -1,18 +1,18 @@
 import torch
 from Utils import progress_bar
 
-def get_stat(net, testloader, device, args):
+def get_stat(net, trainloader, device, args):
 
     Features = {i: [] for i in range(args.train_class_num)}
     with torch.no_grad():
-        for batch_idx, (inputs, targets) in enumerate(testloader):
+        for batch_idx, (inputs, targets) in enumerate(trainloader):
             inputs, targets = inputs.to(device), targets.to(device)
             out = net(inputs)
             out = (out['embed_fea']).unsqueeze(dim=1)
             for i in targets:
                 target = (targets[i]).item()
                 (Features[target]).append(out[i])
-            progress_bar(batch_idx, len(testloader), "calculating statistics ...")
+            progress_bar(batch_idx, len(trainloader), "calculating statistics ...")
 
         list_std = []
         list_mean = []

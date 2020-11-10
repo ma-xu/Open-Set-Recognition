@@ -185,6 +185,7 @@ def main_stage1():
     distance_results = plot_distance(net, trainloader, device, args)
     # print(f"the distance thresholds are\n {distance_results['thresholds']}\n")
     # gap_results = plot_gap(net, trainloader, device, args)
+    stat = get_stat(net, trainloader, device, args)
     # estimator =CGD_estimator(gap_results)
 
     logger.close()
@@ -195,6 +196,7 @@ def main_stage1():
     return {"net": net,
             "distance": distance_results,
             # "estimator": estimator
+            "stat": stat
             }
 
 
@@ -257,6 +259,7 @@ def main_stage2(stage1_dict):
     net1 = stage1_dict['net']
     thresholds = stage1_dict['distance']['thresholds']
     # estimator = stage1_dict['estimator']
+    stat = stage1_dict["stat"]
     print(f"\n===> Start Stage-2 training...\n")
     start_epoch = 0  # start from epoch 0 or last checkpoint epoch
     print('==> Building model..')
@@ -297,12 +300,10 @@ def main_stage2(stage1_dict):
             print('\nStage_2 Epoch: %d   Learning rate: %f' % (epoch + 1, optimizer.param_groups[0]['lr']))
             # Here, I didn't set optimizers respectively, just for simplicity. Performance did not vary a lot.
             adjust_learning_rate(optimizer, epoch, args.stage2_lr, step=10)
-            stat = get_stat(net2, trainloader, device, args)
             print(f"stat is {stat}")
             train_out = stage2_train(net2, trainloader, optimizer, criterion, device, stat)
             save_model(net2, epoch, os.path.join(args.checkpoint, 'stage_2_last_model.pth'))
-
-
+            stat = get_stat(net2, trainloader, device, args)
 
             logger.append([epoch + 1, train_out["train_loss"], train_out["loss_similarity"],
                            train_out["distance_in"], train_out["distance_out"],
