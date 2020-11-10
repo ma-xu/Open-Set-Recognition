@@ -184,8 +184,8 @@ def main_stage1():
     # calculating distances for last epoch
     distance_results = plot_distance(net, trainloader, device, args)
     # print(f"the distance thresholds are\n {distance_results['thresholds']}\n")
-    gap_results = plot_gap(net, trainloader, device, args)
-    estimator =CGD_estimator(gap_results)
+    # gap_results = plot_gap(net, trainloader, device, args)
+    # estimator =CGD_estimator(gap_results)
 
     logger.close()
     print(f"\nFinish Stage-1 training...\n")
@@ -194,7 +194,7 @@ def main_stage1():
 
     return {"net": net,
             "distance": distance_results,
-            "estimator": estimator
+            # "estimator": estimator
             }
 
 
@@ -297,10 +297,11 @@ def main_stage2(stage1_dict):
             print('\nStage_2 Epoch: %d   Learning rate: %f' % (epoch + 1, optimizer.param_groups[0]['lr']))
             # Here, I didn't set optimizers respectively, just for simplicity. Performance did not vary a lot.
             adjust_learning_rate(optimizer, epoch, args.stage2_lr, step=10)
-            train_out = stage2_train(net2, trainloader, optimizer, criterion, device)
+            stat = get_stat(net2, trainloader, device, args)
+            train_out = stage2_train(net2, trainloader, optimizer, criterion, device, stat)
             save_model(net2, epoch, os.path.join(args.checkpoint, 'stage_2_last_model.pth'))
 
-            get_stat(net2, trainloader, device, args)
+
 
             logger.append([epoch + 1, train_out["train_loss"], train_out["loss_similarity"],
                            train_out["distance_in"], train_out["distance_out"],
@@ -327,7 +328,7 @@ def main_stage2(stage1_dict):
     return net2
 
 
-def stage2_train(net2, trainloader, optimizer, criterion, device):
+def stage2_train(net2, trainloader, optimizer, criterion, device, stat):
     net2.train()
     train_loss = 0
     loss_similarity = 0
@@ -341,7 +342,7 @@ def stage2_train(net2, trainloader, optimizer, criterion, device):
         inputs, targets = inputs.to(device), targets.to(device)
 
         optimizer.zero_grad()
-        out = net2(inputs)
+        out = net2(inputs, stat)
         loss_dict = criterion(out, targets)
         loss = loss_dict['total']
         # loss = loss_dict['similarity']

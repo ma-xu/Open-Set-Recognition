@@ -227,3 +227,38 @@ def demoestimator():
     guassian_generator(estimator,torch.rand(256,1152))
 
 # demoestimator()
+
+"""--------------------------------------------"""
+
+
+class CGDestimator():
+    def __init__(self, stat):
+        super(CGDestimator, self).__init__()
+        self.mean = stat["mean"]  # [class_number, channel]
+        self.std = stat["std"]
+
+    def generator(self, gap):
+        batch_size = gap.shape[0]
+        class_num, channel_num = self.mean.size()
+
+        n = max(ceil(batch_size / class_num), 3)
+
+        noise = torch.randn(n, class_num * channel_num).to(gap.device)
+        channel_mean = self.mean.view(-1)
+        channel_std = self.std.view(-1)
+        noise = (noise - noise.mean(dim=0, keepdim=True)) / (noise.std(dim=0, keepdim=True))
+        noise = noise * channel_std + channel_mean
+
+        noise = noise.reshape([n, class_num, channel_num])
+        noise = noise.reshape([n * class_num, channel_num])
+        noise = noise[torch.randperm(noise.size()[0])]
+        noise = noise[0:batch_size]
+        noise = noise.clone().detach()
+        # data = gap + data - gap
+        return noise
+
+
+
+
+
+
