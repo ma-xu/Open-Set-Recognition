@@ -298,7 +298,7 @@ def main_stage2(stage1_dict):
             # Here, I didn't set optimizers respectively, just for simplicity. Performance did not vary a lot.
             adjust_learning_rate(optimizer, epoch, args.stage2_lr, step=10)
             stat = get_stat(net2, trainloader, device, args)
-            print(stat)
+            print(f"stat is {stat}")
             train_out = stage2_train(net2, trainloader, optimizer, criterion, device, stat)
             save_model(net2, epoch, os.path.join(args.checkpoint, 'stage_2_last_model.pth'))
 
