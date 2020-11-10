@@ -56,7 +56,7 @@ class DFPNet(nn.Module):
         else:
             return last_layer.out_channels
 
-    def forward(self, x):
+    def forward(self, x, stat=None):
         x = self.backbone(x)
         dis_gen2cen, dis_gen2ori, thresholds, amplified_thresholds, embed_gen = None, None, None, None, None
         gap = (F.adaptive_avg_pool2d(x, 1)).view(x.size(0), -1)
@@ -92,13 +92,13 @@ def demo():
     x = torch.rand([10, 3, 32, 32])
     y = torch.rand([6, 3, 32, 32])
     threshold = torch.rand([10])
-    net = DFPNet('ResNet18', num_classes=10, embed_dim=64, thresholds=threshold)
+    net = DFPNet('ResNet18', num_classes=10, embed_dim=64, thresholds=None)
     output = net(x)
     print(output["gap"].shape)
     print(output["embed_fea"].shape)
     print(output["sim_fea2cen"].shape)
-    print(output["dis_gen2cen"].shape)
-    print(output["dis_gen2ori"].shape)
+    # print(output["dis_gen2cen"].shape)
+    # print(output["dis_gen2ori"].shape)
 
 
 # demo()

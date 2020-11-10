@@ -23,6 +23,7 @@ from DFPLoss import DFPLoss, DFPLoss2
 from DFPNet import DFPNet
 from MyPlotter import plot_feature, plot_distance,plot_gap
 from Generater import CGD_estimator
+from helper import get_stat
 
 model_names = sorted(name for name in models.__dict__
                      if not name.startswith("__")
@@ -246,7 +247,7 @@ def stage1_test(net, testloader, device):
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
 
-            progress_bar(batch_idx, len(trainloader), '| Acc: %.3f%% (%d/%d)'
+            progress_bar(batch_idx, len(testloader), '| Acc: %.3f%% (%d/%d)'
                          % (100. * correct / total, correct, total))
 
     print("\nTesting results is {:.2f}%".format(100. * correct / total))
@@ -298,6 +299,9 @@ def main_stage2(stage1_dict):
             adjust_learning_rate(optimizer, epoch, args.stage2_lr, step=10)
             train_out = stage2_train(net2, trainloader, optimizer, criterion, device)
             save_model(net2, epoch, os.path.join(args.checkpoint, 'stage_2_last_model.pth'))
+
+            get_stat(net2, testloader, device, args)
+
             logger.append([epoch + 1, train_out["train_loss"], train_out["loss_similarity"],
                            train_out["distance_in"], train_out["distance_out"],
                            train_out["generate_within"], train_out["generate_2orign"],
