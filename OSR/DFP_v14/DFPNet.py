@@ -63,7 +63,7 @@ class DFPNet(nn.Module):
         if hasattr(self, 'thresholds'):
             thresholds = self.thresholds
             estimator = CGDestimator(stat=stat)
-            gen = estimator(gap)
+            gen = estimator.generator(gap)
 
             embed_gen = self.embeddingLayer(gen) if hasattr(self, 'embeddingLayer') else gen
             amplified_thresholds = self.thresholds * self.amplifier
