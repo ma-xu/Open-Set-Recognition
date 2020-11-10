@@ -12,7 +12,6 @@ def get_stat(net, testloader, device, args):
             out = (out['embed_fea']).unsqueeze(dim=1)
             for i in targets:
                 target = (targets[i]).item()
-                print(f"{type(target)}, {target}, {type(out)}, {out.shape}")
                 (Features[target]).append(out[i])
 
         for i in range(args.train_class_num):
