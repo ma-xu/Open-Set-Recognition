@@ -60,11 +60,10 @@ class DFPNet(nn.Module):
         x = self.backbone(x)
         dis_gen2cen, dis_gen2ori, thresholds, amplified_thresholds, embed_gen = None, None, None, None, None
         gap = (F.adaptive_avg_pool2d(x, 1)).view(x.size(0), -1)
-        if hasattr(self, 'thresholds'):
+        if stat is not None:
             thresholds = self.thresholds
             estimator = CGDestimator(stat=stat)
             gen = estimator.generator(gap)
-
             embed_gen = self.embeddingLayer(gen) if hasattr(self, 'embeddingLayer') else gen
             amplified_thresholds = self.thresholds * self.amplifier
         embed_fea = self.embeddingLayer(gap) if hasattr(self, 'embeddingLayer') else gap

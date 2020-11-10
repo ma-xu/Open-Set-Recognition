@@ -254,7 +254,6 @@ class CGDestimator():
         noise = noise[torch.randperm(noise.size()[0])]
         noise = noise[0:batch_size]
         noise = noise.clone().detach()
-        print(f"noise shape is : {noise.shape}")
         # data = gap + data - gap
         return noise
 
