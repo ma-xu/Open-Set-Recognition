@@ -72,7 +72,7 @@ class DFPNet(nn.Module):
         sim_fea2cen = getattr(SIMI, self.similarity)(embed_fea, centroids)
         DIST = Distance(scaled=self.scaled)
         dis_fea2cen = getattr(DIST, self.distance)(embed_fea, centroids)
-        if hasattr(self, 'thresholds'):
+        if stat is not None:
             dis_gen2cen = getattr(DIST, self.distance)(embed_gen, centroids)
             dis_gen2ori = getattr(DIST, self.distance)(embed_gen, self.origin)
 
