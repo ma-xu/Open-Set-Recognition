@@ -36,6 +36,7 @@ class LeNetHiera(nn.Module):
         )
         self.extractor1 = nn.Conv2d(32, 128 * 3 * 3, 1)
         self.extractor2 = nn.Conv2d(64, 128 * 3 * 3, 1)
+        self.fuse = nn.Parameter(torch.Tensor([[[[0.], [0.], [1.]]]]))
 
         if backbone_fc:
             self.linear = nn.Sequential(
@@ -62,7 +63,8 @@ class LeNetHiera(nn.Module):
         x = x.view(-1, 128 * 3 * 3)
         # for unified style for DFPNet
         out = x.unsqueeze(dim=-1).unsqueeze(dim=-1)
-        out = (extractor1 + extractor2 + out)/3.0
+        out = torch.cat([extractor1,extractor2, out],dim=2)
+        out = (out*self.fuse).sum(dim=2,keepdim=True)
 
         # return the original feature map if no FC layers.
         if hasattr(self, 'linear'):
