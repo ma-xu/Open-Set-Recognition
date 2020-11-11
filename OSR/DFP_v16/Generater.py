@@ -262,7 +262,7 @@ class CGDestimator():
 
 
 
-def channel_swicher(gap,ratio=0.7):
+def channel_swicher(gap,ratio=0.2):
     # generated a random gap doesn't require gradient
     # generated a random gap doesn't require gradient
     b, c = gap.size()
