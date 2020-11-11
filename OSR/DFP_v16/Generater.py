@@ -239,14 +239,14 @@ class CGDestimator():
 
     def generator(self, gap):
         mem = gap.clone().detach()
-        noise = torch.randn(gap.size())
+        noise = torch.randn(gap.size()).to(gap.device)
         channel_min, _ = torch.min(mem, dim=0, keepdim=False)
         channel_max, _ = torch.max(mem, dim=0, keepdim=False)
         noise_min, _ = torch.min(noise, dim=0, keepdim=False)
         noise_max, _ = torch.max(noise, dim=0, keepdim=False)
         k = (channel_max-channel_min)/(noise_max-noise_min)
         noise = channel_min + k(noise - noise_min)
-        noise = noise.to(gap.device)
+     
         """
         batch_size = gap.shape[0]
         class_num, channel_num = self.mean.size()
