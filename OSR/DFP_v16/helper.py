@@ -9,7 +9,7 @@ def get_gap_stat(net, trainloader, device, args):
             inputs, targets = inputs.to(device), targets.to(device)
             out = net(inputs)
             out = (out['gap']).unsqueeze(dim=1)
-            for i in targets:
+            for i in range(out.shape[0]):
                 target = (targets[i]).item()
                 (Features[target]).append(out[i])
             progress_bar(batch_idx, len(trainloader), "calculating statistics ...")
