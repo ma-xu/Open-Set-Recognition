@@ -26,7 +26,7 @@ def get_gap_stat(net, trainloader, device, args):
         list_mean = []
         for i in range(args.train_class_num):
             feature = torch.cat(Result[i]["fea_bank"], dim=0)
-            print(f"shape of Result[i][fea_bank] is {Result[i]['fea_bank'].shape}")
+            print(f"shape of Result[i][fea_bank] is {Result[i]['fea_bank'][0].shape}")
             list_std.append(torch.std(feature,dim=0,keepdim=True))
             list_mean.append(torch.mean(feature, dim=0, keepdim=True))
     list_std = torch.cat(list_std,dim=0)
