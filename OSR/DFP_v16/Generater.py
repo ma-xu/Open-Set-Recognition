@@ -245,8 +245,8 @@ class CGDestimator():
         noise_min, _ = torch.min(noise, dim=0, keepdim=False)
         noise_max, _ = torch.max(noise, dim=0, keepdim=False)
         k = (channel_max-channel_min)/(noise_max-noise_min)
-        noise = channel_min + k(noise - noise_min)
-     
+        noise = channel_min + k*(noise - noise_min)
+
         """
         batch_size = gap.shape[0]
         class_num, channel_num = self.mean.size()
