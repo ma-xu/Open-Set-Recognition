@@ -64,7 +64,8 @@ class DFPLoss2(nn.Module):
 
         #  distance loss for generated data
         print(f"dist_gen2cen.shape: {dist_gen2cen.shape}")
-        loss_generate = torch.min(dist_gen2cen, dim=1, keepdim=False)+ dist_gen2ori
+        print(f"dist_gen2ori.shape: {dist_gen2ori.shape}")
+        loss_generate = torch.min(dist_gen2cen, dim=1, keepdim=False) + dist_gen2ori
         loss_generate = dist_gen2ori / loss_generate
         # loss_generate = dist_gen2ori / (dist_gen2cen.min(dim=1, keepdim=False) + dist_gen2ori)
         loss_generate = self.beta * loss_generate.mean()
