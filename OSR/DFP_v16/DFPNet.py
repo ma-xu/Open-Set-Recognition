@@ -64,7 +64,8 @@ class DFPNet(nn.Module):
         if stat is not None:
             thresholds = self.thresholds
             estimator = CGDestimator(stat=stat)
-            gen = channel_swicher(gap)
+            # gen = channel_swicher(gap)
+            gen = estimator.generator(gap)
             embed_gen = self.embeddingLayer(gen) if hasattr(self, 'embeddingLayer') else gen
             amplified_thresholds = self.thresholds * self.amplifier
         embed_fea = self.embeddingLayer(gap) if hasattr(self, 'embeddingLayer') else gap

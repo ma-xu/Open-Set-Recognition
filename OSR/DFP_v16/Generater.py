@@ -238,6 +238,9 @@ class CGDestimator():
         self.std = stat["std"]
 
     def generator(self, gap):
+        cls,cha = self.mean.size()
+        noise = self.mean.unsquezze(dim=0).expand([20,cls,cha]).reshape([-1,cha])
+        """
         batch_size = gap.shape[0]
         class_num, channel_num = self.mean.size()
 
@@ -255,6 +258,7 @@ class CGDestimator():
         noise = noise[0:batch_size]
         noise = noise.clone().detach()
         # data = gap + data - gap
+        """
         return noise
 
 
