@@ -312,7 +312,8 @@ def main_stage2(stage1_dict):
             if args.plot:
                 plot_feature(net2, args, trainloader, device, args.plotfolder2, epoch=epoch,
                              plot_class_num=args.train_class_num, maximum=args.plot_max,
-                             plot_quality=args.plot_quality, norm_centroid=args.norm_centroid, thresholds=thresholds)
+                             plot_quality=args.plot_quality, norm_centroid=args.norm_centroid, thresholds=thresholds,
+                             stat = stat)
                 plot_feature(net2, args, testloader, device, args.plotfolder2, epoch="test_"+str(epoch),
                              plot_class_num=args.train_class_num + 1, maximum=args.plot_max,
                              plot_quality=args.plot_quality, norm_centroid=args.norm_centroid, thresholds=thresholds,
