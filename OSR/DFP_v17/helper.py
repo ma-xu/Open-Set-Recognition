@@ -36,7 +36,11 @@ def get_gap_stat(net, trainloader, device, args):
     print(f"list_std shape: {list_std.shape}")
     print(f"list_mean shape: {list_mean.shape}")
     print(f"list_feature shape: {list_feature.shape}")
-    return {"std":list_std,"mean":list_mean, "fea_bank": list_feature}
+    return {
+        "std": list_std,
+        "mean": list_mean,
+        "fea_bank": list_feature
+    }
 
 
 
