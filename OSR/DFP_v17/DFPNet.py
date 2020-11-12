@@ -7,8 +7,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import backbones.cifar as models
 from Distance import Similarity, Distance
-from Generater import generater_gap5, estimator_generator, whitennoise_generator,\
-    guassian_generator, CGDestimator, channel_swicher
+from Generater import CGDestimator
 
 
 class DFPNet(nn.Module):
