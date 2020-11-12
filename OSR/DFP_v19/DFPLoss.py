@@ -127,3 +127,44 @@ def demo2():
 
 
 # demo2()
+
+
+class DFPLoss3(nn.Module):
+    def __init__(self, alpha=1., beta=1.):
+        super(DFPLoss3, self).__init__()
+        self.alpha = alpha
+        self.beta = beta
+        self.ce = nn.CrossEntropyLoss()
+
+    def forward(self, net_out, targets):
+        sim_fea2cen = net_out["sim_fea2cen"]
+        dist_fea2cen = net_out["dis_fea2cen"]
+        dist_gen2cen = net_out["dis_gen2cen"]
+        dist_gen2ori = net_out["dis_gen2ori"]
+
+        # loss similarity
+        loss_similarity = self.ce(sim_fea2cen, targets)
+
+        # loss distance
+        batch_size, num_classes = dist_fea2cen.shape
+        classes = torch.arange(num_classes, device=targets.device).long()
+        labels = targets.unsqueeze(1).expand(batch_size, num_classes)
+        mask = labels.eq(classes.expand(batch_size, num_classes))
+        dist_within = (dist_fea2cen * mask.float()).sum(dim=1, keepdim=True)
+        loss_distance = self.alpha * (dist_within.sum()) / batch_size
+
+        # loss generate
+        dist_gen2cen_min, _ = torch.min(dist_gen2cen, dim=1, keepdim=True)
+        loss_generate = dist_gen2ori / (dist_gen2cen_min + dist_gen2ori)
+        loss_generate = self.beta * loss_generate.mean()
+
+
+        # total loss
+        loss = loss_similarity + loss_distance + loss_generate
+
+        return {
+            "total": loss,
+            "similarity": loss_similarity,
+            "distance": loss_distance,
+            "generate": loss_generate
+        }

@@ -1,1 +1,1 @@
-what about from the model input?
+what about only one stage?

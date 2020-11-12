@@ -19,7 +19,7 @@ sys.path.append("../..")
 import backbones.cifar as models
 from datasets import MNIST
 from Utils import adjust_learning_rate, progress_bar, Logger, mkdir_p, Evaluation
-from DFPLoss import DFPLoss, DFPLoss2
+from DFPLoss import DFPLoss, DFPLoss2, DFPLoss3
 from DFPNet import DFPNet
 from MyPlotter import plot_feature, plot_distance,plot_gap
 from helper import get_gap_stat
@@ -122,7 +122,7 @@ def main():
     print(device)
 
     stage1_dict = main_stage1()
-    main_stage2(stage1_dict)
+    # main_stage2(stage1_dict)
 
     #     centroids = cal_centroids(net1, device)
     # main_stage2(net1, centroids)
@@ -156,10 +156,10 @@ def main_stage1():
             print("=> no checkpoint found at '{}'".format(args.resume))
     else:
         logger = Logger(os.path.join(args.checkpoint, 'log_stage1.txt'))
-        logger.set_names(['Epoch', 'Train Loss', 'Similarity Loss', 'Distance Loss', 'Train Acc.'])
+        logger.set_names(['Epoch', 'Train Loss', 'Similarity Loss', 'Distance Loss','Generate Loss', 'Train Acc.'])
 
     # after resume
-    criterion = DFPLoss(alpha=args.alpha)
+    criterion = DFPLoss3(alpha=args.alpha, beta=args.beta)
     optimizer = optim.SGD(net.parameters(), lr=args.stage1_lr, momentum=0.9, weight_decay=5e-4)
 
     if not args.evaluate:
@@ -169,16 +169,15 @@ def main_stage1():
             train_out = stage1_train(net, trainloader, optimizer, criterion, device)
             save_model(net, epoch, os.path.join(args.checkpoint, 'stage_1_last_model.pth'))
             logger.append([epoch + 1, train_out["train_loss"], train_out["loss_similarity"],
-                           train_out["loss_distance"], train_out["accuracy"]])
+                           train_out["loss_distance"],train_out["loss_generate"], train_out["accuracy"]])
             if args.plot:
                 plot_feature(net, args, trainloader, device, args.plotfolder1, epoch=epoch,
                              plot_class_num=args.train_class_num, maximum=args.plot_max,
                              plot_quality=args.plot_quality, norm_centroid=args.norm_centroid)
-    if args.plot:
-        # plot the test set
-        plot_feature(net, args, testloader, device, args.plotfolder1, epoch="test",
-                     plot_class_num=args.train_class_num + 1, maximum=args.plot_max,
-                     plot_quality=args.plot_quality, norm_centroid=args.norm_centroid)
+                plot_feature(net, args, testloader, device, args.plotfolder1, epoch="test"+str(epoch),
+                             plot_class_num=args.train_class_num + 1, maximum=args.plot_max,
+                             plot_quality=args.plot_quality, norm_centroid=args.norm_centroid)
+
 
     # calculating distances for last epoch
     distance_results = plot_distance(net, trainloader, device, args)
@@ -205,6 +204,7 @@ def stage1_train(net, trainloader, optimizer, criterion, device):
     train_loss = 0
     loss_similarity = 0
     loss_distance = 0
+    loss_generate = 0
     correct = 0
     total = 0
     for batch_idx, (inputs, targets) in enumerate(trainloader):
@@ -222,6 +222,8 @@ def stage1_train(net, trainloader, optimizer, criterion, device):
         train_loss += loss.item()
         loss_similarity += (loss_dict['similarity']).item()
         loss_distance += (loss_dict['distance']).item()
+        loss_generate += (loss_dict['generate']).item()
+
 
         _, predicted = (out['sim_fea2cen']).max(1)
         total += targets.size(0)
@@ -233,6 +235,7 @@ def stage1_train(net, trainloader, optimizer, criterion, device):
         "train_loss": train_loss / (batch_idx + 1),
         "loss_similarity": loss_similarity / (batch_idx + 1),
         "loss_distance": loss_distance / (batch_idx + 1),
+        "loss_generate": loss_generate / (batch_idx + 1),
         "accuracy": correct / total
     }
 

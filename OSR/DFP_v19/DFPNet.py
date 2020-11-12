@@ -94,22 +94,22 @@ class DFPNet(nn.Module):
 
     def forward(self, input):
         x = self.backbone(input)
-        dis_gen2cen, dis_gen2ori, thresholds, amplified_thresholds, embed_gen = None, None, None, None, None
         gap = (F.adaptive_avg_pool2d(x, 1)).view(x.size(0), -1)
-        if hasattr(self, 'thresholds'):
-            thresholds = self.thresholds
-            gen = self.generator(input)
-            embed_gen = self.embeddingLayer(gen) if hasattr(self, 'embeddingLayer') else gen
-
         embed_fea = self.embeddingLayer(gap) if hasattr(self, 'embeddingLayer') else gap
+        gen = self.generator(input)
+        embed_gen = self.embeddingLayer(gen) if hasattr(self, 'embeddingLayer') else gen
+
         centroids = F.normalize(self.centroids, dim=1, p=2) if self.norm_centroid else self.centroids
         SIMI = Similarity(scaled=self.scaled)
         sim_fea2cen = getattr(SIMI, self.similarity)(embed_fea, centroids)
         DIST = Distance(scaled=self.scaled)
         dis_fea2cen = getattr(DIST, self.distance)(embed_fea, centroids)
+        dis_gen2cen = getattr(DIST, self.distance)(embed_gen, centroids)
+        dis_gen2ori = getattr(DIST, self.distance)(embed_gen, self.origin)
+
+        thresholds = None
         if hasattr(self, 'thresholds'):
-            dis_gen2cen = getattr(DIST, self.distance)(embed_gen, centroids)
-            dis_gen2ori = getattr(DIST, self.distance)(embed_gen, self.origin)
+            thresholds = self.thresholds
 
         return {
             "gap": gap,
@@ -132,8 +132,8 @@ def demo():
     print(output["gap"].shape)
     print(output["embed_fea"].shape)
     print(output["sim_fea2cen"].shape)
-    # print(output["dis_gen2cen"].shape)
-    # print(output["dis_gen2ori"].shape)
+    print(output["dis_gen2cen"].shape)
+    print(output["dis_gen2ori"].shape)
 
 
 # demo()
