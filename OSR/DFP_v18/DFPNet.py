@@ -58,10 +58,10 @@ class DFPNet(nn.Module):
         x_bak = x.clone().detach()
 
         # mixup with the input data
-        # x_bak_noise = x_bak.unsqueeze(dim=0).expand([2, b, c, w, h])
-        # x_bak_noise = x_bak_noise.reshape([-1, c, w, h])
-        # x_bak_noise = x_bak_noise[torch.randperm(x_bak_noise.size()[0])]
-        # x_bak_noise_1 = x_bak_noise[0:b]
+        x_bak_noise = x_bak.unsqueeze(dim=0).expand([2, b, c, w, h])
+        x_bak_noise = x_bak_noise.reshape([-1, c, w, h])
+        x_bak_noise = x_bak_noise[torch.randperm(x_bak_noise.size()[0])]
+        x_bak_noise_1 = x_bak_noise[0:b]
         # weight = x_bak_noise[b:]
         # weight = weight[:,0,1,2] # random select the 0-th channel, 1/2-th pixel as weight
         # weight = torch.sigmoid(weight)/2.0
@@ -81,11 +81,12 @@ class DFPNet(nn.Module):
 
         # channel_wise normalization (others reshape to 1 dim)
         gaussian_noise = torch.randn(b, c, w, h).to(x.device)
-        noise_bak = gaussian_noise.permute(1,0,2,3)
+        noise_bak = gaussian_noise.permute(1, 0, 2, 3)
         noise_bak = noise_bak.reshape([c,-1])
         noise_mean = noise_bak.mean(dim=1,keepdim=True).unsqueeze(dim=-1).unsqueeze(dim=0)
         noise_std = noise_bak.std(dim=1, keepdim=True).unsqueeze(dim=-1).unsqueeze(dim=0)
         gaussian_noise.sub_(noise_mean).div_(noise_std)
+        gaussian_noise = 0.7*x_bak+0.15*gaussian_noise +0.15*x_bak_noise_1
         gen = self.backbone(gaussian_noise)
 
         gen = (F.adaptive_avg_pool2d(gen, 1)).view(x.size(0), -1)
