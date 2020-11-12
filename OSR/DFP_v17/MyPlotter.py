@@ -11,14 +11,14 @@ from tqdm import tqdm
 
 
 def plot_feature(net, args, plotloader, device, dirname, epoch=0, plot_class_num=10, maximum=500, plot_quality=150,
-                 norm_centroid=False, thresholds=None, testmode=False, stat = None):
+                 norm_centroid=False, thresholds=None, testmode=False):
     plot_features = []
     plot_generates = []
     plot_labels = []
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(plotloader):
             inputs, targets = inputs.to(device), targets.to(device)
-            out = net(inputs, stat)
+            out = net(inputs)
             embed_fea = out["embed_fea"]
             embed_gen = out["embed_gen"]
             try:

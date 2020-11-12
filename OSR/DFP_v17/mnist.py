@@ -265,7 +265,7 @@ def main_stage2(stage1_dict):
     print('==> Building model..')
     net2 = DFPNet(backbone=args.arch, num_classes=args.train_class_num, embed_dim=args.embed_dim,
                   distance=args.distance, similarity=args.similarity, scaled=args.scaled, thresholds=thresholds,
-                  norm_centroid=args.norm_centroid, amplifier=args.amplifier, estimator = None)
+                  norm_centroid=args.norm_centroid, stat = stat)
     net2 = net2.to(device)
     if not args.evaluate and not os.path.isdir(args.stage2_resume):
         init_stage2_model(net1, net2)
@@ -304,10 +304,9 @@ def main_stage2(stage1_dict):
             if args.plot:
                 plot_feature(net2, args, trainloader, device, args.plotfolder2, epoch='before_'+str(epoch),
                              plot_class_num=args.train_class_num, maximum=args.plot_max,
-                             plot_quality=args.plot_quality, norm_centroid=args.norm_centroid, thresholds=thresholds,
-                             stat = stat)
+                             plot_quality=args.plot_quality, norm_centroid=args.norm_centroid, thresholds=thresholds)
 
-            train_out = stage2_train(net2, trainloader, optimizer, criterion, device, stat)
+            train_out = stage2_train(net2, trainloader, optimizer, criterion, device)
             save_model(net2, epoch, os.path.join(args.checkpoint, 'stage_2_last_model.pth'))
             # stat = get_gap_stat(net2, trainloader, device, args)
 
@@ -317,8 +316,7 @@ def main_stage2(stage1_dict):
             if args.plot:
                 plot_feature(net2, args, trainloader, device, args.plotfolder2, epoch=epoch,
                              plot_class_num=args.train_class_num, maximum=args.plot_max,
-                             plot_quality=args.plot_quality, norm_centroid=args.norm_centroid, thresholds=thresholds,
-                             stat = stat)
+                             plot_quality=args.plot_quality, norm_centroid=args.norm_centroid, thresholds=thresholds)
                 plot_feature(net2, args, testloader, device, args.plotfolder2, epoch="test_"+str(epoch),
                              plot_class_num=args.train_class_num + 1, maximum=args.plot_max,
                              plot_quality=args.plot_quality, norm_centroid=args.norm_centroid, thresholds=thresholds,
@@ -336,7 +334,7 @@ def main_stage2(stage1_dict):
     return net2
 
 
-def stage2_train(net2, trainloader, optimizer, criterion, device, stat):
+def stage2_train(net2, trainloader, optimizer, criterion, device):
     net2.train()
     train_loss = 0
     loss_similarity = 0
@@ -349,7 +347,7 @@ def stage2_train(net2, trainloader, optimizer, criterion, device, stat):
         inputs, targets = inputs.to(device), targets.to(device)
 
         optimizer.zero_grad()
-        out = net2(inputs, stat)
+        out = net2(inputs)
         loss_dict = criterion(out, targets)
         loss = loss_dict['total']
         # loss = loss_dict['similarity']

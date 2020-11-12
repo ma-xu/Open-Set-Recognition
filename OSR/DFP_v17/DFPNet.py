@@ -12,10 +12,11 @@ from Generater import CGDestimator
 
 class DFPNet(nn.Module):
     def __init__(self, backbone='ResNet18', num_classes=1000, embed_dim=None, distance='l2',
-                 similarity="dotproduct", scaled=True, thresholds=None, norm_centroid=False, amplifier=1.0,
-                 estimator=None):
+                 similarity="dotproduct", scaled=True, thresholds=None, norm_centroid=False,
+                 stat=None):
         super(DFPNet, self).__init__()
-        self.estimator = estimator
+        if stat is not None:
+            self.estimator = CGDestimator(stat)
         self.num_classes = num_classes
         self.backbone_name = backbone
         self.norm_centroid = norm_centroid
@@ -37,7 +38,6 @@ class DFPNet(nn.Module):
         self.scaled = scaled
         if thresholds is not None:
             self.register_buffer("thresholds", thresholds)
-            self.amplifier = amplifier
 
     def get_backbone_last_layer_out_channel(self):
         if self.backbone_name == "LeNetPlus":
@@ -56,15 +56,13 @@ class DFPNet(nn.Module):
         else:
             return last_layer.out_channels
 
-    def forward(self, x, stat=None):
+    def forward(self, x):
         x = self.backbone(x)
         dis_gen2cen, dis_gen2ori, thresholds, amplified_thresholds, embed_gen = None, None, None, None, None
         gap = (F.adaptive_avg_pool2d(x, 1)).view(x.size(0), -1)
-        if stat is not None:
+        if hasattr(self, 'estimator'):
             thresholds = self.thresholds
-            estimator = CGDestimator(stat=stat)
-            # gen = channel_swicher(gap)
-            gen = estimator.generator(gap)
+            gen = self.estimator.sampler(gap)
             embed_gen = self.embeddingLayer(gen) if hasattr(self, 'embeddingLayer') else gen
             amplified_thresholds = self.thresholds * self.amplifier
         embed_fea = self.embeddingLayer(gap) if hasattr(self, 'embeddingLayer') else gap
@@ -73,7 +71,7 @@ class DFPNet(nn.Module):
         sim_fea2cen = getattr(SIMI, self.similarity)(embed_fea, centroids)
         DIST = Distance(scaled=self.scaled)
         dis_fea2cen = getattr(DIST, self.distance)(embed_fea, centroids)
-        if stat is not None:
+        if hasattr(self, 'estimator'):
             dis_gen2cen = getattr(DIST, self.distance)(embed_gen, centroids)
             dis_gen2ori = getattr(DIST, self.distance)(embed_gen, self.origin)
 
@@ -85,7 +83,6 @@ class DFPNet(nn.Module):
             "dis_fea2cen": dis_fea2cen,
             "dis_gen2cen": dis_gen2cen,
             "dis_gen2ori": dis_gen2ori,
-            "amplified_thresholds": amplified_thresholds,
             "thresholds": thresholds
         }
 
