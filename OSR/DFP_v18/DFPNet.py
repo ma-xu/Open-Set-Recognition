@@ -12,11 +12,8 @@ from Generater import CGDestimator
 
 class DFPNet(nn.Module):
     def __init__(self, backbone='ResNet18', num_classes=1000, embed_dim=None, distance='l2',
-                 similarity="dotproduct", scaled=True, thresholds=None, norm_centroid=False,
-                 stat=None):
+                 similarity="dotproduct", scaled=True, thresholds=None, norm_centroid=False):
         super(DFPNet, self).__init__()
-        if stat is not None:
-            self.estimator = CGDestimator(stat)
         self.num_classes = num_classes
         self.backbone_name = backbone
         self.norm_centroid = norm_centroid
@@ -56,13 +53,32 @@ class DFPNet(nn.Module):
         else:
             return last_layer.out_channels
 
-    def forward(self, x):
-        x = self.backbone(x)
+    def generator(self, x):
+        b, c, w, h = x.size()
+        x_bak = x.clone().detach()
+
+        # mixup with the input data
+        x_bak_noise = x_bak.unsqueeze(dim=0).expand([2, b, c, w, h])
+        x_bak_noise = x_bak_noise.view([-1, c, w, h])
+        x_bak_noise = x_bak_noise[torch.randperm(x_bak_noise.size()[0])]
+        x_bak_noise = x_bak_noise[0:b]
+        weight = x_bak_noise[b:]
+        weight = weight[:,0,1,2] # random select the 0-th channel, 1/2-th pixel as weight
+        weight = torch.sigmoid(weight)/2.0
+        noise_mix_input = (1.0-weight)*x_bak + weight*x_bak_noise
+
+
+
+        gen = self.backbone(noise_mix_input)
+        return gen
+
+    def forward(self, input):
+        x = self.backbone(input)
         dis_gen2cen, dis_gen2ori, thresholds, amplified_thresholds, embed_gen = None, None, None, None, None
         gap = (F.adaptive_avg_pool2d(x, 1)).view(x.size(0), -1)
-        if hasattr(self, 'estimator'):
+        if hasattr(self, 'thresholds'):
             thresholds = self.thresholds
-            gen = self.estimator.sampler(gap)
+            gen = self.generator(input)
             embed_gen = self.embeddingLayer(gen) if hasattr(self, 'embeddingLayer') else gen
 
         embed_fea = self.embeddingLayer(gap) if hasattr(self, 'embeddingLayer') else gap
@@ -71,7 +87,7 @@ class DFPNet(nn.Module):
         sim_fea2cen = getattr(SIMI, self.similarity)(embed_fea, centroids)
         DIST = Distance(scaled=self.scaled)
         dis_fea2cen = getattr(DIST, self.distance)(embed_fea, centroids)
-        if hasattr(self, 'estimator'):
+        if hasattr(self, 'thresholds'):
             dis_gen2cen = getattr(DIST, self.distance)(embed_gen, centroids)
             dis_gen2ori = getattr(DIST, self.distance)(embed_gen, self.origin)
 
