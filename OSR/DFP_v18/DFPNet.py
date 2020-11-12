@@ -78,7 +78,14 @@ class DFPNet(nn.Module):
         # # noise_mix_gaussian = 0.7*x_bak + 0.3*gaussian_noise
         # noise_mix_gaussian = gaussian_noise
         # gen = self.backbone(noise_mix_gaussian)
+
+        # channel_wise normalization (others reshape to 1 dim)
         gaussian_noise = torch.randn(b, c, w, h).to(x.device)
+        noise_bak = gaussian_noise.permute(1,0,2,3)
+        noise_bak = noise_bak.reshape([c,-1])
+        noise_mean = noise_bak.mean(dim=1,keepdim=True).unsqueeze(dim=-1).unsqueeze(dim=0)
+        noise_std = noise_bak.std(dim=1, keepdim=True).unsqueeze(dim=-1).unsqueeze(dim=0)
+        gaussian_noise.sub_(noise_mean).div_(noise_std)
         gen = self.backbone(gaussian_noise)
 
         gen = (F.adaptive_avg_pool2d(gen, 1)).view(x.size(0), -1)
@@ -116,7 +123,7 @@ class DFPNet(nn.Module):
 
 
 def demo():
-    x = torch.rand([10, 3, 32, 32])
+    x = torch.rand([3, 3, 32, 32])
     y = torch.rand([6, 3, 32, 32])
     threshold = torch.rand([10])
     net = DFPNet('ResNet18', num_classes=10, embed_dim=64, thresholds=None)
