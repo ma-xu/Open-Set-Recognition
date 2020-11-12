@@ -69,15 +69,17 @@ class DFPNet(nn.Module):
         # noise_mix_input = (1.0-weight)*x_bak + weight*x_bak_noise_1
         # gen = self.backbone(noise_mix_input)
 
-        # mixup with batch gussian distribution
+        # # mixup with batch gussian distribution
+        # gaussian_noise = torch.randn(b, c, w, h).to(x.device)
+        # gaussian_noise = (gaussian_noise - gaussian_noise.mean(dim=0,keepdim=True))/(gaussian_noise.std(dim=0,keepdim=True))
+        # batch_mean = x_bak.mean(dim=0,keepdim=True)
+        # batch_std = x_bak.std(dim=0, keepdim=True)
+        # gaussian_noise = gaussian_noise * batch_std + batch_mean
+        # # noise_mix_gaussian = 0.7*x_bak + 0.3*gaussian_noise
+        # noise_mix_gaussian = gaussian_noise
+        # gen = self.backbone(noise_mix_gaussian)
         gaussian_noise = torch.randn(b, c, w, h).to(x.device)
-        gaussian_noise = (gaussian_noise - gaussian_noise.mean(dim=0,keepdim=True))/(gaussian_noise.std(dim=0,keepdim=True))
-        batch_mean = x_bak.mean(dim=0,keepdim=True)
-        batch_std = x_bak.std(dim=0, keepdim=True)
-        gaussian_noise = gaussian_noise * batch_std + batch_mean
-        # noise_mix_gaussian = 0.7*x_bak + 0.3*gaussian_noise
-        noise_mix_gaussian = gaussian_noise
-        gen = self.backbone(noise_mix_gaussian)
+        gen = self.backbone(gaussian_noise)
 
         gen = (F.adaptive_avg_pool2d(gen, 1)).view(x.size(0), -1)
         return gen
