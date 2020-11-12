@@ -1,1 +1,3 @@
 check out gap, visualization.
+
+From the results, we can see even in the gap, the known and unknown already un-reconizable.
