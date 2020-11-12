@@ -61,11 +61,12 @@ class DFPNet(nn.Module):
         x_bak_noise = x_bak.unsqueeze(dim=0).expand([2, b, c, w, h])
         x_bak_noise = x_bak_noise.reshape([-1, c, w, h])
         x_bak_noise = x_bak_noise[torch.randperm(x_bak_noise.size()[0])]
-        x_bak_noise = x_bak_noise[0:b]
+        x_bak_noise_1 = x_bak_noise[0:b]
         weight = x_bak_noise[b:]
         weight = weight[:,0,1,2] # random select the 0-th channel, 1/2-th pixel as weight
         weight = torch.sigmoid(weight)/2.0
-        noise_mix_input = (1.0-weight)*x_bak + weight*x_bak_noise
+        weight = weight.unsqueeze(dim=-1).unsqueeze(dim=-1).unsqueeze(dim=-1)
+        noise_mix_input = (1.0-weight)*x_bak + weight*x_bak_noise_1
 
 
 
