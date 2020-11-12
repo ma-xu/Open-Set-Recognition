@@ -59,7 +59,7 @@ class DFPNet(nn.Module):
 
         # mixup with the input data
         x_bak_noise = x_bak.unsqueeze(dim=0).expand([2, b, c, w, h])
-        x_bak_noise = x_bak_noise.view([-1, c, w, h])
+        x_bak_noise = x_bak_noise.reshape([-1, c, w, h])
         x_bak_noise = x_bak_noise[torch.randperm(x_bak_noise.size()[0])]
         x_bak_noise = x_bak_noise[0:b]
         weight = x_bak_noise[b:]
