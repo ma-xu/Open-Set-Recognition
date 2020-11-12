@@ -22,7 +22,6 @@ from Utils import adjust_learning_rate, progress_bar, Logger, mkdir_p, Evaluatio
 from DFPLoss import DFPLoss, DFPLoss2
 from DFPNet import DFPNet
 from MyPlotter import plot_feature, plot_distance,plot_gap
-from Generater import CGD_estimator
 from helper import get_gap_stat
 
 model_names = sorted(name for name in models.__dict__
