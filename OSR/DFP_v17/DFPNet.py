@@ -64,7 +64,7 @@ class DFPNet(nn.Module):
             thresholds = self.thresholds
             gen = self.estimator.sampler(gap)
             embed_gen = self.embeddingLayer(gen) if hasattr(self, 'embeddingLayer') else gen
-            amplified_thresholds = self.thresholds * self.amplifier
+        
         embed_fea = self.embeddingLayer(gap) if hasattr(self, 'embeddingLayer') else gap
         centroids = F.normalize(self.centroids, dim=1, p=2) if self.norm_centroid else self.centroids
         SIMI = Similarity(scaled=self.scaled)
