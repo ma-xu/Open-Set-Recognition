@@ -87,7 +87,7 @@ class Evaluation(object):
         true_scores = one_hot_encoder.transform(np.array(label).reshape(-1, 1))
         if prediction_scores is None:
             prediction_scores = one_hot_encoder.transform(np.array(predict).reshape(-1, 1))
-        assert prediction_scores.shape == true_scores.shape
+        # assert prediction_scores.shape == true_scores.shape
         return roc_auc_score(true_scores, prediction_scores, multi_class=multi_class)
 
     def _confusion_matrix(self, normalize=None) -> np.array:
