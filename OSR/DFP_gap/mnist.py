@@ -21,7 +21,7 @@ from datasets import MNIST
 from Utils import adjust_learning_rate, progress_bar, Logger, mkdir_p, Evaluation
 from DFPLoss import DFPLoss, DFPLoss2
 from DFPNet import DFPNet
-from MyPlotter import plot_feature, plot_distance,plot_gap
+from MyPlotter import plot_feature, plot_distance,plot_gap, plot_feature_gap
 from helper import get_gap_stat
 
 model_names = sorted(name for name in models.__dict__
@@ -43,7 +43,7 @@ parser.add_argument('--bs', default=256, type=int, help='batch size')
 parser.add_argument('--evaluate', action='store_true', help='Evaluate without training')
 
 # General MODEL parameters
-parser.add_argument('--arch', default='LeNetPlus', choices=model_names, type=str, help='choosing network')
+parser.add_argument('--arch', default='LeNetGAP', choices=model_names, type=str, help='choosing network')
 parser.add_argument('--embed_dim', default=2, type=int, help='embedding feature dimension')
 parser.add_argument('--distance', default='l2', choices=['l2', 'l1', 'cosine', 'dotproduct'],
                     type=str, help='choosing distance metric')
@@ -173,6 +173,9 @@ def main_stage1():
             if args.plot:
                 plot_feature(net, args, trainloader, device, args.plotfolder1, epoch=epoch,
                              plot_class_num=args.train_class_num, maximum=args.plot_max,
+                             plot_quality=args.plot_quality, norm_centroid=args.norm_centroid)
+                plot_feature_gap(net, args, testloader, device, args.plotfolder1, epoch="test_gap_"+str(epoch),
+                             plot_class_num=args.train_class_num+1, maximum=args.plot_max,
                              plot_quality=args.plot_quality, norm_centroid=args.norm_centroid)
     if args.plot:
         # plot the test set
@@ -320,6 +323,10 @@ def main_stage2(stage1_dict):
                              plot_class_num=args.train_class_num + 1, maximum=args.plot_max,
                              plot_quality=args.plot_quality, norm_centroid=args.norm_centroid, thresholds=thresholds,
                              testmode=True)
+                plot_feature_gap(net2, args, testloader, device, args.plotfolder2, epoch="test_gap_" + str(epoch),
+                                 plot_class_num=args.train_class_num + 1, maximum=args.plot_max,
+                                 plot_quality=args.plot_quality, norm_centroid=args.norm_centroid, thresholds=thresholds,
+                                 testmode=True)
         if args.plot:
             # plot the test set
             plot_feature(net2, args, testloader, device, args.plotfolder2, epoch="test",

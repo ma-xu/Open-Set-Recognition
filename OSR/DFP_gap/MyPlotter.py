@@ -103,6 +103,99 @@ def plot_feature(net, args, plotloader, device, dirname, epoch=0, plot_class_num
     plt.close()
 
 
+def plot_feature_gap(net, args, plotloader, device, dirname, epoch=0, plot_class_num=10, maximum=500, plot_quality=150,
+                 norm_centroid=False, thresholds=None, testmode=False):
+    plot_features = []
+    plot_generates = []
+    plot_labels = []
+    with torch.no_grad():
+        for batch_idx, (inputs, targets) in enumerate(plotloader):
+            inputs, targets = inputs.to(device), targets.to(device)
+            out = net(inputs)
+            embed_fea = out["gap"]
+            embed_gen = out["embed_gen"]
+            try:
+                embed_fea = embed_fea.data.cpu().numpy()
+                targets = targets.data.cpu().numpy()
+            except:
+                embed_fea = embed_fea.data.numpy()
+                targets = targets.data.numpy()
+
+            plot_features.append(embed_fea)
+            plot_labels.append(targets)
+            if embed_gen is not None and not testmode:
+                try:
+                    embed_gen = embed_gen.data.cpu().numpy()
+                except:
+                    embed_gen = embed_gen.data.numpy()
+                plot_generates.append(embed_gen)
+
+    plot_features = np.concatenate(plot_features, 0)
+    plot_labels = np.concatenate(plot_labels, 0)
+
+
+    net_dict = net.state_dict()
+    centroids = net_dict['module.centroids'] if isinstance(net, nn.DataParallel) \
+        else net_dict['centroids']
+    if norm_centroid:
+        centroids = F.normalize(centroids, dim=1, p=2)
+    try:
+        centroids = centroids.data.cpu().numpy()
+    except:
+        centroids = centroids.data.numpy()
+    # print(centroids)
+    colors = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9']
+    for label_idx in range(plot_class_num):
+        features = plot_features[plot_labels == label_idx, :]
+        maximum = min(maximum, len(features)) if maximum > 0 else len(features)
+        plt.scatter(
+            features[0:maximum, 0],
+            features[0:maximum, 1],
+            c=colors[label_idx],
+            s=1,
+        )
+    if len(plot_generates) > 0:
+        plot_generates = np.concatenate(plot_generates, 0)
+        plt.scatter(
+            plot_generates[:, 0],
+            plot_generates[:, 1],
+            # c=colors[label_idx],
+            c=colors[plot_class_num],
+            s=1,
+        )
+    plt.scatter(
+        centroids[:, 0],
+        centroids[:, 1],
+        # c=colors[label_idx],
+        c='black',
+        marker="*",
+        s=5,
+    )
+
+    if thresholds is not None:
+        try:
+            thresholds = thresholds.data.cpu().numpy()
+        except:
+            thresholds = thresholds.data.numpy()
+        for label_idx in range(args.train_class_num):
+            circle = plt.Circle(
+                xy=(centroids[label_idx, 0], centroids[label_idx, 1]),
+                radius=thresholds[label_idx],
+                fill=False,
+                color='black')
+            plt.gcf().gca().add_artist(circle)
+
+
+    # currently only support 10 classes, for a good visualization.
+    # change plot_class_num would lead to problems.
+    legends = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+    plt.legend(legends[0:plot_class_num] + ['c'], loc='upper right')
+
+    save_name = os.path.join(dirname, 'epoch_' + str(epoch) + '.png')
+    plt.savefig(save_name, bbox_inches='tight', dpi=plot_quality)
+    plt.close()
+
+
 def plot_distance(net,
                   plotloader: torch.utils.data.DataLoader,
                   device: str,

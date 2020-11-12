@@ -25,9 +25,9 @@ class DFPNet(nn.Module):
         if embed_dim:
             self.embeddingLayer = nn.Sequential(
                 nn.PReLU(),
-                nn.Linear(self.feat_dim, self.feat_dim // 16),
+                nn.Linear(self.feat_dim, 8),
                 nn.PReLU(),
-                nn.Linear(self.feat_dim // 16, embed_dim)
+                nn.Linear(8, embed_dim)
             )
             self.feat_dim = embed_dim
         self.centroids = nn.Parameter(torch.randn(num_classes, self.feat_dim))
@@ -40,8 +40,8 @@ class DFPNet(nn.Module):
             self.register_buffer("thresholds", thresholds)
 
     def get_backbone_last_layer_out_channel(self):
-        if self.backbone_name == "LeNetPlus":
-            return 128 * 3 * 3
+        if self.backbone_name == "LeNetGAP":
+            return 2
         last_layer = list(self.backbone.children())[-1]
         while (not isinstance(last_layer, nn.Conv2d)) and \
                 (not isinstance(last_layer, nn.Linear)) and \
