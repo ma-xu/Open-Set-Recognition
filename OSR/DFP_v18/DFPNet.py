@@ -76,7 +76,7 @@ class DFPNet(nn.Module):
         batch_std = x_bak.std(dim=0, keepdim=True)
         gaussian_noise = gaussian_noise * batch_std + batch_mean
         noise_mix_gaussian = 0.7*x_bak + 0.3*gaussian_noise
-        gen = self.backbone(noise_mix_gaussian)s
+        gen = self.backbone(noise_mix_gaussian)
 
         gen = (F.adaptive_avg_pool2d(gen, 1)).view(x.size(0), -1)
         return gen
