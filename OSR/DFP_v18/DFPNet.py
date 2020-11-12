@@ -71,6 +71,7 @@ class DFPNet(nn.Module):
 
 
         gen = self.backbone(noise_mix_input)
+        gen = (F.adaptive_avg_pool2d(gen, 1)).view(x.size(0), -1)
         return gen
 
     def forward(self, input):
