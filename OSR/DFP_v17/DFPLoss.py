@@ -44,7 +44,6 @@ class DFPLoss2(nn.Module):
         dist_gen2cen = net_out["dis_gen2cen"]
         dist_gen2ori = net_out["dis_gen2ori"]
         thresholds = net_out["thresholds"]  # [class_num]
-        amplified_thresholds = net_out["amplified_thresholds"]
 
         # classification loss for input data
         loss_similarity = self.ce(sim_fea2cen, targets)
@@ -110,7 +109,7 @@ def demo2():
     dist_gen2cen = torch.rand([n, c])
     thresholds = torch.rand([c])
     dist_gen2ori = torch.rand([c, 1])
-    amplified_thresholds = thresholds * 1.1
+
 
     label = torch.empty(3, dtype=torch.long).random_(5)
     print(label)
@@ -120,8 +119,7 @@ def demo2():
         "dis_fea2cen": dist_fea2cen,
         "dis_gen2cen": dist_gen2cen,
         "dis_gen2ori": dist_gen2ori,
-        "thresholds": thresholds,
-        "amplified_thresholds": amplified_thresholds
+        "thresholds": thresholds
     }
     dist_loss = loss(netout, label)
     print(dist_loss['total'])
