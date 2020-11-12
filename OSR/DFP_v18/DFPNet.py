@@ -58,19 +58,26 @@ class DFPNet(nn.Module):
         x_bak = x.clone().detach()
 
         # mixup with the input data
-        x_bak_noise = x_bak.unsqueeze(dim=0).expand([2, b, c, w, h])
-        x_bak_noise = x_bak_noise.reshape([-1, c, w, h])
-        x_bak_noise = x_bak_noise[torch.randperm(x_bak_noise.size()[0])]
-        x_bak_noise_1 = x_bak_noise[0:b]
-        weight = x_bak_noise[b:]
-        weight = weight[:,0,1,2] # random select the 0-th channel, 1/2-th pixel as weight
-        weight = torch.sigmoid(weight)/2.0
-        weight = weight.unsqueeze(dim=-1).unsqueeze(dim=-1).unsqueeze(dim=-1)
-        noise_mix_input = (1.0-weight)*x_bak + weight*x_bak_noise_1
+        # x_bak_noise = x_bak.unsqueeze(dim=0).expand([2, b, c, w, h])
+        # x_bak_noise = x_bak_noise.reshape([-1, c, w, h])
+        # x_bak_noise = x_bak_noise[torch.randperm(x_bak_noise.size()[0])]
+        # x_bak_noise_1 = x_bak_noise[0:b]
+        # weight = x_bak_noise[b:]
+        # weight = weight[:,0,1,2] # random select the 0-th channel, 1/2-th pixel as weight
+        # weight = torch.sigmoid(weight)/2.0
+        # weight = weight.unsqueeze(dim=-1).unsqueeze(dim=-1).unsqueeze(dim=-1)
+        # noise_mix_input = (1.0-weight)*x_bak + weight*x_bak_noise_1
+        # gen = self.backbone(noise_mix_input)
 
+        # mixup with batch gussian distribution
+        gaussian_noise = torch.randn(b, c, w, h).to(x.device)
+        gaussian_noise = (gaussian_noise - gaussian_noise.mean(dim=0,keepdim=True))/(gaussian_noise.std(dim=0,keepdim=True))
+        batch_mean = x_bak.mean(dim=0,keepdim=True)
+        batch_std = x_bak.std(dim=0, keepdim=True)
+        gaussian_noise = gaussian_noise * batch_std + batch_mean
+        noise_mix_gaussian = 0.7*x_bak + 0.3*gaussian_noise
+        gen = self.backbone(noise_mix_gaussian)s
 
-
-        gen = self.backbone(noise_mix_input)
         gen = (F.adaptive_avg_pool2d(gen, 1)).view(x.size(0), -1)
         return gen
 
