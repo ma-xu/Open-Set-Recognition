@@ -41,7 +41,7 @@ parser.add_argument('--includes_all_train_class', default=True, action='store_tr
 # Others
 parser.add_argument('--lr', default=0.01, type=float, help='learning rate')
 parser.add_argument('--bs', default=128, type=int, help='batch size')
-parser.add_argument('--es', default=100, type=int, help='epoch size')
+parser.add_argument('--es', default=50, type=int, help='epoch size')
 parser.add_argument('--evaluate', action='store_true', help='Evaluate without training')
 parser.add_argument('--resume', default='', type=str, metavar='PATH', help='path to latest checkpoint (default: none)')
 
@@ -50,7 +50,7 @@ parser.add_argument('--arch', default='LeNetPlus', choices=model_names, type=str
 parser.add_argument('--embed_dim', default=2, type=int, help='embedding feature dimension')
 parser.add_argument('--centerloss_weight', default=1, type=float, help='center loss weight')
 parser.add_argument('--center_lr', default=0.5, type=float, help='learning rate for center loss')
-parser.add_argument('--threshold', default=0.1, type=float, help='threshold for center-loss probability')
+parser.add_argument('--threshold', default=0.9, type=float, help='threshold for center-loss probability')
 
 
 
@@ -130,7 +130,7 @@ def main():
 
 
     if not args.evaluate:
-        scheduler = lr_scheduler.StepLR(optimizer_softmax, step_size=20, gamma=0.5)
+        scheduler = lr_scheduler.StepLR(optimizer_softmax, step_size=20, gamma=0.1)
         for epoch in range(start_epoch, start_epoch + args.es):
             print('\nEpoch: %d   Learning rate: %f' % (epoch + 1, optimizer_softmax.param_groups[0]['lr']))
             train_loss, softmax_loss, center_loss, train_acc = train(net, trainloader, optimizer_softmax,
