@@ -41,7 +41,7 @@ parser.add_argument('--includes_all_train_class', default=True, action='store_tr
 # Others
 parser.add_argument('--lr', default=0.01, type=float, help='learning rate')
 parser.add_argument('--bs', default=128, type=int, help='batch size')
-parser.add_argument('--es', default=50, type=int, help='epoch size')
+parser.add_argument('--es', default=100, type=int, help='epoch size')
 parser.add_argument('--evaluate', action='store_true', help='Evaluate without training')
 parser.add_argument('--resume', default='', type=str, metavar='PATH', help='path to latest checkpoint (default: none)')
 
@@ -127,6 +127,7 @@ def main():
     else:
         logger = Logger(os.path.join(args.checkpoint, 'log.txt'))
         logger.set_names(['Epoch', 'Total Loss','Softmax Loss', 'Center Loss', 'train Acc.'])
+
 
     if not args.evaluate:
         scheduler = lr_scheduler.StepLR(optimizer_softmax, step_size=20, gamma=0.5)
@@ -215,9 +216,13 @@ def test(net, testloader, device):
         pred.append(np.argmax(score) if np.max(score) >= args.threshold else args.train_class_num)
 
     print("Evaluation...")
-    eval = Evaluation(pred, labels)
+    eval = Evaluation(pred, labels, scores)
+    torch.save(eval, os.path.join(args.checkpoint, 'eval.pkl'))
     print(f"Center-Loss accuracy is %.3f" % (eval.accuracy))
-
+    print(f"Center-Loss F1 is %.3f" % (eval.f1_measure))
+    print(f"Center-Loss f1_macro is %.3f" % (eval.f1_macro))
+    print(f"Center-Loss f1_macro_weighted is %.3f" % (eval.f1_macro_weighted))
+    print(f"Center-Loss area_under_roc is %.3f" % (eval.area_under_roc))
 
 def save_model(net, centerloss, epoch, path):
     print('Saving..')

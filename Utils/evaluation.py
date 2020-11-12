@@ -7,9 +7,10 @@ from sklearn.preprocessing import OneHotEncoder
 
 class Evaluation(object):
     """Evaluation class based on python list"""
-    def __init__(self, predict, label):
+    def __init__(self, predict, label,prediction_scores = None):
         self.predict = predict
         self.label = label
+        self.prediction_scores = prediction_scores
 
         self.accuracy = self._accuracy()
         self.f1_measure = self._f1_measure()
@@ -19,6 +20,8 @@ class Evaluation(object):
         self.precision_macro, self.recall_macro = self._precision_recall(average='macro')
         self.precision_weighted, self.recall_weighted = self._precision_recall(average='weighted')
         self.confusion_matrix = self._confusion_matrix()
+        if self.prediction_scores is not None:
+            self.area_under_roc = self._area_under_roc(prediction_scores)
 
     def _accuracy(self) -> float:
         """
@@ -66,7 +69,7 @@ class Evaluation(object):
         precision, recall, _, _ = precision_recall_fscore_support(self.label, self.predict, average=average)
         return precision, recall
 
-    def area_under_roc(self, prediction_scores: np.array = None, multi_class='ovo') -> float:
+    def _area_under_roc(self, prediction_scores: np.array = None, multi_class='ovo') -> float:
         """
         Area Under Receiver Operating Characteristic Curve
 
