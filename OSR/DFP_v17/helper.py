@@ -16,8 +16,8 @@ def get_gap_stat(net, trainloader, device, args):
             # start check bank storage
             # we believe 1024 samples in each class is representive enough.
             for i in range(args.train_class_num):
-                if len(Result[i]["fea_bank"])>1024:
-                    Result[i]["fea_bank"] = Result[i]["fea_bank"][:1024]
+                if len(Result[i]["fea_bank"])>2048:
+                    Result[i]["fea_bank"] = Result[i]["fea_bank"][:2048]
             # end check bank storage
 
             progress_bar(batch_idx, len(trainloader), "calculating statistics ...")
