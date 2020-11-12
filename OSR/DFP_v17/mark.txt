@@ -1,0 +1,4 @@
+move gap distribution. For examples, the distribution (mean, std) from class A to class B
+To get the dsitribution and potentional generated feature gap, we use the feature bank.
+
+Not good. Can not imiate the unknown classes.
