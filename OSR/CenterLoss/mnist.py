@@ -144,9 +144,10 @@ def main():
 
             logger.append([epoch + 1, train_loss, softmax_loss, center_loss, train_acc])
             scheduler.step()
+            test(net, testloader, device)
 
 
-    test(net, testloader, device)
+
     if args.plot:
         plot_feature(net, criterion_centerloss, testloader, device, args.plotfolder, epoch="test",
                      plot_class_num=args.train_class_num+1, maximum=args.plot_max, plot_quality=args.plot_quality)
