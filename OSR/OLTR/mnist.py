@@ -290,8 +290,8 @@ def main_stage2(net1, centroids):
             save_model(net2, None, epoch, os.path.join(args.checkpoint, 'stage_2_last_model.pth'))
             logger.append([epoch + 1, optimizer.param_groups[0]['lr'], train_loss, train_acc])
             pass_centroids(net2, fea_criterion, init_centroids=None)
-            plot_feature(net2, fea_criterion, trainloader, device, args.plotfolder, epoch="stage2_" + str(epoch),
-                         plot_class_num=args.train_class_num, maximum=args.plot_max, plot_quality=args.plot_quality)
+            # plot_feature(net2, fea_criterion, trainloader, device, args.plotfolder, epoch="stage2_" + str(epoch),
+            #              plot_class_num=args.train_class_num, maximum=args.plot_max, plot_quality=args.plot_quality)
             test(net2, testloader, device)
         print(f"\nFinish Stage-2 training...\n")
 
@@ -358,7 +358,7 @@ def test( net,  testloader, device):
     scores = scores.softmax(dim=1)
     scores = scores.cpu().numpy()
 
-    print(scores.shape)
+    # print(scores.shape)
     labels = torch.cat(labels, dim=0).cpu().numpy()
     pred=[]
     for score in scores:
