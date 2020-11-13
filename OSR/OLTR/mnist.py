@@ -52,7 +52,7 @@ parser.add_argument('--stage1_resume', default='', type=str, metavar='PATH', hel
 parser.add_argument('--stage1_es', default=35, type=int, help='epoch size')
 parser.add_argument('--stage1_use_fc', default=False,  action='store_true',
                     help='If to use the last FC/embedding layer in network, FC (whatever, stage1_feature_dim)')
-parser.add_argument('--stage1_feature_dim', default=128, type=int, help='embedding feature dimension')
+parser.add_argument('--stage1_feature_dim', default=64, type=int, help='embedding feature dimension')
 parser.add_argument('--stage1_classifier', default='dotproduct', type=str,choices=['dotproduct', 'cosnorm', 'metaembedding'],
                     help='Select a classifier (default dotproduct)')
 
@@ -63,7 +63,7 @@ parser.add_argument('--stage2_es', default=35, type=int, help='epoch size')
 parser.add_argument('--stage2_use_fc', default=True,  action='store_true',
                     help='If to use the last FC/embedding layer in network, FC (whatever, stage1_feature_dim)')
 parser.add_argument('--stage2_fea_loss_weight', default=0.001, type=float, help='The wegiht for feature loss')
-parser.add_argument('--oltr_threshold', default=0.1, type=float, help='The score threshold for OLTR')
+parser.add_argument('--oltr_threshold', default=0.9, type=float, help='The score threshold for OLTR')
 
 # Parameters for stage plotting
 parser.add_argument('--plot', action='store_true', help='Plotting the training set.')
@@ -199,7 +199,7 @@ def stage2_train(net,trainloader,optimizer,optimizer2, criterion, fea_criterion,
         outputs, _, _, features = net(inputs)
         loss_cls = criterion(outputs, targets)
         loss_fea = fea_criterion(features, targets)
-        print(f"loss_cls: {loss_cls} loss_fea: {loss_fea}")
+
         loss =loss_cls+ loss_fea*args.stage2_fea_loss_weight
         loss.backward()
         optimizer.step()
@@ -292,13 +292,15 @@ def main_stage2(net1, centroids):
             pass_centroids(net2, fea_criterion, init_centroids=None)
             plot_feature(net2, fea_criterion, trainloader, device, args.plotfolder, epoch="stage2_" + str(epoch),
                          plot_class_num=args.train_class_num, maximum=args.plot_max, plot_quality=args.plot_quality)
+            test(net2, testloader, device)
         print(f"\nFinish Stage-2 training...\n")
+
     logger.close()
 
 
     test(net2, testloader, device)
-    plot_feature(net2, fea_criterion, testloader, device, args.plotfolder, epoch="test",
-                 plot_class_num=args.train_class_num+1, maximum=args.plot_max, plot_quality=args.plot_quality)
+    # plot_feature(net2, fea_criterion, testloader, device, args.plotfolder, epoch="test",
+    #              plot_class_num=args.train_class_num+1, maximum=args.plot_max, plot_quality=args.plot_quality)
     return net2
 
 
@@ -361,8 +363,13 @@ def test( net,  testloader, device):
     pred=[]
     for score in scores:
         pred.append(np.argmax(score) if np.max(score) >= args.oltr_threshold else args.train_class_num)
-    eval = Evaluation(pred, labels)
-    print(f"OLTR accuracy is %.3f"%(eval.accuracy))
+    eval = Evaluation(pred, labels,scores)
+    torch.save(eval, os.path.join(args.checkpoint, 'eval.pkl'))
+    print(f"Center-Loss accuracy is %.3f" % (eval.accuracy))
+    print(f"Center-Loss F1 is %.3f" % (eval.f1_measure))
+    print(f"Center-Loss f1_macro is %.3f" % (eval.f1_macro))
+    print(f"Center-Loss f1_macro_weighted is %.3f" % (eval.f1_macro_weighted))
+    print(f"Center-Loss area_under_roc is %.3f" % (eval.area_under_roc))
 
 
 def save_model(net, acc, epoch, path):
