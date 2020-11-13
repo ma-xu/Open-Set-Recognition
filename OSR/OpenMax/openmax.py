@@ -127,9 +127,10 @@ def compute_train_score_and_mavs_and_dists(train_class_num,trainloader,device,ne
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(trainloader):
             inputs, targets = inputs.to(device), targets.to(device)
-            print(inputs.shape)
+
             # this must cause error for cifar
             _, outputs = net(inputs)
+            print(f"output is {outputs}")
             for score, t in zip(outputs, targets):
                 if torch.argmax(score) == t:
                     scores[t].append(score.unsqueeze(dim=0).unsqueeze(dim=0))
