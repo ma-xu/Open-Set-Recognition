@@ -37,8 +37,8 @@ model_names = sorted(name for name in models.__dict__
                      and callable(models.__dict__[name]))
 
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
-parser.add_argument('-d', '--data', default='/home/g1007540910/DATA/ImageNet2012/', type=str)
-parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet18',
+parser.add_argument('-d', '--data', default='/home/g1007540910/DATA/ImageNet2012_O/', type=str)
+parser.add_argument('--arch', '-a', metavar='ARCH', default='old_resnet18',
                     choices=model_names,
                     help='model architecture: ' +
                     ' | '.join(model_names) +
@@ -82,6 +82,10 @@ parser.add_argument('-t', '--test', action='store_true',
                     help='Launch test mode with preset arguments')
 
 parser.add_argument("--local_rank", default=0, type=int)
+#################################
+parser.add_argument('--train_class_num', default=500, type=int, help='Classes used in training')
+parser.add_argument('--test_class_num', default=800, type=int, help='Classes used in testing')
+
 
 cudnn.benchmark = True
 
@@ -204,7 +208,8 @@ def main():
         model = models.__dict__[args.arch](pretrained=True)
     else:
         print("=> creating model '{}'".format(args.arch))
-        model = models.__dict__[args.arch]()
+        model = Network(backbone=args.arch, num_classes=args.train_class_num)
+
 
     model = model.cuda()
     if args.fp16:
@@ -332,7 +337,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
         target_var = Variable(target)
 
         # compute output
-        output = model(input_var)
+        _, output = model(input_var)
         loss = criterion(output, target_var)
 
         # measure accuracy and record loss
