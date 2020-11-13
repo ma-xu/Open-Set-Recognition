@@ -90,7 +90,7 @@ def main():
 
     # Model
     print('==> Building model..')
-    net = Network(backbone=args.arch, num_classes=args.train_class_num, embed_dim=args.embed_dim)
+    net = Network(backbone=args.arch, num_classes=args.train_class_num, backbone_fc=True)
     net = net.to(device)
 
     if device == 'cuda':
@@ -143,7 +143,7 @@ def train(net,trainloader,optimizer,criterion,device):
     for batch_idx, (inputs, targets) in enumerate(trainloader):
         inputs, targets = inputs.to(device), targets.to(device)
         optimizer.zero_grad()
-        outputs = net(inputs)
+        _, outputs = net(inputs)
         loss = criterion(outputs, targets)
         loss.backward()
         optimizer.step()
@@ -169,7 +169,7 @@ def test(epoch, net,trainloader,  testloader,criterion, device):
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
-            outputs = net(inputs)
+            _, outputs = net(inputs)
             # loss = criterion(outputs, targets)
             # test_loss += loss.item()
             # _, predicted = outputs.max(1)

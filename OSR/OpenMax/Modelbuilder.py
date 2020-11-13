@@ -7,10 +7,10 @@ import torch.nn.functional as F
 
 
 class Network(nn.Module):
-    def __init__(self, backbone='ResNet18', num_classes=1000,embed_dim=None):
+    def __init__(self, backbone='ResNet18', num_classes=1000,embed_dim=None, backbone_fc = False):
         super(Network, self).__init__()
         self.backbone_name = backbone
-        self.backbone = models.__dict__[backbone](num_classes=num_classes,backbone_fc=False)
+        self.backbone = models.__dict__[backbone](num_classes=num_classes,backbone_fc=backbone_fc)
         self.dim = self.get_backbone_last_layer_out_channel()
         if embed_dim:
             self.embeddingLayer =nn.Sequential(
@@ -34,13 +34,16 @@ class Network(nn.Module):
                 last_layer = temp_layer
         if isinstance(last_layer, nn.BatchNorm2d):
             return last_layer.num_features
+        elif isinstance(last_layer, nn.Linear):
+            return last_layer.out_features
         else:
             return last_layer.out_channels
 
     def forward(self, x):
         feature = self.backbone(x)
-        feature = F.adaptive_avg_pool2d(feature,1)
-        feature = feature.view(x.size(0), -1)
+        if feature.dim()==4:
+            feature = F.adaptive_avg_pool2d(feature,1)
+            feature = feature.view(x.size(0), -1)
         # if includes embedding layer.
         feature = self.embeddingLayer(feature) if hasattr(self, 'embeddingLayer') else feature
         logits = self.classifier(feature)
@@ -62,5 +65,10 @@ def demo():
     # net = Network('LeNetPlus', num_classes=10,embed_dim=512)
     # output = net(x)
 
+    # x = torch.rand([1, 3, 32, 32])
+    # net = Network('ResNet18', 50, backbone_fc = True)
+    # feature, logits = net(x)
+    # print(feature.shape)
+    # print(logits.shape)
 
 # demo()
