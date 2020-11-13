@@ -284,7 +284,7 @@ def main_stage2(net1, centroids):
         for epoch in range(start_epoch, args.stage2_es):
             print('\nStage_2 Epoch: %d   Learning rate: %f' % (epoch + 1, optimizer.param_groups[0]['lr']))
             # Here, I didn't set optimizers respectively, just for simplicity. Performance did not vary a lot.
-            adjust_learning_rate(optimizer, epoch, args.lr, step=20)
+            adjust_learning_rate(optimizer, epoch, args.lr, step=10)
             train_loss, train_acc = stage2_train(net2, trainloader, optimizer,optimizer_criterion,
                                                  criterion, fea_criterion, device)
             save_model(net2, None, epoch, os.path.join(args.checkpoint, 'stage_2_last_model.pth'))
