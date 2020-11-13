@@ -1,4 +1,68 @@
 import torch
+#####################
+# CIFAR-100
+#####################
+# Five paths:
+# yang: /home/UNT/jg0737/Open-Set-Recognition/OSR/OpenMax/checkpoints/cifar_no1
+# talon /work/xm0036/CVPR/Folder1/Open-Set-Recognition/OSR/OpenMax/checkpoints/cifar_no2/
+# talon /work/xm0036/CVPR/Folder2/Open-Set-Recognition/OSR/OpenMax/checkpoints/cifar_no3/
+# yang: /work/xm0036/CVPR/Folder3/Open-Set-Recognition/OSR/OpenMax/checkpoints/cifar_no4/
+# talon /work/xm0036/CVPR/Folder4/Open-Set-Recognition/OSR/OpenMax/cifar_no4/
+#
+
+# softmax
+accuracy = torch.Tensor([0.373,0.360,0.370,0.371,0.371])
+F1 = torch.Tensor([0.373,0.360,0.370,0.371,0.371])
+f1_macro = torch.Tensor([0.504,0.485,0.500,0.501,0.501])
+f1_macro_weighted = torch.Tensor([0.257,0.247,0.255,0.256,0.255])
+auroc = torch.Tensor([0.977,0.974,0.975,0.977,0.977])
+print('________________SoftMax_______________________\n\n')
+print('accuracy: %.3f , %.2f' % (accuracy.mean(), accuracy.std()))
+print('F1: %.3f , %.2f' % (F1.mean(), F1.std()))
+print('f1_macro: %.3f , %.2f' % (f1_macro.mean(), f1_macro.std()))
+print('f1_macro_weighted: %.3f , %.2f' % (f1_macro_weighted.mean(), f1_macro_weighted.std()))
+print('auroc: %.3f , %.2f' % (auroc.mean(), auroc.std()))
+print('_______________________________________\n\n')
+
+
+# softmaxthreshold
+accuracy = torch.Tensor([0.636,0.628,0.638,0.640,0.639])
+F1 = torch.Tensor([0.636,0.628,0.638,0.640,0.639])
+f1_macro = torch.Tensor([0.601,0.581,0.596, 0.604,0.602])
+f1_macro_weighted = torch.Tensor([0.636,0.627,0.637,0.640,0.639])
+auroc = torch.Tensor([0.977,0.974,0.975,0.977,0.977])
+print('________________SoftMax-threshold_______________________\n\n')
+print('accuracy: %.3f , %.2f' % (accuracy.mean(), accuracy.std()))
+print('F1: %.3f , %.2f' % (F1.mean(), F1.std()))
+print('f1_macro: %.3f , %.2f' % (f1_macro.mean(), f1_macro.std()))
+print('f1_macro_weighted: %.3f , %.2f' % (f1_macro_weighted.mean(), f1_macro_weighted.std()))
+print('auroc: %.3f , %.2f' % (auroc.mean(), auroc.std()))
+print('_______________________________________\n\n')
+
+
+# openmax
+accuracy = torch.Tensor([0.628,0.618,0.620,0.621,0.622])
+F1 = torch.Tensor([0.628,0.618,0.620,0.621,0.622])
+f1_macro = torch.Tensor([0.585,0.565,0.573,0.579,0.579])
+f1_macro_weighted = torch.Tensor([0.629,0.616,0.619,0.621,0.622])
+auroc = torch.Tensor([0.917,0.922,0.914,0.917,0.914])
+print('________________OpenMax_______________________\n\n')
+print('accuracy: %.3f , %.2f' % (accuracy.mean(), accuracy.std()))
+print('F1: %.3f , %.2f' % (F1.mean(), F1.std()))
+print('f1_macro: %.3f , %.2f' % (f1_macro.mean(), f1_macro.std()))
+print('f1_macro_weighted: %.3f , %.2f' % (f1_macro_weighted.mean(), f1_macro_weighted.std()))
+print('auroc: %.3f , %.2f' % (auroc.mean(), auroc.std()))
+print('_______________________________________\n\n')
+
+
+
+
+
+
+"""
+###############################
+# MNIST
+###############################
 # Five paths:
 # yang: /home/UNT/jg0737/Open-Set-Recognition/OSR/OpenMax/checkpoints_number1
 # talon /home/xm0036/Open-Set-Recognition/OSR/OpenMax/checkpoints_number2
@@ -47,3 +111,4 @@ print('f1_macro: %.3f , %.2f' % (f1_macro.mean(), f1_macro.std()))
 print('f1_macro_weighted: %.3f , %.2f' % (f1_macro_weighted.mean(), f1_macro_weighted.std()))
 print('auroc: %.3f , %.2f' % (auroc.mean(), auroc.std()))
 print('_______________________________________\n\n')
+"""
