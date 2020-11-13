@@ -34,7 +34,7 @@ parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
 parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
 parser.add_argument('--resume', default='', type=str, metavar='PATH', help='path to latest checkpoint (default: none)')
 parser.add_argument('--arch', default='ResNet18', choices=model_names, type=str, help='choosing network')
-parser.add_argument('--bs', default=256, type=int, help='batch size')
+parser.add_argument('--bs', default=128, type=int, help='batch size')
 parser.add_argument('--es', default=100, type=int, help='epoch size')
 
 parser.add_argument('--train_class_num', default=50, type=int, help='Classes used in training')
@@ -45,7 +45,7 @@ parser.add_argument('--evaluate', action='store_true',
                     help='Evaluate without training')
 parser.add_argument('--centerloss_weight', default=0.003, type=float, help='center loss weight')
 parser.add_argument('--center_lr', default=0.1, type=float, help='learning rate for center loss')
-parser.add_argument('--threshold', default=0.1, type=float, help='threshold for center-loss probability')
+parser.add_argument('--threshold', default=0.9, type=float, help='threshold for center-loss probability')
 parser.add_argument('--embed_dim', default=256, type=int, help='embedding feature dimension')
 
 
@@ -130,7 +130,8 @@ def main():
             logger.append([epoch+1, train_loss, softmax_loss, center_loss, train_acc])
             scheduler.step()
 
-    test(net, testloader, device)
+            test(net, testloader, device)
+
     logger.close()
 
 
@@ -196,8 +197,13 @@ def test(net, testloader, device):
         pred.append(np.argmax(score) if np.max(score) >= args.threshold else args.train_class_num)
 
     print("Evaluation...")
-    eval = Evaluation(pred, labels)
-    print(f"Center-Loss accuracy is %.3f"%(eval.accuracy))
+    eval = Evaluation(pred, labels, scores)
+    torch.save(eval, os.path.join(args.checkpoint, 'eval.pkl'))
+    print(f"Center-Loss accuracy is %.3f" % (eval.accuracy))
+    print(f"Center-Loss F1 is %.3f" % (eval.f1_measure))
+    print(f"Center-Loss f1_macro is %.3f" % (eval.f1_macro))
+    print(f"Center-Loss f1_macro_weighted is %.3f" % (eval.f1_macro_weighted))
+    print(f"Center-Loss area_under_roc is %.3f" % (eval.area_under_roc))
 
 def save_model(net, centerloss, epoch, path):
     print('Saving..')
