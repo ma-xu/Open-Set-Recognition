@@ -135,8 +135,8 @@ def main():
             logger.append([epoch+1, optimizer.param_groups[0]['lr'], train_loss, train_acc, test_loss, test_acc])
             plot_feature(net, trainloader, device, args.plotfolder, epoch=epoch,
                          plot_class_num=args.train_class_num, maximum=args.plot_max, plot_quality=args.plot_quality)
+            test(epoch, net, trainloader, testloader, criterion, device)
 
-    test(epoch, net, trainloader, testloader, criterion, device)
     plot_feature(net, testloader, device, args.plotfolder, epoch="test",
                  plot_class_num=args.train_class_num+1, maximum=args.plot_max, plot_quality=args.plot_quality)
     logger.close()
@@ -213,7 +213,9 @@ def test(epoch, net,trainloader,  testloader,criterion, device):
     eval_softmax = Evaluation(pred_softmax, labels,ss)
     eval_softmax_threshold = Evaluation(pred_softmax_threshold, labels,ss)
     eval_openmax = Evaluation(pred_openmax, labels,so)
-
+    torch.save(eval_softmax, os.path.join(args.checkpoint, 'eval_softmax.pkl'))
+    torch.save(eval_softmax_threshold, os.path.join(args.checkpoint, 'eval_softmax_threshold.pkl'))
+    torch.save(eval_openmax, os.path.join(args.checkpoint, 'eval_openmax.pkl'))
 
     print(f"Softmax accuracy is %.3f" % (eval_softmax.accuracy))
     print(f"Softmax F1 is %.3f" % (eval_softmax.f1_measure))
