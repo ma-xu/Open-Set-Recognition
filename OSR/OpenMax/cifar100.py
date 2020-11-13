@@ -118,7 +118,7 @@ def main():
     # test(0, net, trainloader, testloader, criterion, device)
     epoch=0
     if not args.evaluate:
-        for epoch in range(start_epoch, start_epoch + args.es):
+        for epoch in range(start_epoch, args.es):
             print('\nEpoch: %d   Learning rate: %f' % (epoch+1, optimizer.param_groups[0]['lr']))
             adjust_learning_rate(optimizer, epoch, args.lr)
             train_loss, train_acc = train(net,trainloader,optimizer,criterion,device)
@@ -127,6 +127,8 @@ def main():
             #
             logger.append([epoch+1, optimizer.param_groups[0]['lr'], train_loss, train_acc, test_loss, test_acc])
 
+            if epoch % 5 == 0:
+                test(epoch, net, trainloader, testloader, criterion, device)
     test(epoch, net, trainloader, testloader, criterion, device)
     logger.close()
 
@@ -191,23 +193,44 @@ def test(epoch, net,trainloader,  testloader,criterion, device):
     weibull_model = fit_weibull(mavs, dists, categories, args.weibull_tail, "euclidean")
 
     pred_softmax, pred_softmax_threshold, pred_openmax = [], [], []
+    score_softmax, score_openmax = [], []
     for score in scores:
         so, ss = openmax(weibull_model, categories, score,
                          0.5, args.weibull_alpha, "euclidean")  # openmax_prob, softmax_prob
         pred_softmax.append(np.argmax(ss))
         pred_softmax_threshold.append(np.argmax(ss) if np.max(ss) >= args.weibull_threshold else args.train_class_num)
         pred_openmax.append(np.argmax(so) if np.max(so) >= args.weibull_threshold else args.train_class_num)
+        score_softmax.append(ss)
+        score_openmax.append(so)
 
     print("Evaluation...")
-    eval_softmax = Evaluation(pred_softmax, labels)
-    eval_softmax_threshold = Evaluation(pred_softmax_threshold, labels)
-    eval_openmax = Evaluation(pred_openmax, labels)
+    eval_softmax = Evaluation(pred_softmax, labels, score_softmax)
+    eval_softmax_threshold = Evaluation(pred_softmax_threshold, labels, score_softmax)
+    eval_openmax = Evaluation(pred_openmax, labels, score_openmax)
+    torch.save(eval_softmax, os.path.join(args.checkpoint, 'eval_softmax.pkl'))
+    torch.save(eval_softmax_threshold, os.path.join(args.checkpoint, 'eval_softmax_threshold.pkl'))
+    torch.save(eval_openmax, os.path.join(args.checkpoint, 'eval_openmax.pkl'))
 
+    print(f"Softmax accuracy is %.3f" % (eval_softmax.accuracy))
+    print(f"Softmax F1 is %.3f" % (eval_softmax.f1_measure))
+    print(f"Softmax f1_macro is %.3f" % (eval_softmax.f1_macro))
+    print(f"Softmax f1_macro_weighted is %.3f" % (eval_softmax.f1_macro_weighted))
+    print(f"Softmax area_under_roc is %.3f" % (eval_softmax.area_under_roc))
+    print(f"_________________________________________")
 
+    print(f"SoftmaxThreshold accuracy is %.3f" % (eval_softmax_threshold.accuracy))
+    print(f"SoftmaxThreshold F1 is %.3f" % (eval_softmax_threshold.f1_measure))
+    print(f"SoftmaxThreshold f1_macro is %.3f" % (eval_softmax_threshold.f1_macro))
+    print(f"SoftmaxThreshold f1_macro_weighted is %.3f" % (eval_softmax_threshold.f1_macro_weighted))
+    print(f"SoftmaxThreshold area_under_roc is %.3f" % (eval_softmax_threshold.area_under_roc))
+    print(f"_________________________________________")
 
-    print(f"Softmax accuracy is %.3f"%(eval_softmax.accuracy))
-    print(f"Softmax-with-threshold accuracy is %.3f"%(eval_softmax_threshold.accuracy))
-    print(f"Openmax accuracy is %.3f"%(eval_openmax.accuracy))
+    print(f"OpenMax accuracy is %.3f" % (eval_openmax.accuracy))
+    print(f"OpenMax F1 is %.3f" % (eval_openmax.f1_measure))
+    print(f"OpenMax f1_macro is %.3f" % (eval_openmax.f1_macro))
+    print(f"OpenMax f1_macro_weighted is %.3f" % (eval_openmax.f1_macro_weighted))
+    print(f"OpenMax area_under_roc is %.3f" % (eval_openmax.area_under_roc))
+    print(f"_________________________________________")
 
 def save_model(net, acc, epoch, path):
     print('Saving..')
