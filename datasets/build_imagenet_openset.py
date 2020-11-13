@@ -19,7 +19,7 @@ selected_known_folders =random.sample(class_folders,known_class_num)
 rest_folders = list(set(class_folders).difference(set(selected_known_folders)))
 selected_unknown_folders = random.sample(rest_folders,unnknown_class_num)
 
-"""
+
 # for train set
 print("Processing training set....")
 counter = 0
@@ -29,7 +29,7 @@ for class_folder in selected_known_folders:
         os.path.join(old_path,old_folder,'train',class_folder),
         os.path.join(old_path,new_folder,'train',class_folder))
     print(f"copying Train classes \t \t {counter} / {known_class_num}")
-"""
+
 
 
 # for test set
