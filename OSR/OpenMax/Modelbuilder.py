@@ -1,6 +1,7 @@
 import sys
 sys.path.append("../..")
 import backbones.cifar as models
+import backbones.ImageNet as ImageNetmodels
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -10,7 +11,10 @@ class Network(nn.Module):
     def __init__(self, backbone='ResNet18', num_classes=1000,embed_dim=None):
         super(Network, self).__init__()
         self.backbone_name = backbone
-        self.backbone = models.__dict__[backbone](num_classes=num_classes,backbone_fc=False)
+        if "_" in backbone:
+            self.backbone = ImageNetmodels.__dict__[backbone](num_classes=num_classes, backbone_fc=False)
+        else:
+            self.backbone = models.__dict__[backbone](num_classes=num_classes,backbone_fc=False)
         self.dim = self.get_backbone_last_layer_out_channel()
         if embed_dim:
             self.embeddingLayer =nn.Sequential(
