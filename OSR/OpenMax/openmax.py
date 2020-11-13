@@ -127,6 +127,7 @@ def compute_train_score_and_mavs_and_dists(train_class_num,trainloader,device,ne
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(trainloader):
             inputs, targets = inputs.to(device), targets.to(device)
+            print(inputs.shape)
             # this must cause error for cifar
             _, outputs = net(inputs)
             for score, t in zip(outputs, targets):
