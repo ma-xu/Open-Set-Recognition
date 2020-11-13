@@ -58,7 +58,7 @@ parser.add_argument('--stage2_es', default=70, type=int, help='epoch size')
 parser.add_argument('--stage2_use_fc', default=True,  action='store_true',
                     help='If to use the last FC/embedding layer in network, FC (whatever, stage1_feature_dim)')
 parser.add_argument('--stage2_fea_loss_weight', default=0.01, type=float, help='The wegiht for feature loss')
-parser.add_argument('--oltr_threshold', default=0.1, type=float, help='The score threshold for OLTR')
+parser.add_argument('--oltr_threshold', default=0.9, type=float, help='The score threshold for OLTR')
 
 
 
