@@ -128,7 +128,7 @@ def main():
             #
             logger.append([epoch+1, optimizer.param_groups[0]['lr'], train_loss, train_acc, test_loss, test_acc])
 
-            if epoch % 5 == 0:
+            if epoch % 5 == 0 and epoch!=0:
                 test(epoch, net, trainloader, testloader, criterion, device)
     test(epoch, net, trainloader, testloader, criterion, device)
     logger.close()
