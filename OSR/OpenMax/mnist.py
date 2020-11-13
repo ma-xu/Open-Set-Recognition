@@ -210,15 +210,33 @@ def test(epoch, net,trainloader,  testloader,criterion, device):
         pred_openmax.append(np.argmax(so) if np.max(so) >= args.weibull_threshold else args.train_class_num)
 
     print("Evaluation...")
-    eval_softmax = Evaluation(pred_softmax, labels)
-    eval_softmax_threshold = Evaluation(pred_softmax_threshold, labels)
-    eval_openmax = Evaluation(pred_openmax, labels)
+    eval_softmax = Evaluation(pred_softmax, labels,ss)
+    eval_softmax_threshold = Evaluation(pred_softmax_threshold, labels,ss)
+    eval_openmax = Evaluation(pred_openmax, labels,so)
 
 
+    print(f"Softmax accuracy is %.3f" % (eval_softmax.accuracy))
+    print(f"Softmax F1 is %.3f" % (eval_softmax.f1_measure))
+    print(f"Softmax f1_macro is %.3f" % (eval_softmax.f1_macro))
+    print(f"Softmax f1_macro_weighted is %.3f" % (eval_softmax.f1_macro_weighted))
+    print(f"Softmax area_under_roc is %.3f" % (eval_softmax.area_under_roc))
+    print(f"_________________________________________")
 
-    print(f"Softmax accuracy is %.3f"%(eval_softmax.accuracy))
-    print(f"Softmax-with-threshold accuracy is %.3f"%(eval_softmax_threshold.accuracy))
-    print(f"Openmax accuracy is %.3f"%(eval_openmax.accuracy))
+    print(f"SoftmaxThreshold accuracy is %.3f" % (eval_softmax_threshold.accuracy))
+    print(f"SoftmaxThreshold F1 is %.3f" % (eval_softmax_threshold.f1_measure))
+    print(f"SoftmaxThreshold f1_macro is %.3f" % (eval_softmax_threshold.f1_macro))
+    print(f"SoftmaxThreshold f1_macro_weighted is %.3f" % (eval_softmax_threshold.f1_macro_weighted))
+    print(f"SoftmaxThreshold area_under_roc is %.3f" % (eval_softmax_threshold.area_under_roc))
+    print(f"_________________________________________")
+
+    print(f"OpenMax accuracy is %.3f" % (eval_openmax.accuracy))
+    print(f"OpenMax F1 is %.3f" % (eval_openmax.f1_measure))
+    print(f"OpenMax f1_macro is %.3f" % (eval_openmax.f1_macro))
+    print(f"OpenMax f1_macro_weighted is %.3f" % (eval_openmax.f1_macro_weighted))
+    print(f"OpenMax area_under_roc is %.3f" % (eval_openmax.area_under_roc))
+    print(f"_________________________________________")
+
+
 
 def save_model(net, acc, epoch, path):
     print('Saving..')
