@@ -43,7 +43,7 @@ parser.add_argument('--includes_all_train_class', default=True,  action='store_t
 
 # Others
 parser.add_argument('--arch', default='LeNetPlus', choices=model_names, type=str, help='choosing network')
-parser.add_argument('--bs', default=256, type=int, help='batch size')
+parser.add_argument('--bs', default=128, type=int, help='batch size')
 parser.add_argument('--lr', default=0.01, type=float, help='learning rate')
 parser.add_argument('--evaluate', action='store_true', help='Evaluate without training')
 
