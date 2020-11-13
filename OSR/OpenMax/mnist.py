@@ -202,18 +202,21 @@ def test(epoch, net,trainloader,  testloader,criterion, device):
     weibull_model = fit_weibull(mavs, dists, categories, args.weibull_tail, "euclidean")
 
     pred_softmax, pred_softmax_threshold, pred_openmax = [], [], []
+    score_softmax, score_openmax = [], []
     for score in scores:
         so, ss = openmax(weibull_model, categories, score,
                          0.5, args.weibull_alpha, "euclidean")
-        print(f"so  {so} \n ss  {ss}")# openmax_prob, softmax_prob
+        # print(f"so  {so} \n ss  {ss}")# openmax_prob, softmax_prob
         pred_softmax.append(np.argmax(ss))
         pred_softmax_threshold.append(np.argmax(ss) if np.max(ss) >= args.weibull_threshold else args.train_class_num)
         pred_openmax.append(np.argmax(so) if np.max(so) >= args.weibull_threshold else args.train_class_num)
+        score_softmax.append(ss)
+        score_openmax.append(so)
 
     print("Evaluation...")
-    eval_softmax = Evaluation(pred_softmax, labels,ss)
-    eval_softmax_threshold = Evaluation(pred_softmax_threshold, labels,ss)
-    eval_openmax = Evaluation(pred_openmax, labels,so)
+    eval_softmax = Evaluation(pred_softmax, labels, score_softmax)
+    eval_softmax_threshold = Evaluation(pred_softmax_threshold, labels, score_softmax)
+    eval_openmax = Evaluation(pred_openmax, labels, score_openmax)
     torch.save(eval_softmax, os.path.join(args.checkpoint, 'eval_softmax.pkl'))
     torch.save(eval_softmax_threshold, os.path.join(args.checkpoint, 'eval_softmax_threshold.pkl'))
     torch.save(eval_openmax, os.path.join(args.checkpoint, 'eval_openmax.pkl'))
