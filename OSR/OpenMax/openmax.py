@@ -130,8 +130,8 @@ def compute_train_score_and_mavs_and_dists(train_class_num,trainloader,device,ne
 
             # this must cause error for cifar
             _, outputs = net(inputs)
-            print(f"output is {outputs}")
             for score, t in zip(outputs, targets):
+                print(f"torch.argmax(score) is {torch.argmax(score)}, t is {t}")
                 if torch.argmax(score) == t:
                     scores[t].append(score.unsqueeze(dim=0).unsqueeze(dim=0))
     scores = [torch.cat(x).cpu().numpy() for x in scores]  # (N_c, 1, C) * C
