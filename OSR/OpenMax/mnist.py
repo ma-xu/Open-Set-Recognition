@@ -205,7 +205,7 @@ def test(epoch, net,trainloader,  testloader,criterion, device):
     for score in scores:
         so, ss = openmax(weibull_model, categories, score,
                          0.5, args.weibull_alpha, "euclidean")
-        print(f"so size: {so.size()} ss size: {ss.size()}")# openmax_prob, softmax_prob
+        print(f"so  {so} \n ss  {ss}")# openmax_prob, softmax_prob
         pred_softmax.append(np.argmax(ss))
         pred_softmax_threshold.append(np.argmax(ss) if np.max(ss) >= args.weibull_threshold else args.train_class_num)
         pred_openmax.append(np.argmax(so) if np.max(so) >= args.weibull_threshold else args.train_class_num)
