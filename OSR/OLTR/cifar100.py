@@ -44,7 +44,7 @@ parser.add_argument('--evaluate', action='store_true', help='Evaluate without tr
 
 # Parameters for stage 1
 parser.add_argument('--stage1_resume', default='', type=str, metavar='PATH', help='path to latest checkpoint')
-parser.add_argument('--stage1_es', default=30, type=int, help='epoch size')
+parser.add_argument('--stage1_es', default=35, type=int, help='epoch size')
 parser.add_argument('--stage1_use_fc', default=False,  action='store_true',
                     help='If to use the last FC/embedding layer in network, FC (whatever, stage1_feature_dim)')
 parser.add_argument('--stage1_feature_dim', default=512, type=int, help='embedding feature dimension')
@@ -89,6 +89,9 @@ testset = CIFAR100(root='../../data', train=False, download=True, transform=tran
                    train_class_num=args.train_class_num, test_class_num=args.test_class_num,
                    includes_all_train_class=args.includes_all_train_class)
 
+trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.bs, shuffle=True, num_workers=4)
+testloader = torch.utils.data.DataLoader(testset, batch_size=args.bs, shuffle=False, num_workers=4)
+
 # ensure load checkpoints for evaluation
 if args.evaluate:
     assert os.path.isfile(args.stage2_resume)
@@ -107,8 +110,7 @@ def main_stage1():
     print(f"\nStart Stage-1 training...\n")
     start_epoch = 0  # start from epoch 0 or last checkpoint epoch
     # data loader
-    trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.bs, shuffle=True, num_workers=4)
-    # testloader = torch.utils.data.DataLoader(testset, batch_size=args.bs, shuffle=False, num_workers=4)
+
 
     # Model
     print('==> Building model..')
@@ -140,7 +142,7 @@ def main_stage1():
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
 
-    for epoch in range(start_epoch, start_epoch + args.stage1_es):
+    for epoch in range(start_epoch, args.stage1_es):
         print('\nStage_1 Epoch: %d   Learning rate: %f' % (epoch+1, optimizer.param_groups[0]['lr']))
         adjust_learning_rate(optimizer, epoch, args.lr,step=10)
         train_loss, train_acc = stage1_train(net,trainloader,optimizer,criterion,device)
@@ -174,7 +176,8 @@ def stage1_train(net,trainloader,optimizer,criterion,device):
     return train_loss/(batch_idx+1), correct/total
 
 
-def stage2_train(net,trainloader,optimizer,criterion, fea_criterion, device):
+def stage2_train(net,trainloader,optimizer,optimizer2,
+                 criterion, fea_criterion, device):
     net.train()
     train_loss = 0
     correct = 0
@@ -182,12 +185,14 @@ def stage2_train(net,trainloader,optimizer,criterion, fea_criterion, device):
     for batch_idx, (inputs, targets) in enumerate(trainloader):
         inputs, targets = inputs.to(device), targets.to(device)
         optimizer.zero_grad()
+        optimizer2.zero_grad()
         outputs, _, _, features = net(inputs)
         loss = criterion(outputs, targets)
         loss_fea = fea_criterion(features, targets)
         loss += loss_fea*args.stage2_fea_loss_weight
         loss.backward()
         optimizer.step()
+        optimizer2.step()
 
         train_loss += loss.item()
         _, predicted = outputs.max(1)
@@ -238,6 +243,7 @@ def main_stage2(net1, centroids):
     fea_criterion = DiscCentroidsLoss(args.train_class_num, args.stage1_feature_dim)
     fea_criterion = fea_criterion.to(device)
     optimizer = optim.SGD(net2.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
+    optimizer_criterion = optim.SGD(fea_criterion.parameters(), lr=args.lr * 0.1, momentum=0.9, weight_decay=5e-4)
 
     # passing centroids data.
     if not args.evaluate:
@@ -264,20 +270,22 @@ def main_stage2(net1, centroids):
         logger.set_names(['Epoch', 'Learning Rate', 'Train Loss', 'Train Acc.'])
 
     if not args.evaluate:
-        for epoch in range(start_epoch, start_epoch + args.stage2_es):
+        for epoch in range(start_epoch, args.stage2_es):
             print('\nStage_2 Epoch: %d   Learning rate: %f' % (epoch + 1, optimizer.param_groups[0]['lr']))
             # Here, I didn't set optimizers respectively, just for simplicity. Performance did not vary a lot.
             adjust_learning_rate(optimizer, epoch, args.lr, step=20)
-            train_loss, train_acc = stage2_train(net2, trainloader, optimizer, criterion, fea_criterion, device)
+            train_loss, train_acc = stage2_train(net2, trainloader, optimizer, optimizer_criterion,
+                                                 criterion, fea_criterion, device)
             save_model(net2, None, epoch, os.path.join(args.checkpoint, 'stage_2_last_model.pth'))
             logger.append([epoch + 1, optimizer.param_groups[0]['lr'], train_loss, train_acc])
             pass_centroids(net2, fea_criterion, init_centroids=None)
+            if epoch % 5 ==0:
+                test(net2, testloader, device)
         print(f"\nFinish Stage-2 training...\n")
     logger.close()
 
 
 
-    testloader = torch.utils.data.DataLoader(testset, batch_size=args.bs, shuffle=False, num_workers=4)
     test(net2, testloader, device)
     return net2
 
@@ -341,8 +349,13 @@ def test( net,  testloader, device):
     pred=[]
     for score in scores:
         pred.append(np.argmax(score) if np.max(score) >= args.oltr_threshold else args.train_class_num)
-    eval = Evaluation(pred, labels)
-    print(f"OLTR accuracy is %.3f"%(eval.accuracy))
+    eval = Evaluation(pred, labels, scores)
+    torch.save(eval, os.path.join(args.checkpoint, 'eval.pkl'))
+    print(f"Center-Loss accuracy is %.3f" % (eval.accuracy))
+    print(f"Center-Loss F1 is %.3f" % (eval.f1_measure))
+    print(f"Center-Loss f1_macro is %.3f" % (eval.f1_macro))
+    print(f"Center-Loss f1_macro_weighted is %.3f" % (eval.f1_macro_weighted))
+    print(f"Center-Loss area_under_roc is %.3f" % (eval.area_under_roc))
 
 
 def save_model(net, acc, epoch, path):
