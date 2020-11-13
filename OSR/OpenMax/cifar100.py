@@ -21,6 +21,7 @@ import backbones.cifar as models
 from datasets import CIFAR100
 from Utils import adjust_learning_rate, progress_bar, Logger, mkdir_p, Evaluation
 from openmax import compute_train_score_and_mavs_and_dists,fit_weibull,openmax
+from Modelbuilder import Network
 
 model_names = sorted(name for name in models.__dict__
     if not name.startswith("__")
@@ -89,7 +90,7 @@ def main():
 
     # Model
     print('==> Building model..')
-    net = models.__dict__[args.arch](num_classes=args.train_class_num) # CIFAR 100
+    net = Network(backbone=args.arch, num_classes=args.train_class_num, embed_dim=args.embed_dim)
     net = net.to(device)
 
     if device == 'cuda':
