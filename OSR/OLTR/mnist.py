@@ -52,7 +52,7 @@ parser.add_argument('--stage1_resume', default='', type=str, metavar='PATH', hel
 parser.add_argument('--stage1_es', default=35, type=int, help='epoch size')
 parser.add_argument('--stage1_use_fc', default=False,  action='store_true',
                     help='If to use the last FC/embedding layer in network, FC (whatever, stage1_feature_dim)')
-parser.add_argument('--stage1_feature_dim', default=2, type=int, help='embedding feature dimension')
+parser.add_argument('--stage1_feature_dim', default=128, type=int, help='embedding feature dimension')
 parser.add_argument('--stage1_classifier', default='dotproduct', type=str,choices=['dotproduct', 'cosnorm', 'metaembedding'],
                     help='Select a classifier (default dotproduct)')
 
@@ -66,7 +66,7 @@ parser.add_argument('--stage2_fea_loss_weight', default=0.001, type=float, help=
 parser.add_argument('--oltr_threshold', default=0.1, type=float, help='The score threshold for OLTR')
 
 # Parameters for stage plotting
-parser.add_argument('--plot', default=True, action='store_true', help='Plotting the training set.')
+parser.add_argument('--plot', action='store_true', help='Plotting the training set.')
 parser.add_argument('--plot_max', default=0, type=int, help='max examples to plot in each class, 0 indicates all.')
 parser.add_argument('--plot_quality', default=200, type=int, help='DPI of plot figure')
 
