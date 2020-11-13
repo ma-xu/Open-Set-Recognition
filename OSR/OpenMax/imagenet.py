@@ -14,7 +14,9 @@ import torch.distributed as dist
 import torch.optim
 import torch.utils.data
 import torch.utils.data.distributed
-import backbones.imagenet as models
+import sys
+sys.path.append("../..")
+import backbones.ImageNet as models
 from Utils import adjust_learning_rate, progress_bar, Logger, mkdir_p, Evaluation
 from openmax import compute_train_score_and_mavs_and_dists,fit_weibull,openmax
 from Modelbuilder import Network
