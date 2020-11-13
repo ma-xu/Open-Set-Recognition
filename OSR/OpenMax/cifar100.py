@@ -90,7 +90,7 @@ def main():
 
     # Model
     print('==> Building model..')
-    net = Network(backbone=args.arch, num_classes=args.train_class_num, backbone_fc=True)
+    net = Network(backbone=args.arch, num_classes=args.train_class_num)
     net = net.to(device)
 
     if device == 'cuda':

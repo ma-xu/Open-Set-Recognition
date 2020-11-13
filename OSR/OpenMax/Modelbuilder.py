@@ -7,10 +7,10 @@ import torch.nn.functional as F
 
 
 class Network(nn.Module):
-    def __init__(self, backbone='ResNet18', num_classes=1000,embed_dim=None, backbone_fc = False):
+    def __init__(self, backbone='ResNet18', num_classes=1000,embed_dim=None):
         super(Network, self).__init__()
         self.backbone_name = backbone
-        self.backbone = models.__dict__[backbone](num_classes=num_classes,backbone_fc=backbone_fc)
+        self.backbone = models.__dict__[backbone](num_classes=num_classes,backbone_fc=False)
         self.dim = self.get_backbone_last_layer_out_channel()
         if embed_dim:
             self.embeddingLayer =nn.Sequential(
@@ -65,10 +65,10 @@ def demo():
     # net = Network('LeNetPlus', num_classes=10,embed_dim=512)
     # output = net(x)
 
-    # x = torch.rand([1, 3, 32, 32])
-    # net = Network('ResNet18', 50, backbone_fc = True)
-    # feature, logits = net(x)
-    # print(feature.shape)
-    # print(logits.shape)
+    x = torch.rand([1, 3, 32, 32])
+    net = Network('ResNet18', 50)
+    feature, logits = net(x)
+    print(feature.shape)
+    print(logits.shape)
 
 # demo()
