@@ -128,6 +128,8 @@ def main():
             #
             logger.append([epoch+1, optimizer.param_groups[0]['lr'], train_loss, train_acc, test_loss, test_acc])
 
+            # don't test the first epoch, cause some classes may have no predict samples, leading to error caused by
+            # compute_train_score_and_mavs_and_dists
             if epoch % 5 == 0 and epoch!=0:
                 test(epoch, net, trainloader, testloader, criterion, device)
     test(epoch, net, trainloader, testloader, criterion, device)
