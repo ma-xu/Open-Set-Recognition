@@ -56,14 +56,14 @@ class DFPLoss2(nn.Module):
         dist_within = dist_fea2cen * mask  # [batch,class] distance to centroids
         mask_in = (dist_within <= thresholds.unsqueeze(dim=0)).float()
         mask_out = (dist_within > thresholds.unsqueeze(dim=0)).float()
-        batch_size_in = (mask_in * mask).sum()
-        batch_size_out = (mask_out * mask).sum()
+        # batch_size_in = (mask_in * mask).sum()
+        # batch_size_out = (mask_out * mask).sum()
         # print(f"batch: {batch_size} / in {batch_size_in} / {batch_size_out}"
         #       f" ---- equal {(batch_size_in+batch_size_out)==batch_size}")
         loss_distance_in = (dist_within * mask_in).sum(dim=1, keepdim=False)
-        loss_distance_in = self.alpha * (loss_distance_in.sum()) / (batch_size_in+1)
+        loss_distance_in = self.alpha * (loss_distance_in.sum()) / batch_size
         loss_distance_out = (dist_within * mask_out).sum(dim=1, keepdim=False)
-        loss_distance_out = self.alpha * self.theta* (loss_distance_out.sum()) /(batch_size_out+1)
+        loss_distance_out = self.alpha * self.theta* (loss_distance_out.sum()) /batch_size
 
         #  distance loss for generated data
         loss_generate = F.relu((2*thresholds.unsqueeze(dim=0) - dist_gen2cen), inplace=True)
