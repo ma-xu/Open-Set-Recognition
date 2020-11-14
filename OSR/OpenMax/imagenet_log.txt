@@ -1,0 +1,21 @@
+the result for val with threshold 0.1 is:
+_________________________________________
+Softmax accuracy is 0.801
+Softmax F1 is 0.801
+Softmax f1_macro is 0.317
+Softmax f1_macro_weighted is 0.830
+_________________________________________
+SoftmaxThreshold accuracy is 0.801
+SoftmaxThreshold F1 is 0.801
+SoftmaxThreshold f1_macro is 0.320
+SoftmaxThreshold f1_macro_weighted is 0.830
+_________________________________________
+OpenMax accuracy is 0.704
+OpenMax F1 is 0.704
+OpenMax f1_macro is 0.346
+OpenMax f1_macro_weighted is 0.774
+_________________________________________
+
+
+
+
