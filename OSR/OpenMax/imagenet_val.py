@@ -299,6 +299,10 @@ def validate(val_loader, train_loader, model):
         with torch.no_grad():
             _, output = model(input_var)
 
+        for mm in range(output.shape[1]):
+            m_predict = torch.argmax(output[mm])
+            m_target = target_var[mm]
+            print(f"Predict: {m_predict}, Target: {m_target}")
         # print(f"output shape is : {output.shape}, max target is {max(target_var)}, min target is {min(target_var)}")
         scores.append(reduce_tensor(output))
         labels.append(reduce_tensor(target))
