@@ -61,9 +61,9 @@ class DFPLoss2(nn.Module):
         # print(f"batch: {batch_size} / in {batch_size_in} / {batch_size_out}"
         #       f" ---- equal {(batch_size_in+batch_size_out)==batch_size}")
         loss_distance_in = (dist_within * mask_in).sum(dim=1, keepdim=False)
-        loss_distance_in = self.alpha * (loss_distance_in.sum()) / batch_size
+        loss_distance_in = self.alpha * (loss_distance_in.sum()) / (batch_size_in+1)
         loss_distance_out = (dist_within * mask_out).sum(dim=1, keepdim=False)
-        loss_distance_out = self.alpha * self.theta* (loss_distance_out.sum()) /batch_size
+        loss_distance_out = self.alpha * self.theta* (loss_distance_out.sum()) /(batch_size_out+1)
 
         #  distance loss for generated data
         loss_generate = F.relu((2*thresholds.unsqueeze(dim=0) - dist_gen2cen), inplace=True)
