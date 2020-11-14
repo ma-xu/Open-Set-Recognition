@@ -37,7 +37,7 @@ class CGDestimator():
         return fea_new
 
     def sampler(self,gap):
-        inds = torch.randint(0, self.gen_n, [30*gap.shape[0]])
+        inds = torch.randint(0, self.gen_n, [2*gap.shape[0]])
         out = self.gen_fea[inds]
         return out
 
@@ -81,4 +81,4 @@ def demo():
     estimator.sampler(gap)
 
 
-# demo()
+demo()
