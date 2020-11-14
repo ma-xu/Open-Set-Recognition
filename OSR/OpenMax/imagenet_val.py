@@ -328,38 +328,30 @@ def validate(val_loader, train_loader, model):
         score_softmax.append(ss)
         score_openmax.append(so)
 
-    if args.local_rank == 0 :
-        print("Evaluation...")
-        eval_softmax = Evaluation(pred_softmax, labels)
-        eval_softmax_threshold = Evaluation(pred_softmax_threshold, labels)
-        eval_openmax = Evaluation(pred_openmax, labels)
-        torch.save(eval_softmax, os.path.join(args.checkpoint, 'eval_softmax.pkl'))
-        torch.save(eval_softmax_threshold, os.path.join(args.checkpoint, 'eval_softmax_threshold.pkl'))
-        torch.save(eval_openmax, os.path.join(args.checkpoint, 'eval_openmax.pkl'))
 
-        print(f"the result for {args.val} with threshold {args.weibull_threshold} is:")
-        print(f"_________________________________________")
-        print(f"Softmax accuracy is %.3f" % (eval_softmax.accuracy))
-        print(f"Softmax F1 is %.3f" % (eval_softmax.f1_measure))
-        print(f"Softmax f1_macro is %.3f" % (eval_softmax.f1_macro))
-        print(f"Softmax f1_macro_weighted is %.3f" % (eval_softmax.f1_macro_weighted))
-        # print(f"Softmax area_under_roc is %.3f" % (eval_softmax.area_under_roc))
-        print(f"_________________________________________")
+    print("Evaluation...")
+    eval_softmax = Evaluation(pred_softmax, labels)
+    eval_softmax_threshold = Evaluation(pred_softmax_threshold, labels)
+    eval_openmax = Evaluation(pred_openmax, labels)
+    # torch.save(eval_softmax, os.path.join(args.checkpoint, 'eval_softmax.pkl'))
+    # torch.save(eval_softmax_threshold, os.path.join(args.checkpoint, 'eval_softmax_threshold.pkl'))
+    # torch.save(eval_openmax, os.path.join(args.checkpoint, 'eval_openmax.pkl'))
 
-        print(f"SoftmaxThreshold accuracy is %.3f" % (eval_softmax_threshold.accuracy))
-        print(f"SoftmaxThreshold F1 is %.3f" % (eval_softmax_threshold.f1_measure))
-        print(f"SoftmaxThreshold f1_macro is %.3f" % (eval_softmax_threshold.f1_macro))
-        print(f"SoftmaxThreshold f1_macro_weighted is %.3f" % (eval_softmax_threshold.f1_macro_weighted))
-        # print(f"SoftmaxThreshold area_under_roc is %.3f" % (eval_softmax_threshold.area_under_roc))
-        print(f"_________________________________________")
+    softmax_results = torch.Tensor([eval_softmax.accuracy,eval_softmax.f1_measure,
+                                         eval_softmax.f1_macro,eval_softmax.f1_macro_weighted])
+    threshold_results = torch.Tensor([eval_softmax_threshold.accuracy, eval_softmax_threshold.f1_measure,
+                                         eval_softmax_threshold.f1_macro, eval_softmax_threshold.f1_macro_weighted])
+    openmax_results = torch.Tensor([eval_openmax.accuracy, eval_openmax.f1_measure,
+                                    eval_openmax.f1_macro, eval_openmax.f1_macro_weighted])
 
-        print(f"OpenMax accuracy is %.3f" % (eval_openmax.accuracy))
-        print(f"OpenMax F1 is %.3f" % (eval_openmax.f1_measure))
-        print(f"OpenMax f1_macro is %.3f" % (eval_openmax.f1_macro))
-        print(f"OpenMax f1_macro_weighted is %.3f" % (eval_openmax.f1_macro_weighted))
-        # print(f"OpenMax area_under_roc is %.3f" % (eval_openmax.area_under_roc))
-        print(f"_________________________________________")
-
+    softmax_results = reduce_tensor(softmax_results)
+    threshold_results = reduce_tensor(threshold_results)
+    openmax_results = reduce_tensor(openmax_results)
+    if args.local_rank == 0:
+        print(f"the result for three     :  Acc, F1, macro, w-marco")
+        print(f"the result for softmax   :  {softmax_results}")
+        print(f"the result for threshold :  {threshold_results}")
+        print(f"the result for openmax   :  {openmax_results}")
 
 
 
