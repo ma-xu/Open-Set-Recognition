@@ -299,6 +299,7 @@ def validate(val_loader, train_loader, model):
         with torch.no_grad():
             _, output = model(input_var)
 
+        print(f"output shape is : {output.shape}, max target is {max(target_var)}")
         scores.append(output)
         labels.append(target)
 
