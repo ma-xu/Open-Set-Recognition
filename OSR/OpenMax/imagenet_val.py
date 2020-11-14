@@ -271,11 +271,11 @@ def main():
     val_loader = DALIClassificationIterator(pipe, size=int(pipe.epoch_size("Reader") / args.world_size))
 
 
-    validate(val_loader, model, criterion)
+    validate(val_loader,train_loader, model)
 
 
 
-def validate(val_loader, model):
+def validate(val_loader, train_loader, model):
     # switch to evaluate mode
     model.eval()
     if args.local_rank == 0:
@@ -308,7 +308,7 @@ def validate(val_loader, model):
 
     # Fit the weibull distribution from training data.
     print("Fittting Weibull distribution...")
-    _, mavs, dists = compute_train_score_and_mavs_and_dists(args.train_class_num, trainloader, device, net)
+    _, mavs, dists = compute_train_score_and_mavs_and_dists(args.train_class_num, train_loader, model)
     categories = list(range(0, args.train_class_num))
     weibull_model = fit_weibull(mavs, dists, categories, args.weibull_tail, "euclidean")
 
