@@ -73,7 +73,7 @@ class DFPLoss2(nn.Module):
         # loss_generate_2orign = self.beta * loss_generate_2orign.mean()
 
         # loss = loss_similarity + loss_distance_in + loss_distance_out + loss_generate
-        loss = loss_similarity + loss_distance_in + loss_distance_out +
+        loss = loss_similarity + loss_distance_in + loss_distance_out
         return {
             "total": loss,
             "similarity": loss_similarity,
