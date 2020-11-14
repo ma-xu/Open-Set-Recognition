@@ -92,6 +92,8 @@ parser.add_argument('--weibull_tail', default=20, type=int, help='Classes used i
 parser.add_argument('--weibull_alpha', default=3, type=int, help='Classes used in testing')
 parser.add_argument('--weibull_threshold', default=0.1, type=float, help='Classes used in testing')
 
+parser.add_argument('-v', '--val', default='val', type=str)
+
 cudnn.benchmark = True
 
 class HybridTrainPipe(Pipeline):
@@ -256,7 +258,7 @@ def main():
             logger.set_names(['Learning Rate', 'Train Loss', 'Valid Loss', 'Train Acc.', 'Valid Acc.', 'Valid Top5.'])
 
     traindir = os.path.join(args.data, 'train')
-    valdir = os.path.join(args.data, 'val')
+    valdir = os.path.join(args.data, args.val)
 
 
     crop_size = 224
@@ -334,6 +336,8 @@ def validate(val_loader, train_loader, model):
         torch.save(eval_softmax_threshold, os.path.join(args.checkpoint, 'eval_softmax_threshold.pkl'))
         torch.save(eval_openmax, os.path.join(args.checkpoint, 'eval_openmax.pkl'))
 
+        print(f"the result for {args.val} with threshold {args.weibull_threshold} is:")
+        print(f"_________________________________________")
         print(f"Softmax accuracy is %.3f" % (eval_softmax.accuracy))
         print(f"Softmax F1 is %.3f" % (eval_softmax.f1_measure))
         print(f"Softmax f1_macro is %.3f" % (eval_softmax.f1_macro))
