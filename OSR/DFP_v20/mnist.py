@@ -43,7 +43,7 @@ parser.add_argument('--bs', default=256, type=int, help='batch size')
 parser.add_argument('--evaluate', action='store_true', help='Evaluate without training')
 
 # General MODEL parameters
-parser.add_argument('--arch', default='LeNetPlus', choices=model_names, type=str, help='choosing network')
+parser.add_argument('--arch', default='LeNetCascade', choices=model_names, type=str, help='choosing network')
 parser.add_argument('--embed_dim', default=2, type=int, help='embedding feature dimension')
 parser.add_argument('--distance', default='l2', choices=['l2', 'l1', 'cosine', 'dotproduct'],
                     type=str, help='choosing distance metric')
@@ -173,6 +173,9 @@ def main_stage1():
             if args.plot:
                 plot_feature(net, args, trainloader, device, args.plotfolder1, epoch=epoch,
                              plot_class_num=args.train_class_num, maximum=args.plot_max,
+                             plot_quality=args.plot_quality, norm_centroid=args.norm_centroid)
+                plot_feature(net, args, testloader, device, args.plotfolder1, epoch="test"+str(epoch),
+                             plot_class_num=args.train_class_num + 1, maximum=args.plot_max,
                              plot_quality=args.plot_quality, norm_centroid=args.norm_centroid)
     if args.plot:
         # plot the test set

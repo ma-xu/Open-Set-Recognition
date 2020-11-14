@@ -22,12 +22,13 @@ class DFPNet(nn.Module):
         self.norm_centroid = norm_centroid
         self.backbone = models.__dict__[backbone](num_classes=num_classes, backbone_fc=False)
         self.feat_dim = self.get_backbone_last_layer_out_channel()  # get the channel number of backbone output
+        self.fuse = nn.Parameter(torch.Tensor([[[[0.], [0.], [1.]]]]))
         if embed_dim:
             self.embeddingLayer = nn.Sequential(
                 nn.PReLU(),
-                nn.Linear(self.feat_dim, self.feat_dim // 16),
+                nn.Conv2d(self.feat_dim, self.feat_dim // 16,1),
                 nn.PReLU(),
-                nn.Linear(self.feat_dim // 16, embed_dim)
+                nn.Conv2d(self.feat_dim // 16, embed_dim,1)
             )
             self.feat_dim = embed_dim
         self.centroids = nn.Parameter(torch.randn(num_classes, self.feat_dim))
@@ -59,18 +60,19 @@ class DFPNet(nn.Module):
     def forward(self, x):
         x = self.backbone(x)
         dis_gen2cen, dis_gen2ori, thresholds, amplified_thresholds, embed_gen = None, None, None, None, None
-        gap = (F.adaptive_avg_pool2d(x, 1)).view(x.size(0), -1)
+        gap = x
         if hasattr(self, 'estimator'):
             thresholds = self.thresholds
             gen = self.estimator.sampler(gap)
             embed_gen = self.embeddingLayer(gen) if hasattr(self, 'embeddingLayer') else gen
 
         embed_fea = self.embeddingLayer(gap) if hasattr(self, 'embeddingLayer') else gap
+        embed_fea_2d = (self.fuse*embed_fea).sum(dim=2, keepdim=False).squeeze(dim=-1)
         centroids = F.normalize(self.centroids, dim=1, p=2) if self.norm_centroid else self.centroids
         SIMI = Similarity(scaled=self.scaled)
-        sim_fea2cen = getattr(SIMI, self.similarity)(embed_fea, centroids)
+        sim_fea2cen = getattr(SIMI, self.similarity)(embed_fea_2d, centroids)
         DIST = Distance(scaled=self.scaled)
-        dis_fea2cen = getattr(DIST, self.distance)(embed_fea, centroids)
+        dis_fea2cen = getattr(DIST, self.distance)(embed_fea_2d, centroids)
         if hasattr(self, 'estimator'):
             dis_gen2cen = getattr(DIST, self.distance)(embed_gen, centroids)
             dis_gen2ori = getattr(DIST, self.distance)(embed_gen, self.origin)
@@ -88,16 +90,22 @@ class DFPNet(nn.Module):
 
 
 def demo():
-    x = torch.rand([10, 3, 32, 32])
+    # x = torch.rand([10, 3, 32, 32])
+    # y = torch.rand([6, 3, 32, 32])
+    # threshold = torch.rand([10])
+    # net = DFPNet('ResNet18', num_classes=10, embed_dim=64, thresholds=None)
+    # output = net(x)
+    # print(output["gap"].shape)
+    # print(output["embed_fea"].shape)
+    # print(output["sim_fea2cen"].shape)
+    # # print(output["dis_gen2cen"].shape)
+    # # print(output["dis_gen2ori"].shape)
+
+
+    x = torch.rand([10, 1, 28, 28])
     y = torch.rand([6, 3, 32, 32])
     threshold = torch.rand([10])
-    net = DFPNet('ResNet18', num_classes=10, embed_dim=64, thresholds=None)
+    net = DFPNet('LeNetCascade', num_classes=10, embed_dim=64, thresholds=None)
     output = net(x)
-    print(output["gap"].shape)
-    print(output["embed_fea"].shape)
-    print(output["sim_fea2cen"].shape)
-    # print(output["dis_gen2cen"].shape)
-    # print(output["dis_gen2ori"].shape)
 
-
-# demo()
+demo()

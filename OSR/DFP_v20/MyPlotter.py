@@ -19,7 +19,7 @@ def plot_feature(net, args, plotloader, device, dirname, epoch=0, plot_class_num
         for batch_idx, (inputs, targets) in enumerate(plotloader):
             inputs, targets = inputs.to(device), targets.to(device)
             out = net(inputs)
-            embed_fea = out["embed_fea"]
+            embed_fea = out["embed_fea"] # [b,2,3,1]
             embed_gen = out["embed_gen"]
             try:
                 embed_fea = embed_fea.data.cpu().numpy()
@@ -52,55 +52,59 @@ def plot_feature(net, args, plotloader, device, dirname, epoch=0, plot_class_num
         centroids = centroids.data.numpy()
     # print(centroids)
     colors = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9']
-    for label_idx in range(plot_class_num):
-        features = plot_features[plot_labels == label_idx, :]
-        maximum = min(maximum, len(features)) if maximum > 0 else len(features)
+
+    lastfixs = ['stage1','stage2','stage3']
+    for ith in range(0,3):
+        lastfix = lastfixs[ith]
+        for label_idx in range(plot_class_num):
+            features = plot_features[plot_labels == label_idx, :]
+            maximum = min(maximum, len(features)) if maximum > 0 else len(features)
+            plt.scatter(
+                features[0:maximum, 0,ith,0],
+                features[0:maximum, 1,ith,0],
+                c=colors[label_idx],
+                s=1,
+            )
+        if len(plot_generates) > 0:
+            plot_generates = np.concatenate(plot_generates, 0)
+            plt.scatter(
+                plot_generates[:, 0],
+                plot_generates[:, 1],
+                # c=colors[label_idx],
+                c=colors[plot_class_num],
+                s=1,
+            )
         plt.scatter(
-            features[0:maximum, 0],
-            features[0:maximum, 1],
-            c=colors[label_idx],
-            s=1,
-        )
-    if len(plot_generates) > 0:
-        plot_generates = np.concatenate(plot_generates, 0)
-        plt.scatter(
-            plot_generates[:, 0],
-            plot_generates[:, 1],
+            centroids[:, 0],
+            centroids[:, 1],
             # c=colors[label_idx],
-            c=colors[plot_class_num],
-            s=1,
+            c='black',
+            marker="*",
+            s=5,
         )
-    plt.scatter(
-        centroids[:, 0],
-        centroids[:, 1],
-        # c=colors[label_idx],
-        c='black',
-        marker="*",
-        s=5,
-    )
 
-    if thresholds is not None:
-        try:
-            thresholds = thresholds.data.cpu().numpy()
-        except:
-            thresholds = thresholds.data.numpy()
-        for label_idx in range(args.train_class_num):
-            circle = plt.Circle(
-                xy=(centroids[label_idx, 0], centroids[label_idx, 1]),
-                radius=thresholds[label_idx],
-                fill=False,
-                color='black')
-            plt.gcf().gca().add_artist(circle)
+        if thresholds is not None:
+            try:
+                thresholds = thresholds.data.cpu().numpy()
+            except:
+                thresholds = thresholds.data.numpy()
+            for label_idx in range(args.train_class_num):
+                circle = plt.Circle(
+                    xy=(centroids[label_idx, 0], centroids[label_idx, 1]),
+                    radius=thresholds[label_idx],
+                    fill=False,
+                    color='black')
+                plt.gcf().gca().add_artist(circle)
 
 
-    # currently only support 10 classes, for a good visualization.
-    # change plot_class_num would lead to problems.
-    legends = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
-    plt.legend(legends[0:plot_class_num] + ['c'], loc='upper right')
+        # currently only support 10 classes, for a good visualization.
+        # change plot_class_num would lead to problems.
+        legends = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+        plt.legend(legends[0:plot_class_num] + ['c'], loc='upper right')
 
-    save_name = os.path.join(dirname, 'epoch_' + str(epoch) + '.png')
-    plt.savefig(save_name, bbox_inches='tight', dpi=plot_quality)
-    plt.close()
+        save_name = os.path.join(dirname, 'epoch_' + str(epoch)+lastfix + '.png')
+        plt.savefig(save_name, bbox_inches='tight', dpi=plot_quality)
+        plt.close()
 
 
 def plot_distance(net,
