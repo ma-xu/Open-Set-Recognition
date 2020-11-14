@@ -41,7 +41,7 @@ counter = 0
 for class_folder in selected_known_folders:
     counter += 1
     shutil.copytree(
-        os.path.join(old_path,old_folder,'val300',class_folder),
+        os.path.join(old_path,old_folder,'val',class_folder),
         os.path.join(old_path,new_folder,'val300',class_folder))
     print(f"copying Val classes (known) \t \t {counter} / {known_class_num}")
 targetdir = os.path.join(old_path,new_folder,'val300','n99999999')
@@ -66,7 +66,7 @@ counter = 0
 for class_folder in selected_known_folders:
     counter += 1
     shutil.copytree(
-        os.path.join(old_path,old_folder,'val400',class_folder),
+        os.path.join(old_path,old_folder,'val',class_folder),
         os.path.join(old_path,new_folder,'val400',class_folder))
     print(f"copying Val classes (known) \t \t {counter} / {known_class_num}")
 targetdir = os.path.join(old_path,new_folder,'val400','n99999999')
@@ -92,7 +92,7 @@ counter = 0
 for class_folder in selected_known_folders:
     counter += 1
     shutil.copytree(
-        os.path.join(old_path,old_folder,'val500',class_folder),
+        os.path.join(old_path,old_folder,'val',class_folder),
         os.path.join(old_path,new_folder,'val500',class_folder))
     print(f"copying Val classes (known) \t \t {counter} / {known_class_num}")
 targetdir = os.path.join(old_path,new_folder,'val500','n99999999')
