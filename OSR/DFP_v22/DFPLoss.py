@@ -51,29 +51,26 @@ class DFPLoss2(nn.Module):
         #  distance loss for input data
         batch_size, num_classes = dist_fea2cen.shape
         classes = torch.arange(num_classes, device=targets.device).long()
-        labels = targets.unsqueeze(1).expand(batch_size, num_classes)
-        mask = labels.eq(classes.expand(batch_size, num_classes))
-        dist_within = dist_fea2cen * mask.float()
+        labels = targets.unsqueeze(1).expand(batch_size, num_classes)  # [batch,class]
+        mask = (labels.eq(classes.expand(batch_size, num_classes))).float()  # [batch,class]
+        dist_within = dist_fea2cen * mask  # [batch,class] distance to centroids
         mask_in = (dist_within <= thresholds.unsqueeze(dim=0)).float()
-        mask_out = self.theta * ((dist_within > thresholds.unsqueeze(dim=0)).float())
+        mask_out = (dist_within > thresholds.unsqueeze(dim=0)).float()
+        batch_size_in = (mask_in * mask).sum()
+        batch_size_out = (mask_out * mask).sum()
+        # print(f"batch: {batch_size} / in {batch_size_in} / {batch_size_out}"
+        #       f" ---- equal {(batch_size_in+batch_size_out)==batch_size}")
         loss_distance_in = (dist_within * mask_in).sum(dim=1, keepdim=False)
-        loss_distance_in = self.alpha * (loss_distance_in.sum()) / batch_size
+        loss_distance_in = self.alpha * (loss_distance_in.sum()) / (batch_size_in+1)
         loss_distance_out = (dist_within * mask_out).sum(dim=1, keepdim=False)
-        loss_distance_out = self.alpha * (loss_distance_out.sum()) / batch_size
+        loss_distance_out = self.alpha * self.theta* (loss_distance_out.sum()) / (batch_size_out+1)
 
         #  distance loss for generated data
-        dist_gen2cen_min, _ = torch.min(dist_gen2cen, dim=1, keepdim=True)
-        loss_generate = dist_gen2ori / (dist_gen2cen_min + dist_gen2ori)
-        # loss_generate = dist_gen2ori / (dist_gen2cen.min(dim=1, keepdim=False) + dist_gen2ori)
-        loss_generate = self.beta * loss_generate.mean()
+        loss_generate = F.relu((2*thresholds.unsqueeze(dim=0) - dist_gen2cen), inplace=True)
+        loss_generate = self.beta * (loss_generate.sum()) / (loss_generate.shape[0])
 
-        # loss_generate_within = F.relu((amplified_thresholds.unsqueeze(dim=0) - dist_gen2cen), inplace=True)
-        # loss_generate_within = self.beta * self.theta * (loss_generate_within.sum()) / (loss_generate_within.shape[0])
-        # loss_generate_2orign = dist_gen2ori / (dist_gen2cen.sum(dim=1, keepdim=False) + dist_gen2ori)
-        # loss_generate_2orign = self.beta * loss_generate_2orign.mean()
 
-        # loss = loss_similarity + loss_distance_in + loss_distance_out + loss_generate
-        loss = loss_similarity + loss_distance_in + loss_distance_out
+        loss = loss_similarity + loss_distance_in + loss_distance_out + loss_generate
         return {
             "total": loss,
             "similarity": loss_similarity,
@@ -112,7 +109,7 @@ def demo2():
 
 
     label = torch.empty(3, dtype=torch.long).random_(5)
-    print(label)
+    # print(label)
     loss = DFPLoss2(1.)
     netout = {
         "sim_fea2cen": dist_gen2cen,
@@ -122,8 +119,10 @@ def demo2():
         "thresholds": thresholds
     }
     dist_loss = loss(netout, label)
-    print(dist_loss['total'])
-    print(dist_loss['similarity'])
+    # print(dist_loss['total'])
+    # print(dist_loss['similarity'])
 
 
-# demo2()
+demo2()
+for i in range(100):
+    demo2()
