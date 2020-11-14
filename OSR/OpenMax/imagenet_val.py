@@ -309,6 +309,7 @@ def validate(val_loader, train_loader, model):
     # Fit the weibull distribution from training data.
     print("Fittting Weibull distribution...")
     _, mavs, dists = compute_train_score_and_mavs_and_dists(args.train_class_num, train_loader, model)
+    print("Finish fittting Weibull distribution...")
     categories = list(range(0, args.train_class_num))
     weibull_model = fit_weibull(mavs, dists, categories, args.weibull_tail, "euclidean")
 
@@ -326,9 +327,9 @@ def validate(val_loader, train_loader, model):
 
     if args.local_rank == 0 :
         print("Evaluation...")
-        eval_softmax = Evaluation(pred_softmax, labels, score_softmax)
-        eval_softmax_threshold = Evaluation(pred_softmax_threshold, labels, score_softmax)
-        eval_openmax = Evaluation(pred_openmax, labels, score_openmax)
+        eval_softmax = Evaluation(pred_softmax, labels)
+        eval_softmax_threshold = Evaluation(pred_softmax_threshold, labels)
+        eval_openmax = Evaluation(pred_openmax, labels)
         torch.save(eval_softmax, os.path.join(args.checkpoint, 'eval_softmax.pkl'))
         torch.save(eval_softmax_threshold, os.path.join(args.checkpoint, 'eval_softmax_threshold.pkl'))
         torch.save(eval_openmax, os.path.join(args.checkpoint, 'eval_openmax.pkl'))
@@ -337,21 +338,21 @@ def validate(val_loader, train_loader, model):
         print(f"Softmax F1 is %.3f" % (eval_softmax.f1_measure))
         print(f"Softmax f1_macro is %.3f" % (eval_softmax.f1_macro))
         print(f"Softmax f1_macro_weighted is %.3f" % (eval_softmax.f1_macro_weighted))
-        print(f"Softmax area_under_roc is %.3f" % (eval_softmax.area_under_roc))
+        # print(f"Softmax area_under_roc is %.3f" % (eval_softmax.area_under_roc))
         print(f"_________________________________________")
 
         print(f"SoftmaxThreshold accuracy is %.3f" % (eval_softmax_threshold.accuracy))
         print(f"SoftmaxThreshold F1 is %.3f" % (eval_softmax_threshold.f1_measure))
         print(f"SoftmaxThreshold f1_macro is %.3f" % (eval_softmax_threshold.f1_macro))
         print(f"SoftmaxThreshold f1_macro_weighted is %.3f" % (eval_softmax_threshold.f1_macro_weighted))
-        print(f"SoftmaxThreshold area_under_roc is %.3f" % (eval_softmax_threshold.area_under_roc))
+        # print(f"SoftmaxThreshold area_under_roc is %.3f" % (eval_softmax_threshold.area_under_roc))
         print(f"_________________________________________")
 
         print(f"OpenMax accuracy is %.3f" % (eval_openmax.accuracy))
         print(f"OpenMax F1 is %.3f" % (eval_openmax.f1_measure))
         print(f"OpenMax f1_macro is %.3f" % (eval_openmax.f1_macro))
         print(f"OpenMax f1_macro_weighted is %.3f" % (eval_openmax.f1_macro_weighted))
-        print(f"OpenMax area_under_roc is %.3f" % (eval_openmax.area_under_roc))
+        # print(f"OpenMax area_under_roc is %.3f" % (eval_openmax.area_under_roc))
         print(f"_________________________________________")
 
 
