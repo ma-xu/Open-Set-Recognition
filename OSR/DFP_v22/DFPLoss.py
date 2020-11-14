@@ -13,7 +13,7 @@ class DFPLoss(nn.Module):
         sim_fea2cen = net_out["sim_fea2cen"]
         loss_similarity = self.ce(sim_fea2cen, targets)
 
-        dist_fea2cen = net_out["dis_fea2cen"]
+        dist_fea2cen = 0.5*(net_out["dis_fea2cen"])**2  #0.5*||d||^2
         batch_size, num_classes = dist_fea2cen.shape
         classes = torch.arange(num_classes, device=targets.device).long()
         labels = targets.unsqueeze(1).expand(batch_size, num_classes)
@@ -40,9 +40,9 @@ class DFPLoss2(nn.Module):
 
     def forward(self, net_out, targets):
         sim_fea2cen = net_out["sim_fea2cen"]
-        dist_fea2cen = net_out["dis_fea2cen"]
-        dist_gen2cen = net_out["dis_gen2cen"]
-        dist_gen2ori = net_out["dis_gen2ori"]
+        dist_fea2cen = 0.5*(net_out["dis_fea2cen"])**2
+        dist_gen2cen = 0.5*(net_out["dis_gen2cen"])**2
+        dist_gen2ori = 0.5*(net_out["dis_gen2ori"])**2
         thresholds = net_out["thresholds"]  # [class_num]
 
         # classification loss for input data
