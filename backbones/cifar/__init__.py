@@ -9,3 +9,5 @@ from .lenet2 import LeNetHiera
 from .lenetgap import LeNetGAP
 
 from .lenetCascade import LeNetCascade
+
+from .lenetNobias import LeNetNobias
