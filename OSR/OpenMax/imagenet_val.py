@@ -299,9 +299,9 @@ def validate(val_loader, train_loader, model):
         with torch.no_grad():
             _, output = model(input_var)
 
-        print(f"output shape is : {output.shape}, max target is {max(target_var)}, min target is {min(target_var)}")
-        scores.append(output)
-        labels.append(target)
+        # print(f"output shape is : {output.shape}, max target is {max(target_var)}, min target is {min(target_var)}")
+        scores.append(reduce_tensor(output))
+        labels.append(reduce_tensor(target))
 
     # Get the prdict results.
     scores = torch.cat(scores, dim=0).cpu().numpy()
