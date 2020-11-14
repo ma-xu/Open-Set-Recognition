@@ -344,9 +344,9 @@ def validate(val_loader, train_loader, model):
     openmax_results = torch.Tensor([eval_openmax.accuracy, eval_openmax.f1_measure,
                                     eval_openmax.f1_macro, eval_openmax.f1_macro_weighted])
 
-    softmax_results = reduce_tensor(softmax_results)
-    threshold_results = reduce_tensor(threshold_results)
-    openmax_results = reduce_tensor(openmax_results)
+    softmax_results = reduce_tensor(softmax_results.to(input_var.device))
+    threshold_results = reduce_tensor(threshold_results.to(input_var.device))
+    openmax_results = reduce_tensor(openmax_results.to(input_var.device))
     if args.local_rank == 0:
         print(f"the result for three     :  Acc, F1, macro, w-marco")
         print(f"the result for softmax   :  {softmax_results}")
