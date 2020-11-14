@@ -299,13 +299,9 @@ def validate(val_loader, train_loader, model):
         with torch.no_grad():
             _, output = model(input_var)
 
-            for mm in range(output.shape[1]):
-                m_predict = torch.argmax(output[mm])
-                m_target = target_var[mm]
-                print(f"Predict: {m_predict}, Target: {m_target}")
         # print(f"output shape is : {output.shape}, max target is {max(target_var)}, min target is {min(target_var)}")
-        scores.append(reduce_tensor(output))
-        labels.append(reduce_tensor(target))
+        scores.append(output)
+        labels.append(target)
 
     # Get the prdict results.
     scores = torch.cat(scores, dim=0).cpu().numpy()
@@ -332,7 +328,7 @@ def validate(val_loader, train_loader, model):
         score_softmax.append(ss)
         score_openmax.append(so)
 
-    if args.local_rank == 0 :
+    if args.local_rank == 3 :
         print("Evaluation...")
         eval_softmax = Evaluation(pred_softmax, labels)
         eval_softmax_threshold = Evaluation(pred_softmax_threshold, labels)
@@ -397,7 +393,20 @@ def compute_train_score_and_mavs_and_dists(train_class_num,trainloader,net):
     return scores, mavs, dists
 
 
+def accuracy(output, target, topk=(1,)):
+    """Computes the precision@k for the specified values of k"""
+    maxk = max(topk)
+    batch_size = target.size(0)
 
+    _, pred = output.topk(maxk, 1, True, True)
+    pred = pred.t()
+    correct = pred.eq(target.view(1, -1).expand_as(pred))
+
+    res = []
+    for k in topk:
+        correct_k = correct[:k].view(-1).float().sum(0, keepdim=True)
+        res.append(correct_k.mul_(100.0 / batch_size))
+    return res
 
 
 if __name__ == '__main__':
