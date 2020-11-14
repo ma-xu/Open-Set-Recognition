@@ -74,14 +74,14 @@ def plot_feature(net, args, plotloader, device, dirname, epoch=0, plot_class_num
                 c=colors[plot_class_num],
                 s=1,
             )
-        plt.scatter(
-            centroids[:, 0],
-            centroids[:, 1],
-            # c=colors[label_idx],
-            c='black',
-            marker="*",
-            s=5,
-        )
+        # plt.scatter(
+        #     centroids[:, 0],
+        #     centroids[:, 1],
+        #     # c=colors[label_idx],
+        #     c='black',
+        #     marker="*",
+        #     s=5,
+        # )
 
         if thresholds is not None:
             try:
@@ -100,7 +100,7 @@ def plot_feature(net, args, plotloader, device, dirname, epoch=0, plot_class_num
         # currently only support 10 classes, for a good visualization.
         # change plot_class_num would lead to problems.
         legends = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
-        plt.legend(legends[0:plot_class_num] + ['c'], loc='upper right')
+        # plt.legend(legends[0:plot_class_num] + ['c'], loc='upper right')
 
         save_name = os.path.join(dirname, 'epoch_' + str(epoch)+lastfix + '.png')
         plt.savefig(save_name, bbox_inches='tight', dpi=plot_quality)
