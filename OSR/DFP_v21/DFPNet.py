@@ -40,7 +40,7 @@ class DFPNet(nn.Module):
             self.register_buffer("thresholds", thresholds)
 
     def get_backbone_last_layer_out_channel(self):
-        if self.backbone_name == "LeNetPlus":
+        if self.backbone_name.startswith("LeNet"):
             return 128 * 3 * 3
         last_layer = list(self.backbone.children())[-1]
         while (not isinstance(last_layer, nn.Conv2d)) and \
