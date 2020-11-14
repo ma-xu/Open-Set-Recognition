@@ -56,8 +56,8 @@ class DFPLoss2(nn.Module):
         dist_within = dist_fea2cen * mask  # [batch,class] distance to centroids
         mask_in = (dist_within <= thresholds.unsqueeze(dim=0)).float()
         mask_out = (dist_within > thresholds.unsqueeze(dim=0)).float()
-        # batch_size_in = (mask_in * mask).sum()
-        # batch_size_out = (mask_out * mask).sum()
+        batch_size_in = (mask_in * mask).sum()
+        batch_size_out = (mask_out * mask).sum()
         # print(f"batch: {batch_size} / in {batch_size_in} / {batch_size_out}"
         #       f" ---- equal {(batch_size_in+batch_size_out)==batch_size}")
         loss_distance_in = (dist_within * mask_in).sum(dim=1, keepdim=False)
