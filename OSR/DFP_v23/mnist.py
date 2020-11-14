@@ -303,11 +303,6 @@ def main_stage2(stage1_dict):
             # Here, I didn't set optimizers respectively, just for simplicity. Performance did not vary a lot.
             adjust_learning_rate(optimizer, epoch, args.stage2_lr, step=10)
 
-            if args.plot:
-                plot_feature(net2, args, trainloader, device, args.plotfolder2, epoch='before_'+str(epoch),
-                             plot_class_num=args.train_class_num, maximum=args.plot_max,
-                             plot_quality=args.plot_quality, norm_centroid=args.norm_centroid, thresholds=thresholds)
-
             train_out = stage2_train(net2, trainloader, optimizer, criterion, device)
             save_model(net2, epoch, os.path.join(args.checkpoint, 'stage_2_last_model.pth'))
             # stat = get_gap_stat(net2, trainloader, device, args)
@@ -318,7 +313,8 @@ def main_stage2(stage1_dict):
             if args.plot:
                 plot_feature(net2, args, trainloader, device, args.plotfolder2, epoch=epoch,
                              plot_class_num=args.train_class_num, maximum=args.plot_max,
-                             plot_quality=args.plot_quality, norm_centroid=args.norm_centroid, thresholds=thresholds)
+                             plot_quality=args.plot_quality, norm_centroid=args.norm_centroid, thresholds=thresholds,
+                             testmode=True)
                 plot_feature(net2, args, testloader, device, args.plotfolder2, epoch="test_"+str(epoch),
                              plot_class_num=args.train_class_num + 1, maximum=args.plot_max,
                              plot_quality=args.plot_quality, norm_centroid=args.norm_centroid, thresholds=thresholds,
