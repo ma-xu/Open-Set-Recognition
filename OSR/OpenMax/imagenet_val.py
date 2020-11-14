@@ -328,7 +328,7 @@ def validate(val_loader, train_loader, model):
         score_softmax.append(ss)
         score_openmax.append(so)
 
-    if args.local_rank == 3 :
+    if args.local_rank == 0 :
         print("Evaluation...")
         eval_softmax = Evaluation(pred_softmax, labels)
         eval_softmax_threshold = Evaluation(pred_softmax_threshold, labels)
