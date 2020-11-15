@@ -296,8 +296,7 @@ def main_stage2(stage1_dict):
                 thresholds = checkpoint['net']['module.thresholds']
                 # gap_mean = checkpoint['net']['module.gap_mean']
                 # gap_std = checkpoint['net']['module.gap_std']
-            net.module.set_threshold(thresholds.to(device))
-            print(net.state_dict())
+            # net.module.set_threshold(thresholds.to(device))
             # net.module.set_gap(gap_mean.to(device), gap_std.to(device))
 
             logger = Logger(os.path.join(args.checkpoint, 'log_stage2.txt'), resume=True)

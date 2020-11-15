@@ -58,8 +58,8 @@ class DFPNet(nn.Module):
     def set_threshold(self,thresholds):
         self.register_buffer("thresholds", thresholds)
     def set_gap(self,gap_mean,gap_std):
-        self.gap_mean = gap_mean
-        self.gap_std = gap_std
+        self.register_parameter("gap_mean",gap_mean)
+        self.register_parameter("gap_std", gap_std)
 
     def forward(self, x):
         x = self.backbone(x)
