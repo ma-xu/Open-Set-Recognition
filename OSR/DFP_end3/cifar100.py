@@ -54,8 +54,8 @@ parser.add_argument('--alpha', default=1.0, type=float, help='weight of distance
 parser.add_argument('--beta', default=1.0, type=float, help='weight of center between  loss')
 parser.add_argument('--theta', default=10.0, type=float, help='slope for input data distance within/out thresholds,'
                                                              'default 10.')
-parser.add_argument('--sim_threshold', default=0.9, type=float, help='slope for input data distance within/out thresholds,'
-                                                             'default 10.')
+parser.add_argument('--sim_threshold', default=0.9, type=float, help='.')
+parser.add_argument('--amplier', default=0.9, type=float, help='.')
 
 parser.add_argument('--scaled', default='True',  action='store_true',
                     help='If scale distance by sqrt(embed_dim)')
@@ -417,7 +417,7 @@ def detail_evalate(sim_list,dis_list,target_list, threshold):
         sim, dis, target = sim_list[i], dis_list[i], target_list[i]
         sim_value, sim_ind = sim.max(0)
         dis_value, dis_ind = dis.min(0)
-        if sim_value < args.sim_threshold or dis_value >1.1*threshold[dis_ind]:
+        if sim_value < args.sim_threshold or dis_value >args.amplier*threshold[dis_ind]:
         # if sim_value < args.sim_threshold:
             predict = c
         else:
@@ -427,7 +427,10 @@ def detail_evalate(sim_list,dis_list,target_list, threshold):
         print(f"sim_value{sim_value}\t predict{predict}\t  target{target}\t dis_value{dis_value}\t")
     eval_result = Evaluation(predicts, labels)
     print(f"accuracy is %.3f" % (eval_result.accuracy))
-
+    print(f"F1 is %.3f" % (eval_result.f1_measure))
+    print(f"f1_macro is %.3f" % (eval_result.f1_macro))
+    print(f"f1_macro_weighted is %.3f" % (eval_result.f1_macro_weighted))
+    print(f"area_under_roc is %.3f" % (eval_result.area_under_roc))
 
     # eval_result = Evaluation(pred_list, target_list, score_list)
     #
