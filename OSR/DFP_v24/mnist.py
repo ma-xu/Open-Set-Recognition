@@ -122,7 +122,8 @@ def main():
     print(device)
     stage1_dict = {
         'thresholds': "placeholder",
-        'stat': None
+        'stat': None,
+        'net':None
     }
 
     if not args.evaluate and not os.path.isfile(args.stage2_resume):
