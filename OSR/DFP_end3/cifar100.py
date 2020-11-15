@@ -354,7 +354,7 @@ def stage2_train(net2, trainloader, optimizer, criterion, device):
         distance_out += (loss_dict['distance_out']).item()
         distance_center += (loss_dict['distance_center']).item()
 
-        _, predicted = (out['dis_fea2cen']).min(1)
+        _, predicted = (out['sim_fea2cen']).max(1)
         total += targets.size(0)
         correct += predicted.eq(targets).sum().item()
 

@@ -77,7 +77,7 @@ class DFPLoss2(nn.Module):
         loss_distance_center = math.sqrt(num_classes)*self.beta*loss_distance_center.sum()
 
 
-        loss = loss_similarity + loss_distance_in + loss_distance_out + loss_distance_center
+        loss = loss_similarity + loss_distance_in + loss_distance_out
         return {
             "total": loss,
             "similarity": loss_similarity,
