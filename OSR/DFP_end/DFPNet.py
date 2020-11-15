@@ -11,15 +11,13 @@ from Distance import Similarity, Distance
 class Decorrelation(nn.Module):
     def __init__(self,channel,):
         super(Decorrelation, self).__init__()
-        self.weight = nn.Parameter(torch.ones(1,channel,1,1))
-        self.bias = nn.Parameter(torch.zeros(1,channel,1,1))
+        self.weight = nn.Parameter(torch.ones(1,channel))
+        self.bias = nn.Parameter(torch.zeros(1,channel))
 
     def forward(self, gap):
-        b, c, w, h = gap.size()
-        y = gap.mean(dim=2,keepdim=True).mean(dim=3,keepdim=True) if w!=1 else gap
-        _mean = y.mean(dim=1,keepdim=True)
-        _std = y.std(dim=1,keepdim=True)
-        y = (y-_mean)/(_std+1e-5)
+        _mean = gap.mean(dim=1,keepdim=True)
+        _std = gap.std(dim=1,keepdim=True)
+        y = (gap-_mean)/(_std+1e-5)
         y =y * self.weight+self.bias
         y = torch.sigmoid(y)
         return gap * y
