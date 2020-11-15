@@ -54,6 +54,8 @@ parser.add_argument('--alpha', default=1.0, type=float, help='weight of distance
 parser.add_argument('--beta', default=1.0, type=float, help='weight of center between  loss')
 parser.add_argument('--theta', default=10.0, type=float, help='slope for input data distance within/out thresholds,'
                                                              'default 10.')
+parser.add_argument('--sim_threshold', default=0.8, type=float, help='slope for input data distance within/out thresholds,'
+                                                             'default 10.')
 
 parser.add_argument('--scaled', default='True',  action='store_true',
                     help='If scale distance by sqrt(embed_dim)')
@@ -401,7 +403,7 @@ def stage2_test(net, testloader, device):
 
             compare_threshold = 1*threshold[predicted]
             ind1 = (dis_predicted-compare_threshold)>0
-            ind2 = (1/math.sqrt(c) - sim_predicted) >0
+            ind2 = (args.sim_threshold - sim_predicted) >0
             print(f"ind1 type {type(ind1)} value {ind1}")
             print(f"ind2 type {type(ind2)} value {ind2}")
 
