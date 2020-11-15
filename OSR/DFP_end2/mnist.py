@@ -80,8 +80,8 @@ parser.add_argument('--bins', default=50, type=int, help='divided into n bins')
 args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 args.checkpoint = './checkpoints/mnist/' + \
-                  '/%s-%s_%s_%s-%s_%s_%s' % (args.train_class_num, args.test_class_num, args.arch, args.alpha,
-                                             args.theta, args.embed_dim, str(args.decorrelation))
+                  '/%s-%s_%s_%s-%s-%s_%s_%s' % (args.train_class_num, args.test_class_num, args.arch, args.alpha,
+                                             args.beta, args.theta, args.embed_dim, str(args.decorrelation))
 if not os.path.isdir(args.checkpoint):
     mkdir_p(args.checkpoint)
 
