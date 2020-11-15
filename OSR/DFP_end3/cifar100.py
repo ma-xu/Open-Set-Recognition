@@ -425,7 +425,7 @@ def detail_evalate(sim_list,dis_list,target_list, threshold):
         predicts.append(predict)
         labels.append(target.item())
         print(f"sim_value{sim_value}\t predict{predict}\t  target{target}\t dis_value{dis_value}\t")
-    eval_result = Evaluation(predicts, labels)
+    eval_result = Evaluation(predicts, labels,sim_list.tolist())
     print(f"accuracy is %.3f" % (eval_result.accuracy))
     print(f"F1 is %.3f" % (eval_result.f1_measure))
     print(f"f1_macro is %.3f" % (eval_result.f1_macro))
