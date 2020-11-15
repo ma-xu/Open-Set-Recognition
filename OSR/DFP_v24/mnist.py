@@ -65,7 +65,7 @@ parser.add_argument('--p_value', default=0.01, type=float, help='default statist
 
 # Parameters for stage 1
 parser.add_argument('--stage1_resume', default='', type=str, metavar='PATH', help='path to latest checkpoint')
-parser.add_argument('--stage1_es', default=35, type=int, help='epoch size')
+parser.add_argument('--stage1_es', default=25, type=int, help='epoch size')
 parser.add_argument('--stage1_lr', default=0.01, type=float, help='learning rate')  # works for MNIST
 
 # Parameters for stage 2
