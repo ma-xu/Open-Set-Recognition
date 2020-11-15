@@ -425,6 +425,10 @@ def stage2_test(net, testloader, device):
             sim_fea2cen= out["sim_fea2cen"]  # [batch,class]
             dis_fea2cen= out["dis_fea2cen"]  # [batch,class]
 
+            b,c = dis_fea2cen.shape
+            dis_predicted, predicted = (dis_fea2cen).min(1) #[b]
+            threshold = threshold.unsqueeze(dim=0).expand_as(sim_fea2cen)
+            
 
 
 
