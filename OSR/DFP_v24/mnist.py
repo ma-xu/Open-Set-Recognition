@@ -293,7 +293,7 @@ def main_stage2(stage1_dict):
             except:
                 thresholds = checkpoint['net']['module.thresholds']
             net.module.set_threshold(thresholds.to(device))
-           
+
 
             logger = Logger(os.path.join(args.checkpoint, 'log_stage2.txt'), resume=True)
         else:
@@ -424,13 +424,14 @@ def stage2_test(net, testloader, device):
             threshold = out["thresholds"]
             sim_fea2cen= out["sim_fea2cen"]
             dis_fea2cen= out["dis_fea2cen"]  # [batch,class]
-            # print(f"threshold shape {threshold.shape} sim shape {sim_fea2cen.shape} dist shape {dis_fea2cen.shape} ")
+
             _, predicted = (out["sim_fea2cen"]).max(1)
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
 
             progress_bar(batch_idx, len(testloader), '| Acc: %.3f%% (%d/%d)'
                          % (100. * correct / total, correct, total))
+        print(f"threshold shape {threshold.shape} sim shape {sim_fea2cen.shape} dist shape {dis_fea2cen.shape} ")
 
     print("\nTesting results is {:.2f}%".format(100. * correct / total))
 
