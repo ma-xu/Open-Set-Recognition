@@ -292,6 +292,7 @@ def main_stage2(stage1_dict):
                 thresholds = checkpoint['net']['thresholds']
             except:
                 thresholds = checkpoint['net']['module.thresholds']
+            print(thresholds)
             logger = Logger(os.path.join(args.checkpoint, 'log_stage2.txt'), resume=True)
         else:
             print("=> no checkpoint found at '{}'".format(args.resume))
