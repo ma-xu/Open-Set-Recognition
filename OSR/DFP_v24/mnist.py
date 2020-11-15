@@ -305,6 +305,7 @@ def main_stage2(stage1_dict):
 
             train_out = stage2_train(net2, trainloader, optimizer, criterion, device)
             save_model(net2, epoch, os.path.join(args.checkpoint, 'stage_2_last_model.pth'))
+            stage2_test(net2, testloader, device)
             # stat = get_gap_stat(net2, trainloader, device, args)
 
             logger.append([epoch + 1, train_out["train_loss"], train_out["loss_similarity"],
@@ -327,8 +328,8 @@ def main_stage2(stage1_dict):
         print(f"\nFinish Stage-2 training...\n")
 
     logger.close()
+    stage2_test(net2, testloader, device)
 
-    # test2(net2, testloader, device)
     return net2
 
 
@@ -397,6 +398,32 @@ def init_stage2_model(net1, net2):
             k = k[7:]  # remove module.1.
         dict2[k] = v
     net2.load_state_dict(dict2)
+
+
+def stage2_test(net, testloader, device):
+    correct = 0
+    total = 0
+    with torch.no_grad():
+        for batch_idx, (inputs, targets) in enumerate(testloader):
+            inputs, targets = inputs.to(device), targets.to(device)
+            out = net(inputs)
+            threshold = out["thresholds"]
+            sim_fea2cen= out["sim_fea2cen"]
+            dis_fea2cen= out["dis_fea2cen"]  # [batch,class]
+            print(f"threshold shape {threshold.shape} sim shape {sim_fea2cen.shape} dist shape {dis_fea2cen.shape} ")
+
+
+
+
+            _, predicted = (out["sim_fea2cen"]).max(1)
+            total += targets.size(0)
+            correct += predicted.eq(targets).sum().item()
+
+            progress_bar(batch_idx, len(testloader), '| Acc: %.3f%% (%d/%d)'
+                         % (100. * correct / total, correct, total))
+
+    print("\nTesting results is {:.2f}%".format(100. * correct / total))
+
 
 
 if __name__ == '__main__':
