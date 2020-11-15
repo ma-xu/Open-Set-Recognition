@@ -57,6 +57,7 @@ parser.add_argument('--theta', default=10.0, type=float, help='slope for input d
 parser.add_argument('--scaled', default=True, action='store_true',
                     help='If scale distance by sqrt(embed_dim)')
 parser.add_argument('--norm_centroid', action='store_true', help='Normalize the centroid using L2-normailization')
+parser.add_argument('--decorrelation', action='store_true', help='Normalize the centroid using L2-normailization')
 
 # for model threshold
 parser.add_argument('--tail_number', default=20, type=int, help='number of maximum distance not take into account(deprecated)')
@@ -72,8 +73,6 @@ parser.add_argument('--stage1_lr', default=0.01, type=float, help='learning rate
 parser.add_argument('--stage2_resume',default='', type=str, metavar='PATH', help='path to latest checkpoint')
 parser.add_argument('--stage2_es', default=25, type=int, help='epoch size')
 parser.add_argument('--stage2_lr', default=0.001, type=float, help='learning rate')  # works for MNIST
-parser.add_argument('--amplifier', default=2, type=float, help='amplify the radius for n times.')
-
 
 # Parameters for stage plotting
 parser.add_argument('--plot', action='store_true', help='Plotting the training set.')
@@ -84,9 +83,9 @@ parser.add_argument('--bins', default=50, type=int, help='divided into n bins')
 
 args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-args.checkpoint = './checkpoints/mnist/' + args.arch + \
-                  '/%s_%s_%s_%s_D%s_S%s_%s' % (args.alpha, args.beta, args.theta,
-                                               args.embed_dim, args.distance, args.similarity, args.norm_centroid)
+args.checkpoint = './checkpoints/mnist/' + \
+                  '/%s_%s_%s_%s_%s_%s_%s' % (args.train_class_num, args.test_class_num, args.arch, args.alpha,
+                                             args.theta, args.embed_dim, str(args.decorrelation))
 if not os.path.isdir(args.checkpoint):
     mkdir_p(args.checkpoint)
 
@@ -143,7 +142,7 @@ def main_stage1():
     print('==> Building model..')
     net = DFPNet(backbone=args.arch, num_classes=args.train_class_num, embed_dim=args.embed_dim,
                  distance=args.distance, similarity=args.similarity, scaled=args.scaled,
-                 norm_centroid=args.norm_centroid)
+                 norm_centroid=args.norm_centroid, decorrelation=args.decorrelation)
 
     net = net.to(device)
     if device == 'cuda':
@@ -267,7 +266,7 @@ def main_stage2(stage1_dict):
     start_epoch = 0  # start from epoch 0 or last checkpoint epoch
     net = DFPNet(backbone=args.arch, num_classes=args.train_class_num, embed_dim=args.embed_dim,
                  distance=args.distance, similarity=args.similarity, scaled=args.scaled,
-                 norm_centroid=args.norm_centroid)
+                 norm_centroid=args.norm_centroid, decorrelation=args.decorrelation)
     net = net.to(device)
     if device == 'cuda':
         net = torch.nn.DataParallel(net)

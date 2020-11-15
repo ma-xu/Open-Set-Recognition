@@ -8,17 +8,35 @@ import torch.nn.functional as F
 import backbones.cifar as models
 from Distance import Similarity, Distance
 
+class Decorrelation(nn.Module):
+    def __init__(self,channel,):
+        super(Decorrelation, self).__init__()
+        self.weight = nn.Parameter(torch.ones(1,channel,1,1))
+        self.bias = nn.Parameter(torch.zeros(1,channel,1,1))
 
+    def forward(self, gap):
+        b, c, w, h = gap.size()
+        y = gap.mean(dim=2,keepdim=True).mean(dim=3,keepdim=True) if w!=1 else gap
+        _mean = y.mean(dim=1,keepdim=True)
+        _std = y.std(dim=1,keepdim=True)
+        y = (y-_mean)/(_std+1e-5)
+        y =y * self.weight+self.bias
+        y = torch.sigmoid(y)
+        return gap * y
 
 class DFPNet(nn.Module):
     def __init__(self, backbone='ResNet18', num_classes=1000, embed_dim=512, distance='l2',
-                 similarity="dotproduct", scaled=True, thresholds=torch.tensor(0), norm_centroid=False):
+                 similarity="dotproduct", scaled=True, thresholds=torch.tensor(0), norm_centroid=False,
+                 decorrelation=False):
         super(DFPNet, self).__init__()
         self.num_classes = num_classes
         self.backbone_name = backbone
         self.norm_centroid = norm_centroid
         self.backbone = models.__dict__[backbone](num_classes=num_classes, backbone_fc=False)
         self.feat_dim = self.get_backbone_last_layer_out_channel()  # get the channel number of backbone output
+
+        if decorrelation:
+            self.decorrelation = Decorrelation(self.feat_dim)
 
         self.embeddingLayer = nn.Sequential(
             nn.PReLU(),
@@ -34,6 +52,8 @@ class DFPNet(nn.Module):
         self.scaled = scaled
 
         self.register_buffer("thresholds", thresholds)
+
+
 
 
     def get_backbone_last_layer_out_channel(self):
@@ -64,8 +84,8 @@ class DFPNet(nn.Module):
         dis_gen2cen, dis_gen2ori, thresholds, amplified_thresholds, embed_gen = None, None, None, None, None
         gap = (F.adaptive_avg_pool2d(x, 1)).view(x.size(0), -1)
 
-        # gen = self.estimator.sampler(gap)
-        # embed_gen = self.embeddingLayer(gen) if hasattr(self, 'embeddingLayer') else gen
+        if hasattr(self,'decorrelation'):
+            gap = self.decorrelation(gap)
 
         embed_fea = self.embeddingLayer(gap) if hasattr(self, 'embeddingLayer') else gap
         centroids = F.normalize(self.centroids, dim=1, p=2) if self.norm_centroid else self.centroids
