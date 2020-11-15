@@ -305,7 +305,7 @@ def main_stage2(stage1_dict):
         return net
 
     # after resume
-    criterion = DFPLoss2(alpha=args.alpha, beta=args.beta, theta=args.theta)
+    criterion = DFPLoss2(alpha=args.alpha, theta=args.theta)
     optimizer = optim.SGD(net.parameters(), lr=args.stage1_lr, momentum=0.9, weight_decay=5e-4)
 
     for epoch in range(start_epoch, args.stage2_es):
