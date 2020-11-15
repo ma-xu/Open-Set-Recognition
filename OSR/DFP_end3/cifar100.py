@@ -414,6 +414,8 @@ def detail_evalate(sim_list,dis_list,target_list, threshold):
     print(c)
     for i in range(target_list.shape[0]):
         sim, dis, target = sim_list[i], dis_list[i], target_list[i]
+        print(sim.shape)
+        sim = torch.softmax(sim,dim=1)
         sim_value, sim_ind = sim.max(0)
         dis_value, dis_ind = dis.min(0)
         # if sim_value < args.sim_threshold and dis_value <threshold[dis_ind]:
