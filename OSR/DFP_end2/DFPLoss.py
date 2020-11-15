@@ -1,4 +1,5 @@
 import torch
+import math
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -41,6 +42,8 @@ class DFPLoss2(nn.Module):
     def forward(self, net_out, targets):
         sim_fea2cen = net_out["sim_fea2cen"]
         dist_fea2cen = net_out["dis_fea2cen"]
+        dis_cen2cen = net_out["dis_cen2cen"]
+        dis_thr2thr = net_out["dis_thr2thr"]
         # dist_gen2cen = 0.5*(net_out["dis_gen2cen"])**2
         thresholds = net_out["thresholds"]  # [class_num]
 
@@ -66,18 +69,20 @@ class DFPLoss2(nn.Module):
         loss_distance_out = 0.5*(loss_distance_out**2)
         loss_distance_out = self.alpha * self.theta* (loss_distance_out.sum()) /batch_size
 
-        #  distance loss for generated data
-        # loss_generate = F.relu((2*thresholds.unsqueeze(dim=0) - dist_gen2cen), inplace=True)
-        # loss_generate = self.beta * (loss_generate.sum()) / (loss_generate.shape[0])
+        #  distance loss for cen2cen
+        dis_cen2cen = dis_cen2cen-torch.tril(dis_cen2cen)
+        dis_thr2thr = dis_thr2thr - torch.tril(dis_thr2thr)
+        loss_distance_center = F.relu(1.5*dis_thr2thr-dis_cen2cen,inplace=True)
+        loss_distance_center = math.sqrt(num_classes)*self.beta*loss_distance_center.sum()
 
 
-        loss = loss_similarity + loss_distance_in + loss_distance_out
+        loss = loss_similarity + loss_distance_in + loss_distance_out + loss_distance_center
         return {
             "total": loss,
             "similarity": loss_similarity,
             "distance_in": loss_distance_in,
             "distance_out": loss_distance_out,
-            "generate": loss_distance_out # placeholder
+            "distance_center": loss_distance_center
         }
 
 
@@ -106,7 +111,8 @@ def demo2():
     dist_fea2cen = torch.rand([n, c])
     dist_gen2cen = torch.rand([n, c])
     thresholds = torch.rand([c])
-    dist_gen2ori = torch.rand([c, 1])
+    dis_cen2cen = torch.rand([c, c])
+    dis_thr2thr = torch.rand([c, c])
 
 
     label = torch.empty(3, dtype=torch.long).random_(5)
@@ -116,7 +122,8 @@ def demo2():
         "sim_fea2cen": dist_gen2cen,
         "dis_fea2cen": dist_fea2cen,
         "dis_gen2cen": dist_gen2cen,
-        "dis_gen2ori": dist_gen2ori,
+        "dis_cen2cen": dis_cen2cen,
+        "dis_thr2thr": dis_thr2thr,
         "thresholds": thresholds
     }
     dist_loss = loss(netout, label)
@@ -124,6 +131,6 @@ def demo2():
     # print(dist_loss['similarity'])
 
 
-demo2()
-for i in range(100):
-    demo2()
+# demo2()
+# for i in range(100):
+#     demo2()

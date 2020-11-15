@@ -74,7 +74,12 @@ class DFPNet(nn.Module):
     def set_threshold(self,thresholds):
         self.register_buffer("thresholds", thresholds)
 
-
+    def cal_thr2thr(self):
+        if self.thresholds==0:
+            return 0
+        thresholds_1 = self.thresholds.unsqueeze(dim=0).expand([self.num_classes, self.num_classes])
+        thresholds_2 = self.thresholds.unsqueeze(dim=1).expand([self.num_classes, self.num_classes])
+        return thresholds_1 + thresholds_2
 
 
     def forward(self, x):
@@ -91,6 +96,8 @@ class DFPNet(nn.Module):
         sim_fea2cen = getattr(SIMI, self.similarity)(embed_fea, centroids)
         DIST = Distance(scaled=self.scaled)
         dis_fea2cen = getattr(DIST, self.distance)(embed_fea, centroids)
+        dis_cen2cen = getattr(DIST, self.distance)(centroids, centroids)
+        dis_thr2thr = self.cal_thr2thr()
         # if hasattr(self, 'estimator'):
         #     dis_gen2cen = getattr(DIST, self.distance)(embed_gen, centroids)
         #     dis_gen2ori = getattr(DIST, self.distance)(embed_gen, self.origin)
@@ -101,8 +108,8 @@ class DFPNet(nn.Module):
             "embed_gen": embed_gen,
             "sim_fea2cen": sim_fea2cen,
             "dis_fea2cen": dis_fea2cen,
-            "dis_gen2cen": dis_gen2cen,
-            "dis_gen2ori": dis_gen2ori,
+            "dis_cen2cen": dis_cen2cen,
+            "dis_thr2thr": dis_thr2thr,
             "thresholds": self.thresholds
         }
 
@@ -111,7 +118,7 @@ def demo():
     x = torch.rand([10, 3, 32, 32])
     y = torch.rand([6, 3, 32, 32])
     threshold = torch.rand([10])
-    net = DFPNet('ResNet18', num_classes=10, embed_dim=64, thresholds=None)
+    net = DFPNet('ResNet18', num_classes=10, embed_dim=64)
     output = net(x)
     print(output["gap"].shape)
     print(output["embed_fea"].shape)
@@ -120,4 +127,4 @@ def demo():
     # print(output["dis_gen2ori"].shape)
 
 
-# demo()
+demo()
