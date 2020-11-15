@@ -33,8 +33,8 @@ class DFPNet(nn.Module):
         self.distance = distance
         self.similarity = similarity
         self.scaled = scaled
-        if thresholds is not None:
-            self.register_buffer("thresholds", thresholds)
+
+        self.register_buffer("thresholds", thresholds)
         self.gap_mean = gap_mean
         self.gap_std = gap_std
 
@@ -65,10 +65,9 @@ class DFPNet(nn.Module):
         x = self.backbone(x)
         dis_gen2cen, dis_gen2ori, thresholds, amplified_thresholds, embed_gen = None, None, None, None, None
         gap = (F.adaptive_avg_pool2d(x, 1)).view(x.size(0), -1)
-        if hasattr(self, 'thresholds'):
-            thresholds = self.thresholds
-            # gen = self.estimator.sampler(gap)
-            # embed_gen = self.embeddingLayer(gen) if hasattr(self, 'embeddingLayer') else gen
+
+        # gen = self.estimator.sampler(gap)
+        # embed_gen = self.embeddingLayer(gen) if hasattr(self, 'embeddingLayer') else gen
 
         embed_fea = self.embeddingLayer(gap) if hasattr(self, 'embeddingLayer') else gap
         centroids = F.normalize(self.centroids, dim=1, p=2) if self.norm_centroid else self.centroids
@@ -88,7 +87,7 @@ class DFPNet(nn.Module):
             "dis_fea2cen": dis_fea2cen,
             "dis_gen2cen": dis_gen2cen,
             "dis_gen2ori": dis_gen2ori,
-            "thresholds": thresholds
+            "thresholds": self.thresholds
         }
 
 
