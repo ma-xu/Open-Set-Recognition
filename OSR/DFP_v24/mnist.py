@@ -121,9 +121,9 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=args.bs, shuffle=Fa
 def main():
     print(device)
     stage1_dict = {
-        'thresholds': "placeholder",
+        'distance': {'thresholds': "placeholder"},
         'stat': None,
-        'net':None
+        'net': None
     }
 
     if not args.evaluate and not os.path.isfile(args.stage2_resume):
