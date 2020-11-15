@@ -274,6 +274,7 @@ def main_stage2(stage1_dict):
 
     if not args.evaluate and not os.path.isfile(args.stage2_resume):
         net = stage1_dict['net']
+        net = net.to(device)
         thresholds = stage1_dict['distance']['thresholds']
         stat = stage1_dict["stat"]
         net.module.set_threshold(thresholds)
