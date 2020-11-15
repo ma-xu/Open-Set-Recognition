@@ -421,9 +421,12 @@ def stage2_test(net, testloader, device):
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
             out = net(inputs)
-            threshold = out["thresholds"]
-            sim_fea2cen= out["sim_fea2cen"]
+            threshold = out["thresholds"]  # [class]
+            sim_fea2cen= out["sim_fea2cen"]  # [batch,class]
             dis_fea2cen= out["dis_fea2cen"]  # [batch,class]
+
+
+
 
             _, predicted = (out["sim_fea2cen"]).max(1)
             total += targets.size(0)
@@ -431,7 +434,7 @@ def stage2_test(net, testloader, device):
 
             progress_bar(batch_idx, len(testloader), '| Acc: %.3f%% (%d/%d)'
                          % (100. * correct / total, correct, total))
-        print(f"threshold shape {threshold.shape} sim shape {sim_fea2cen.shape} dist shape {dis_fea2cen.shape} ")
+        print(f"threshold shape {threshold.shape} sim shape {sim_fea2cen.shape} dist shape {dis_fea2cen.shape} taget {targets.shape}")
 
     print("\nTesting results is {:.2f}%".format(100. * correct / total))
 
