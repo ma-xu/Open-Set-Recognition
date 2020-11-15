@@ -429,6 +429,9 @@ def stage2_test(net, testloader, device):
             dis_predicted, predicted = (dis_fea2cen).min(1) #[b]
             threshold = threshold.unsqueeze(dim=0).expand_as(sim_fea2cen)
             compare_threshold = 1.1*threshold[:,predicted]
+            print(
+                f"compare_threshold {compare_threshold.shape} predicted {predicted.shape} dis_predicted {dis_predicted.shape}")
+
             predicted[(dis_predicted-compare_threshold)>0] = c
 
 
@@ -439,7 +442,6 @@ def stage2_test(net, testloader, device):
 
             progress_bar(batch_idx, len(testloader), '| Acc: %.3f%% (%d/%d)'
                          % (100. * correct / total, correct, total))
-        print(f"threshold shape {threshold.shape} sim shape {sim_fea2cen.shape} dist shape {dis_fea2cen.shape} taget {targets.shape}")
 
     print("\nTesting results is {:.2f}%".format(100. * correct / total))
 
