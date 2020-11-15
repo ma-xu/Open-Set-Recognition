@@ -384,10 +384,9 @@ def save_model(net, epoch, path, **kwargs):
 
 
 def stage2_test(net, testloader, device):
-    correct = 0
-    total = 0
 
-    pred_list, target_list, score_list = [], [], []
+    sim_list, dis_list, target_list = [], [], []
+    threshold = 0
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
@@ -395,41 +394,38 @@ def stage2_test(net, testloader, device):
             threshold = out["thresholds"]  # [class]
             sim_fea2cen= out["sim_fea2cen"]  # [batch,class]
             dis_fea2cen= out["dis_fea2cen"]  # [batch,class]
-
-            b,c = dis_fea2cen.shape
-            dis_predicted, predicted_dis_ind = (dis_fea2cen).min(1) #[b]
-            sim_predicted, predicted =  (sim_fea2cen).max(1) #[b]
-
-
-            compare_threshold = 1*threshold[predicted]
-            ind1 = (dis_predicted-compare_threshold)>0
-            ind2 = (args.sim_threshold - sim_predicted) >0
-            print(f"ind1 type {type(ind1)} value {ind1}")
-            print(f"ind2 type {type(ind2)} value {ind2}")
-
-            # predicted[unkown_ind] = c
-
-            pred_list.extend(predicted.tolist())
-            target_list.extend(targets.tolist())
-            score_list.extend(sim_fea2cen.tolist())
-
-            total += targets.size(0)
-            correct += predicted.eq(targets).sum().item()
+            sim_list.append(sim_fea2cen)
+            dis_list.append(dis_fea2cen)
+            target_list.append(targets)
+            progress_bar(batch_idx, len(testloader))
 
 
+    sim_list = torch.cat(sim_list,dim=0)
+    dis_list = torch.cat(dis_list,dim=0)
+    target_list = torch.cat(target_list, dim=0)
 
-            progress_bar(batch_idx, len(testloader), '| Acc: %.3f%% (%d/%d)'
-                         % (100. * correct / total, correct, total))
-    eval_result = Evaluation(pred_list, target_list, score_list)
+    detail_evalate(sim_list, dis_list, target_list, threshold)
 
-    torch.save(eval_result, os.path.join(args.checkpoint, 'eval.pkl'))
 
-    print(f"accuracy is %.3f" % (eval_result.accuracy))
-    print(f"F1 is %.3f" % (eval_result.f1_measure))
-    print(f"f1_macro is %.3f" % (eval_result.f1_macro))
-    print(f"f1_macro_weighted is %.3f" % (eval_result.f1_macro_weighted))
-    print(f"area_under_roc is %.3f" % (eval_result.area_under_roc))
-    print(f"confuse matrix unkown is {eval_result.confusion_matrix[:,-1]}")
+def detail_evalate(sim_list,dis_list,target_list, threshold):
+    predicts = [], labels = []
+    for sim, dis, target in zip(sim_list.cpu().numpy(),dis_list.cpu().numpy(),target_list.cpu().numpy()):
+        print(f"{sim.shape} {dis.shape} {target.shape}")
+        # sim_value,sim_index = sim.max()
+        # dis_value, dis_index = dis.max()
+
+
+
+    # eval_result = Evaluation(pred_list, target_list, score_list)
+    #
+    # torch.save(eval_result, os.path.join(args.checkpoint, 'eval.pkl'))
+    #
+    # print(f"accuracy is %.3f" % (eval_result.accuracy))
+    # print(f"F1 is %.3f" % (eval_result.f1_measure))
+    # print(f"f1_macro is %.3f" % (eval_result.f1_macro))
+    # print(f"f1_macro_weighted is %.3f" % (eval_result.f1_macro_weighted))
+    # print(f"area_under_roc is %.3f" % (eval_result.area_under_roc))
+    # print(f"confuse matrix unkown is {eval_result.confusion_matrix[:,-1]}")
 
 
 
