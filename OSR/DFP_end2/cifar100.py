@@ -183,7 +183,7 @@ def main_stage1():
     distance_results = plot_distance(net, trainloader, device, args)
     # print(f"the distance thresholds are\n {distance_results['thresholds']}\n")
     # gap_results = plot_gap(net, trainloader, device, args)
-    stat = get_gap_stat(net, trainloader, device, args)
+    # stat = get_gap_stat(net, trainloader, device, args)
     # estimator =CGD_estimator(gap_results)
 
     logger.close()
@@ -307,7 +307,9 @@ def main_stage2(stage1_dict):
         print('\nStage_2 Epoch: %d   Learning rate: %f' % (epoch + 1, optimizer.param_groups[0]['lr']))
         # Here, I didn't set optimizers respectively, just for simplicity. Performance did not vary a lot.
         adjust_learning_rate(optimizer, epoch, args.stage2_lr, step=20)
-        stat = get_gap_stat(net, trainloader, device, args)
+        distance_results = plot_distance(net, trainloader, device, args)
+        thresholds = distance_results['thresholds']
+        net.module.set_threshold(thresholds.to(device))
         train_out = stage2_train(net, trainloader, optimizer, criterion, device)
         save_model(net, epoch, os.path.join(args.checkpoint, 'stage_2_last_model.pth'))
         stage2_test(net, testloader, device)
