@@ -418,7 +418,7 @@ def stage2_test(net, testloader, device):
     correct = 0
     total = 0
 
-    pred_list, target_list = [], []
+    pred_list, target_list, score_list = [], []
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
@@ -436,6 +436,7 @@ def stage2_test(net, testloader, device):
 
             pred_list.extend(predicted.tolist())
             target_list.extend(targets.tolist())
+            score_list.extend(sim_fea2cen.tolist())
 
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
@@ -444,8 +445,15 @@ def stage2_test(net, testloader, device):
 
             progress_bar(batch_idx, len(testloader), '| Acc: %.3f%% (%d/%d)'
                          % (100. * correct / total, correct, total))
+    eval_result = Evaluation(pred_list, target_list, score_list)
 
-    print("\nTesting results is {:.2f}%".format(100. * correct / total))
+    torch.save(eval_result, os.path.join(args.checkpoint, 'eval.pkl'))
+
+    print(f"accuracy is %.3f" % (eval_result.accuracy))
+    print(f"F1 is %.3f" % (eval_result.f1_measure))
+    print(f"f1_macro is %.3f" % (eval_result.f1_macro))
+    print(f"f1_macro_weighted is %.3f" % (eval_result.f1_macro_weighted))
+    print(f"area_under_roc is %.3f" % (eval_result.area_under_roc))
 
 
 
