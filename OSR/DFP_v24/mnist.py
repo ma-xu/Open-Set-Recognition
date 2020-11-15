@@ -277,8 +277,8 @@ def main_stage2(stage1_dict):
         net = net.to(device)
         thresholds = stage1_dict['distance']['thresholds']
         stat = stage1_dict["stat"]
-        net.module.set_threshold(thresholds)
-        net.module.set_gap(stat["mean"],stat["std"])
+        net.module.set_threshold(thresholds.to(device))
+        net.module.set_gap(stat["mean"].to(device),stat["std"].to(device))
     if args.stage2_resume:
         if device == 'cuda':
             net = torch.nn.DataParallel(net)
