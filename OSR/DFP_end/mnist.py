@@ -50,7 +50,7 @@ parser.add_argument('--distance', default='l2', choices=['l2', 'l1', 'cosine', '
 parser.add_argument('--similarity', default='dotproduct', choices=['l2', 'l1', 'cosine', 'dotproduct'],
                     type=str, help='choosing distance metric')
 parser.add_argument('--alpha', default=1.0, type=float, help='weight of distance loss')
-parser.add_argument('--beta', default=1.0, type=float, help='weight of generated data loss')
+# parser.add_argument('--beta', default=1.0, type=float, help='weight of generated data loss')
 parser.add_argument('--theta', default=10.0, type=float, help='slope for input data distance within/out thresholds,'
                                                              'default 10.')
 
@@ -59,10 +59,6 @@ parser.add_argument('--scaled', default=True, action='store_true',
 parser.add_argument('--norm_centroid', action='store_true', help='Normalize the centroid using L2-normailization')
 parser.add_argument('--decorrelation', action='store_true', help='Normalize the centroid using L2-normailization')
 
-# for model threshold
-parser.add_argument('--tail_number', default=20, type=int, help='number of maximum distance not take into account(deprecated)')
-parser.add_argument('--p_value', default=0.01, type=float, help='default statistical p_value threshold,'
-                                                                ' usually 0.05. 0.01 (deprecated)')
 
 # Parameters for stage 1
 parser.add_argument('--stage1_resume', default='', type=str, metavar='PATH', help='path to latest checkpoint')
@@ -84,7 +80,7 @@ parser.add_argument('--bins', default=50, type=int, help='divided into n bins')
 args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 args.checkpoint = './checkpoints/mnist/' + \
-                  '/%s_%s_%s_%s_%s_%s_%s' % (args.train_class_num, args.test_class_num, args.arch, args.alpha,
+                  '/%s-%s_%s_%s-%s_%s_%s' % (args.train_class_num, args.test_class_num, args.arch, args.alpha,
                                              args.theta, args.embed_dim, str(args.decorrelation))
 if not os.path.isdir(args.checkpoint):
     mkdir_p(args.checkpoint)
