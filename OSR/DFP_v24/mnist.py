@@ -121,7 +121,7 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=args.bs, shuffle=Fa
 def main():
     print(device)
     stage1_dict = {
-        'distance': {'thresholds': "placeholder"},
+        'distance': {'thresholds': torch.ones(1)},
         'stat': None,
         'net': None
     }
