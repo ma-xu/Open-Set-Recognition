@@ -50,7 +50,7 @@ parser.add_argument('--distance', default='l2', choices=['l2', 'l1', 'cosine', '
 parser.add_argument('--similarity', default='dotproduct', choices=['l2', 'l1', 'cosine', 'dotproduct'],
                     type=str, help='choosing distance metric')
 parser.add_argument('--alpha', default=1.0, type=float, help='weight of distance loss')
-parser.add_argument('--beta', default=1.0, type=float, help='weight of generated data loss')
+parser.add_argument('--beta', default=1.0, type=float, help='weight of center between loss')
 parser.add_argument('--theta', default=10.0, type=float, help='slope for input data distance within/out thresholds,'
                                                              'default 10.')
 
@@ -296,7 +296,7 @@ def main_stage2(stage1_dict):
     else:
         logger = Logger(os.path.join(args.checkpoint, 'log_stage2.txt'))
         logger.set_names(['Epoch', 'Train Loss', 'Similarity Loss', 'Distance in', 'Distance out',
-                          'between_center', 'Train Acc.'])
+                          'distance_center', 'Train Acc.'])
 
 
 
@@ -320,7 +320,7 @@ def main_stage2(stage1_dict):
 
         logger.append([epoch + 1, train_out["train_loss"], train_out["loss_similarity"],
                        train_out["distance_in"], train_out["distance_out"],
-                       train_out["between_center"], train_out["accuracy"]])
+                       train_out["distance_center"], train_out["accuracy"]])
         if args.plot:
             plot_feature(net, args, trainloader, device, args.plotfolder2, epoch=epoch,
                          plot_class_num=args.train_class_num, maximum=args.plot_max,
@@ -348,7 +348,7 @@ def stage2_train(net2, trainloader, optimizer, criterion, device):
     loss_similarity = 0
     distance_in = 0
     distance_out = 0
-    between_center = 0
+    distance_center = 0
     correct = 0
     total = 0
     for batch_idx, (inputs, targets) in enumerate(trainloader):
@@ -367,7 +367,7 @@ def stage2_train(net2, trainloader, optimizer, criterion, device):
         loss_similarity += (loss_dict['similarity']).item()
         distance_in += (loss_dict['distance_in']).item()
         distance_out += (loss_dict['distance_out']).item()
-        between_center += (loss_dict['distance_center']).item()
+        distance_center += (loss_dict['distance_center']).item()
 
         _, predicted = (out['sim_fea2cen']).max(1)
         total += targets.size(0)
@@ -380,7 +380,7 @@ def stage2_train(net2, trainloader, optimizer, criterion, device):
         "loss_similarity": loss_similarity / (batch_idx + 1),
         "distance_in": distance_in / (batch_idx + 1),
         "distance_out": distance_out / (batch_idx + 1),
-        "between_center": between_center / (batch_idx + 1),
+        "distance_center": distance_center / (batch_idx + 1),
         "accuracy": correct / total
     }
 

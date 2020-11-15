@@ -50,7 +50,7 @@ parser.add_argument('--distance', default='l2', choices=['l2', 'l1', 'cosine', '
 parser.add_argument('--similarity', default='dotproduct', choices=['l2', 'l1', 'cosine', 'dotproduct'],
                     type=str, help='choosing distance metric')
 parser.add_argument('--alpha', default=1.0, type=float, help='weight of distance loss')
-# parser.add_argument('--beta', default=1.0, type=float, help='weight of generated data loss')
+parser.add_argument('--beta', default=1.0, type=float, help='weight of center between  loss')
 parser.add_argument('--theta', default=10.0, type=float, help='slope for input data distance within/out thresholds,'
                                                              'default 10.')
 
@@ -80,8 +80,8 @@ parser.add_argument('--bins', default=50, type=int, help='divided into n bins')
 args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 args.checkpoint = './checkpoints/cifar/' + \
-                  '/%s-%s_%s_%s-%s_%s_%s' % (args.train_class_num, args.test_class_num, args.arch, args.alpha,
-                                             args.theta, args.embed_dim, str(args.decorrelation))
+                  '/%s-%s_%s_%s-%s-%s_%s_%s' % (args.train_class_num, args.test_class_num, args.arch, args.alpha,
+                                             args.beta, args.theta, args.embed_dim, str(args.decorrelation))
 if not os.path.isdir(args.checkpoint):
     mkdir_p(args.checkpoint)
 
@@ -291,7 +291,7 @@ def main_stage2(stage1_dict):
     else:
         logger = Logger(os.path.join(args.checkpoint, 'log_stage2.txt'))
         logger.set_names(['Epoch', 'Train Loss', 'Similarity Loss', 'Distance in', 'Distance out',
-                          'Generate', 'Train Acc.'])
+                          'Distance Center', 'Train Acc.'])
 
 
 
@@ -300,7 +300,7 @@ def main_stage2(stage1_dict):
         return net
 
     # after resume
-    criterion = DFPLoss2(alpha=args.alpha, theta=args.theta)
+    criterion = DFPLoss2(alpha=args.alpha,beta=args.beta, theta=args.theta)
     optimizer = optim.SGD(net.parameters(), lr=args.stage1_lr, momentum=0.9, weight_decay=5e-4)
 
     for epoch in range(start_epoch, args.stage2_es):
@@ -315,7 +315,7 @@ def main_stage2(stage1_dict):
 
         logger.append([epoch + 1, train_out["train_loss"], train_out["loss_similarity"],
                        train_out["distance_in"], train_out["distance_out"],
-                       train_out["generate"], train_out["accuracy"]])
+                       train_out["distance_center"], train_out["accuracy"]])
 
     print(f"\nFinish Stage-2 training...\n")
 
@@ -330,7 +330,7 @@ def stage2_train(net2, trainloader, optimizer, criterion, device):
     loss_similarity = 0
     distance_in = 0
     distance_out = 0
-    generate = 0
+    distance_center = 0
     correct = 0
     total = 0
     for batch_idx, (inputs, targets) in enumerate(trainloader):
@@ -349,7 +349,7 @@ def stage2_train(net2, trainloader, optimizer, criterion, device):
         loss_similarity += (loss_dict['similarity']).item()
         distance_in += (loss_dict['distance_in']).item()
         distance_out += (loss_dict['distance_out']).item()
-        generate += (loss_dict['generate']).item()
+        distance_center += (loss_dict['distance_center']).item()
 
         _, predicted = (out['sim_fea2cen']).max(1)
         total += targets.size(0)
@@ -362,7 +362,7 @@ def stage2_train(net2, trainloader, optimizer, criterion, device):
         "loss_similarity": loss_similarity / (batch_idx + 1),
         "distance_in": distance_in / (batch_idx + 1),
         "distance_out": distance_out / (batch_idx + 1),
-        "generate": generate / (batch_idx + 1),
+        "distance_center": distance_center / (batch_idx + 1),
         "accuracy": correct / total
     }
 
