@@ -270,8 +270,8 @@ def main_stage2(stage1_dict):
         thresholds = stage1_dict['distance']['thresholds']
         # estimator = stage1_dict['estimator']
         stat = stage1_dict["stat"]
-        net.set_threshold(thresholds)
-        net.set_gap(stat["mean"],stat["std"])
+        net.module.set_threshold(thresholds)
+        net.module.set_gap(stat["mean"],stat["std"])
     if args.stage2_resume:
         # Load checkpoint.
         if os.path.isfile(args.stage2_resume):
