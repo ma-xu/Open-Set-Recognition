@@ -265,14 +265,22 @@ def stage1_test(net, testloader, device):
 def main_stage2(stage1_dict):
     print('==> Building stage2 model..')
     start_epoch = 0  # start from epoch 0 or last checkpoint epoch
-    net = stage1_dict['net']
+    net = DFPNet(backbone=args.arch, num_classes=args.train_class_num, embed_dim=args.embed_dim,
+                 distance=args.distance, similarity=args.similarity, scaled=args.scaled,
+                 norm_centroid=args.norm_centroid)
+    net = net.to(device)
+    if device == 'cuda':
+        cudnn.benchmark = True
+
     if not args.evaluate and not os.path.isfile(args.stage2_resume):
+        net = stage1_dict['net']
         thresholds = stage1_dict['distance']['thresholds']
-        # estimator = stage1_dict['estimator']
         stat = stage1_dict["stat"]
         net.module.set_threshold(thresholds)
         net.module.set_gap(stat["mean"],stat["std"])
     if args.stage2_resume:
+        if device == 'cuda':
+            net = torch.nn.DataParallel(net)
         # Load checkpoint.
         if os.path.isfile(args.stage2_resume):
             print('==> Resuming from checkpoint..')
@@ -287,10 +295,7 @@ def main_stage2(stage1_dict):
         logger.set_names(['Epoch', 'Train Loss', 'Similarity Loss', 'Distance in', 'Distance out',
                           'Generate', 'Train Acc.'])
 
-    net = net.to(device)
-    if device == 'cuda':
-        # net = torch.nn.DataParallel(net)
-        cudnn.benchmark = True
+
 
     if args.evaluate:
         stage2_test(net, testloader, device)
