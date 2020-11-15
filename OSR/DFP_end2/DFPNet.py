@@ -75,7 +75,7 @@ class DFPNet(nn.Module):
         self.register_buffer("thresholds", thresholds)
 
     def cal_thr2thr(self):
-        if self.thresholds==0:
+        if self.thresholds.max()==0:
             return 0
         thresholds_1 = self.thresholds.unsqueeze(dim=0).expand([self.num_classes, self.num_classes])
         thresholds_2 = self.thresholds.unsqueeze(dim=1).expand([self.num_classes, self.num_classes])
