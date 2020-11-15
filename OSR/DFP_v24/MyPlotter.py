@@ -99,8 +99,8 @@ def plot_feature(net, args, plotloader, device, dirname, epoch=0, plot_class_num
 
     # currently only support 10 classes, for a good visualization.
     # change plot_class_num would lead to problems.
-    legends = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
-    plt.legend(legends[0:plot_class_num] + ['c'], loc='upper right')
+    legends = ['0', '1', '2', '3', '4', '5', '6', 'unknown', '8', '9']
+    plt.legend(legends[0:plot_class_num] + ['center'], loc='upper right')
 
     save_name = os.path.join(dirname, 'epoch_' + str(epoch) + '.png')
     plt.savefig(save_name, bbox_inches='tight', dpi=plot_quality)
