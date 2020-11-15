@@ -1,0 +1,2 @@
+should be finnal, with the whitening module
+add center margin loss
