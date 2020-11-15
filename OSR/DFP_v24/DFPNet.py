@@ -12,8 +12,7 @@ from Distance import Similarity, Distance
 
 class DFPNet(nn.Module):
     def __init__(self, backbone='ResNet18', num_classes=1000, embed_dim=512, distance='l2',
-                 similarity="dotproduct", scaled=True, thresholds=torch.tensor(0), norm_centroid=False,
-                 gap_mean=torch.tensor(0), gap_std=torch.tensor(0)):
+                 similarity="dotproduct", scaled=True, thresholds=torch.tensor(0), norm_centroid=False):
         super(DFPNet, self).__init__()
         self.num_classes = num_classes
         self.backbone_name = backbone
@@ -35,8 +34,6 @@ class DFPNet(nn.Module):
         self.scaled = scaled
 
         self.register_buffer("thresholds", thresholds)
-        self.register_buffer("gap_mean", gap_mean)
-        self.register_buffer("gap_std", gap_std)
 
 
     def get_backbone_last_layer_out_channel(self):
@@ -58,11 +55,8 @@ class DFPNet(nn.Module):
 
     def set_threshold(self,thresholds):
         self.register_buffer("thresholds", thresholds)
-    def set_gap(self,gap_mean,gap_std):
-        self.gap_mean= gap_mean
-        self.gap_std = gap_std
-        # self.register_parameter("gap_mean",gap_mean)
-        # self.register_parameter("gap_std", gap_std)
+
+
 
 
     def forward(self, x):

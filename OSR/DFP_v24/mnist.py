@@ -277,9 +277,9 @@ def main_stage2(stage1_dict):
         net = stage1_dict['net']
         net = net.to(device)
         thresholds = stage1_dict['distance']['thresholds']
-        stat = stage1_dict["stat"]
+        # stat = stage1_dict["stat"]
         net.module.set_threshold(thresholds.to(device))
-        net.module.set_gap(stat["mean"].to(device),stat["std"].to(device))
+
 
     if args.stage2_resume:
         # Load checkpoint.
@@ -290,14 +290,10 @@ def main_stage2(stage1_dict):
             start_epoch = checkpoint['epoch']
             try:
                 thresholds = checkpoint['net']['thresholds']
-                # gap_mean = checkpoint['net']['gap_mean']
-                # gap_std = checkpoint['net']['gap_std']
             except:
                 thresholds = checkpoint['net']['module.thresholds']
-                # gap_mean = checkpoint['net']['module.gap_mean']
-                # gap_std = checkpoint['net']['module.gap_std']
-            # net.module.set_threshold(thresholds.to(device))
-            # net.module.set_gap(gap_mean.to(device), gap_std.to(device))
+            net.module.set_threshold(thresholds.to(device))
+           
 
             logger = Logger(os.path.join(args.checkpoint, 'log_stage2.txt'), resume=True)
         else:
