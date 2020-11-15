@@ -193,7 +193,7 @@ def main_stage1():
 
     return {"net": net,
             "distance": distance_results,
-            "stat": stat
+            # "stat": stat
             }
 
 

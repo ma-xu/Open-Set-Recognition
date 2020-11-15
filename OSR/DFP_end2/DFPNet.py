@@ -73,6 +73,7 @@ class DFPNet(nn.Module):
 
     def set_threshold(self,thresholds):
         self.register_buffer("thresholds", thresholds)
+        print(f"new threshold is : {self.thresholds}")
 
     def cal_thr2thr(self):
         if self.thresholds.max()==0:
