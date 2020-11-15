@@ -289,7 +289,7 @@ def main_stage2(stage1_dict):
 
     net = net.to(device)
     if device == 'cuda':
-        net = torch.nn.DataParallel(net)
+        # net = torch.nn.DataParallel(net)
         cudnn.benchmark = True
 
     if args.evaluate:
