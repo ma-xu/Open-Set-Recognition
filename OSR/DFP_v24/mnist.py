@@ -270,6 +270,7 @@ def main_stage2(stage1_dict):
                  norm_centroid=args.norm_centroid)
     net = net.to(device)
     if device == 'cuda':
+        net = torch.nn.DataParallel(net)
         cudnn.benchmark = True
 
     if not args.evaluate and not os.path.isfile(args.stage2_resume):
@@ -279,20 +280,21 @@ def main_stage2(stage1_dict):
         stat = stage1_dict["stat"]
         net.module.set_threshold(thresholds.to(device))
         net.module.set_gap(stat["mean"].to(device),stat["std"].to(device))
+
     if args.stage2_resume:
-        if device == 'cuda':
-            net = torch.nn.DataParallel(net)
         # Load checkpoint.
         if os.path.isfile(args.stage2_resume):
             print('==> Resuming from checkpoint..')
             checkpoint = torch.load(args.stage2_resume)
             net.load_state_dict(checkpoint['net'])
+            print(checkpoint['net'])
+            print('\n'*10)
+            print(net.state_dict())
             start_epoch = checkpoint['epoch']
             try:
                 thresholds = checkpoint['net']['thresholds']
             except:
                 thresholds = checkpoint['net']['module.thresholds']
-            print(thresholds)
             logger = Logger(os.path.join(args.checkpoint, 'log_stage2.txt'), resume=True)
         else:
             print("=> no checkpoint found at '{}'".format(args.resume))
