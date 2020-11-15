@@ -54,7 +54,7 @@ parser.add_argument('--alpha', default=1.0, type=float, help='weight of distance
 parser.add_argument('--theta', default=10.0, type=float, help='slope for input data distance within/out thresholds,'
                                                              'default 10.')
 
-parser.add_argument('--scaled', default=True, action='store_true',
+parser.add_argument('--scaled',  action='store_true',
                     help='If scale distance by sqrt(embed_dim)')
 parser.add_argument('--norm_centroid', action='store_true', help='Normalize the centroid using L2-normailization')
 parser.add_argument('--decorrelation', action='store_true', help='Normalize the centroid using L2-normailization')
