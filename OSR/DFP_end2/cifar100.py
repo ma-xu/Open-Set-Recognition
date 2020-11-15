@@ -417,6 +417,7 @@ def stage2_test(net, testloader, device):
     print(f"f1_macro is %.3f" % (eval_result.f1_macro))
     print(f"f1_macro_weighted is %.3f" % (eval_result.f1_macro_weighted))
     print(f"area_under_roc is %.3f" % (eval_result.area_under_roc))
+    print(f"confuse matrix unkown is {eval_result.confusion_matrix[:,-1]}")
 
 
 
