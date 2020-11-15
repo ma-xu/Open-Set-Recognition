@@ -418,7 +418,7 @@ def stage2_test(net, testloader, device):
     correct = 0
     total = 0
 
-    pred_list, target_list, score_list = [], []
+    pred_list, target_list, score_list = [], [], []
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
