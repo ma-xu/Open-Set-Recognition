@@ -65,7 +65,8 @@ class DFPLoss2(nn.Module):
         loss_distance_in = (dist_within * mask_in).sum(dim=1, keepdim=False)
         loss_distance_in = 0.5*(loss_distance_in**2)
         loss_distance_in = self.alpha * (loss_distance_in.sum()) / batch_size
-        loss_distance_out = (dist_within * mask_out).sum(dim=1, keepdim=False)
+        loss_distance_out = (dist_within * mask_out)
+        loss_distance_out = F.relu(loss_distance_out-thresholds)
         loss_distance_out = 0.5*(loss_distance_out**2)
         loss_distance_out = self.alpha * self.theta* (loss_distance_out.sum()) /batch_size
 
@@ -131,6 +132,6 @@ def demo2():
     # print(dist_loss['similarity'])
 
 
-# demo2()
+demo2()
 # for i in range(100):
 #     demo2()
