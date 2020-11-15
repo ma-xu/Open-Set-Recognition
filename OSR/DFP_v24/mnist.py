@@ -440,7 +440,8 @@ def stage2_test(net, testloader, device):
 
             progress_bar(batch_idx, len(testloader), '| Acc: %.3f%% (%d/%d)'
                          % (100. * correct / total, correct, total))
-
+        print(targets)
+        print(predicted)
     print("\nTesting results is {:.2f}%".format(100. * correct / total))
 
 
