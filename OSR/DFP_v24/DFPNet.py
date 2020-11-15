@@ -35,8 +35,9 @@ class DFPNet(nn.Module):
         self.scaled = scaled
 
         self.register_buffer("thresholds", thresholds)
-        self.gap_mean = gap_mean
-        self.gap_std = gap_std
+        self.register_buffer("gap_mean", gap_mean)
+        self.register_buffer("gap_std", gap_std)
+
 
     def get_backbone_last_layer_out_channel(self):
         if self.backbone_name.startswith("LeNet"):
