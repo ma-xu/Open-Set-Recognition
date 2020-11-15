@@ -288,6 +288,10 @@ def main_stage2(stage1_dict):
             checkpoint = torch.load(args.stage2_resume)
             net.load_state_dict(checkpoint['net'])
             start_epoch = checkpoint['epoch']
+            try:
+                thresholds = checkpoint['net']['thresholds']
+            except:
+                thresholds = checkpoint['net']['module.thresholds']
             logger = Logger(os.path.join(args.checkpoint, 'log_stage2.txt'), resume=True)
         else:
             print("=> no checkpoint found at '{}'".format(args.resume))
