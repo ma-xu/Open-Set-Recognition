@@ -54,7 +54,7 @@ parser.add_argument('--alpha', default=1.0, type=float, help='weight of distance
 parser.add_argument('--beta', default=1.0, type=float, help='weight of center between  loss')
 parser.add_argument('--theta', default=10.0, type=float, help='slope for input data distance within/out thresholds,'
                                                              'default 10.')
-parser.add_argument('--sim_threshold', default=0.8, type=float, help='slope for input data distance within/out thresholds,'
+parser.add_argument('--sim_threshold', default=0.9, type=float, help='slope for input data distance within/out thresholds,'
                                                              'default 10.')
 
 parser.add_argument('--scaled', default='True',  action='store_true',
@@ -416,12 +416,12 @@ def detail_evalate(sim_list,dis_list,target_list, threshold):
         sim, dis, target = sim_list[i], dis_list[i], target_list[i]
         sim_value, sim_ind = sim.min(0)
         dis_value, dis_ind = dis.min(0)
-        if sim_value<args.sim_threshold and dis_value <threshold[dis_ind]:
+        if sim_value < args.sim_threshold and dis_value <threshold[dis_ind]:
             predict = c
         else:
-            predict = sim_ind
+            predict = sim_ind.item()
         predicts.append(predict)
-        labels.append(target)
+        labels.append(target.item())
         print(f"{predict} {type(predict)}  {target} {type(target)}")
     eval_result = Evaluation(predicts, labels)
     print(f"accuracy is %.3f" % (eval_result.accuracy))
