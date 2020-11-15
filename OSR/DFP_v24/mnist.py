@@ -125,7 +125,7 @@ def main():
         'stat': None
     }
 
-    if not args.evaluate and not os.path.isdir(args.stage2_resume):
+    if not args.evaluate and not os.path.isfile(args.stage2_resume):
         stage1_dict = main_stage1()
     main_stage2(stage1_dict)
 
@@ -274,7 +274,7 @@ def main_stage2(stage1_dict):
                   distance=args.distance, similarity=args.similarity, scaled=args.scaled, thresholds=thresholds,
                   norm_centroid=args.norm_centroid, stat = stat)
     net2 = net2.to(device)
-    if not args.evaluate and not os.path.isdir(args.stage2_resume):
+    if not args.evaluate and not os.path.isfile(args.stage2_resume):
         init_stage2_model(net1, net2)
 
     if device == 'cuda':
