@@ -287,14 +287,18 @@ def main_stage2(stage1_dict):
             print('==> Resuming from checkpoint..')
             checkpoint = torch.load(args.stage2_resume)
             net.load_state_dict(checkpoint['net'])
-            print(checkpoint['net'])
-            print('\n'*10)
-            print(net.state_dict())
             start_epoch = checkpoint['epoch']
             try:
                 thresholds = checkpoint['net']['thresholds']
+                gap_mean = checkpoint['net']['gap_mean']
+                gap_std = checkpoint['net']['gap_std']
             except:
                 thresholds = checkpoint['net']['module.thresholds']
+                gap_mean = checkpoint['net']['module.gap_mean']
+                gap_std = checkpoint['net']['module.gap_std']
+            net.module.set_threshold(thresholds.to(device))
+            net.module.set_gap(gap_mean.to(device), gap_std.to(device))
+
             logger = Logger(os.path.join(args.checkpoint, 'log_stage2.txt'), resume=True)
         else:
             print("=> no checkpoint found at '{}'".format(args.resume))
