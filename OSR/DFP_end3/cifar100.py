@@ -408,7 +408,8 @@ def stage2_test(net, testloader, device):
 
 
 def detail_evalate(sim_list,dis_list,target_list, threshold):
-    predicts = [], labels = []
+    predicts = []
+    labels = []
     for sim, dis, target in zip(sim_list.cpu().numpy(),dis_list.cpu().numpy(),target_list.cpu().numpy()):
         print(f"{sim.shape} {dis.shape} {target.shape}")
         # sim_value,sim_index = sim.max()
