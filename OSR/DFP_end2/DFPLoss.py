@@ -132,6 +132,6 @@ def demo2():
     # print(dist_loss['similarity'])
 
 
-demo2()
+# demo2()
 # for i in range(100):
 #     demo2()
