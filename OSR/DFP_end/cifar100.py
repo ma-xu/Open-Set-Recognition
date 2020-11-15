@@ -44,7 +44,7 @@ parser.add_argument('--evaluate', action='store_true', help='Evaluate without tr
 
 # General MODEL parameters
 parser.add_argument('--arch', default='ResNet18', choices=model_names, type=str, help='choosing network')
-parser.add_argument('--embed_dim', default=2, type=int, help='embedding feature dimension')
+parser.add_argument('--embed_dim', default=512, type=int, help='embedding feature dimension')
 parser.add_argument('--distance', default='l2', choices=['l2', 'l1', 'cosine', 'dotproduct'],
                     type=str, help='choosing distance metric')
 parser.add_argument('--similarity', default='dotproduct', choices=['l2', 'l1', 'cosine', 'dotproduct'],
