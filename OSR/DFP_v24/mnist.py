@@ -69,7 +69,7 @@ parser.add_argument('--stage1_es', default=35, type=int, help='epoch size')
 parser.add_argument('--stage1_lr', default=0.01, type=float, help='learning rate')  # works for MNIST
 
 # Parameters for stage 2
-parser.add_argument('--stage2_resume', default='', type=str, metavar='PATH', help='path to latest checkpoint')
+parser.add_argument('--stage2_resume', type=str, metavar='PATH', help='path to latest checkpoint')
 parser.add_argument('--stage2_es', default=25, type=int, help='epoch size')
 parser.add_argument('--stage2_lr', default=0.001, type=float, help='learning rate')  # works for MNIST
 parser.add_argument('--amplifier', default=2, type=float, help='amplify the radius for n times.')
@@ -120,8 +120,13 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=args.bs, shuffle=Fa
 
 def main():
     print(device)
+    stage1_dict = {
+        'thresholds': "placeholder",
+        'stat': None
+    }
 
-    stage1_dict = main_stage1()
+    if not args.evaluate and not os.path.isdir(args.stage2_resume):
+        stage1_dict = main_stage1()
     main_stage2(stage1_dict)
 
     #     centroids = cal_centroids(net1, device)

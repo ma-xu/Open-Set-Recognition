@@ -8,13 +8,14 @@ from math import ceil
 
 
 class CGDestimator():
-    def __init__(self, stat):
+    def __init__(self, stat=None):
         super(CGDestimator, self).__init__()
-        self.mean = stat["mean"]  # [class_number, channel]
-        self.std = stat["std"]  # [class_number, channel]
-        self.fea_bank = stat["fea_bank"]  # [class_number, 1024, channel]
-        self.gen_fea = self.generator()
-        self.gen_n = self.gen_fea.shape[0]
+        if stat is not None:
+            self.mean = stat["mean"]  # [class_number, channel]
+            self.std = stat["std"]  # [class_number, channel]
+            self.fea_bank = stat["fea_bank"]  # [class_number, 1024, channel]
+            self.gen_fea = self.generator()
+            self.gen_n = self.gen_fea.shape[0]
 
     def generator(self):
         fea_norm_disted = (self.fea_bank - self.mean.unsqueeze(dim=1)) / (self.std.unsqueeze(dim=1))
