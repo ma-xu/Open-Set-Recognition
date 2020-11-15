@@ -410,11 +410,19 @@ def stage2_test(net, testloader, device):
 def detail_evalate(sim_list,dis_list,target_list, threshold):
     predicts = []
     labels = []
-    for sim, dis, target in zip(sim_list.cpu().numpy(),dis_list.cpu().numpy(),target_list.cpu().numpy()):
-        print(f"{sim.shape} {dis.shape} {target.shape}")
-        # sim_value,sim_index = sim.max()
-        # dis_value, dis_index = dis.max()
-
+    c = sim_list.shape[1]
+    for i in range(target_list.shape[0]):
+        sim, dis, target = sim_list[i], dis_list[i], target_list[i]
+        sim_value, sim_ind = sim.min(0)
+        dis_value, dis_ind = dis.min(0)
+        if sim_value<args.sim_threshold and dis_value <threshold[dis_ind]:
+            predict = c
+        else:
+            predict = sim_ind
+        predicts.append(predict)
+        labels.append(target)
+    eval_result = Evaluation(predicts, labels)
+    print(f"accuracy is %.3f" % (eval_result.accuracy))
 
 
     # eval_result = Evaluation(pred_list, target_list, score_list)
