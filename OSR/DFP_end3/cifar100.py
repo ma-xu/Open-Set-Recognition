@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import torch
 import torch.nn as nn
+import math
 import torch.optim as optim
 import torch.nn.functional as F
 import torch.backends.cudnn as cudnn
@@ -394,11 +395,17 @@ def stage2_test(net, testloader, device):
             dis_fea2cen= out["dis_fea2cen"]  # [batch,class]
 
             b,c = dis_fea2cen.shape
-            dis_predicted, predicted = (dis_fea2cen).min(1) #[b]
+            dis_predicted, predicted_dis_ind = (dis_fea2cen).min(1) #[b]
+            sim_predicted, predicted =  (sim_fea2cen).max(1) #[b]
 
 
             compare_threshold = 1*threshold[predicted]
-            predicted[(dis_predicted-compare_threshold)>0] = c
+            ind1 = (dis_predicted-compare_threshold)>0
+            ind2 = (1/math.sqrt(c) - sim_predicted) >0
+            print(f"ind1 type {type(ind1)} value {ind1}")
+            print(f"ind2 type {type(ind2)} value {ind2}")
+
+            # predicted[unkown_ind] = c
 
             pred_list.extend(predicted.tolist())
             target_list.extend(targets.tolist())
