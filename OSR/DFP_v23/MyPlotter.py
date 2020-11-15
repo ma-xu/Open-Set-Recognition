@@ -84,13 +84,13 @@ def plot_feature(net, args, plotloader, device, dirname, epoch=0, plot_class_num
             thresholds = thresholds.data.cpu().numpy()
         except:
             thresholds = thresholds.data.numpy()
-        for label_idx in range(args.train_class_num):
-            circle = plt.Circle(
-                xy=(centroids[label_idx, 0], centroids[label_idx, 1]),
-                radius=thresholds[label_idx],
-                fill=False,
-                color='black')
-            plt.gcf().gca().add_artist(circle)
+        # for label_idx in range(args.train_class_num):
+        #     circle = plt.Circle(
+        #         xy=(centroids[label_idx, 0], centroids[label_idx, 1]),
+        #         radius=thresholds[label_idx],
+        #         fill=False,
+        #         color='black')
+        #     plt.gcf().gca().add_artist(circle)
 
 
     # currently only support 10 classes, for a good visualization.
