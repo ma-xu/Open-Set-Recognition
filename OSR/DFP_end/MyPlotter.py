@@ -133,7 +133,7 @@ def plot_distance(net,
         # cls_dist = cls_dist[:-(args.tail_number)]  # remove the tail examples.
         # index = int(len(cls_dist) * (1 - args.p_value))
         # threshold = cls_dist[index].item()
-        threshold = IQRfix(cls_dist)
+        threshold = IQR9(cls_dist)
         threshold_list.append(threshold)
         # cls_dist = cls_dist / (max(cls_dist))  # normalized to 0-1, we consider min as 0.
         # min_distance = min(cls_dist)
@@ -255,3 +255,8 @@ def IQRfix(distances):
     # 1.5 is outlier; 3 is extreme outlier.
     threshold =3*Qr
     return threshold
+
+def IQR9(distances):
+    length = len(distances)
+    Q = distances[int(length*0.9)]
+    return Q
