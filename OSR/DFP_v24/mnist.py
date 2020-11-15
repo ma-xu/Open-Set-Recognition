@@ -427,13 +427,9 @@ def stage2_test(net, testloader, device):
 
             b,c = dis_fea2cen.shape
             dis_predicted, predicted = (dis_fea2cen).min(1) #[b]
-            threshold = threshold.unsqueeze(dim=0).expand_as(sim_fea2cen)
-            print(f"threshold {threshold.shape} ")
 
-            compare_threshold = 1.1*threshold[:,predicted]
-            print(
-                f"compare_threshold {compare_threshold.shape} predicted {predicted.shape} dis_predicted {dis_predicted.shape}")
 
+            compare_threshold = 1.1*threshold[predicted]
             predicted[(dis_predicted-compare_threshold)>0] = c
 
 
