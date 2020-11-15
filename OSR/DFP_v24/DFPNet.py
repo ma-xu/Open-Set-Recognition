@@ -12,7 +12,7 @@ from Distance import Similarity, Distance
 
 class DFPNet(nn.Module):
     def __init__(self, backbone='ResNet18', num_classes=1000, embed_dim=512, distance='l2',
-                 similarity="dotproduct", scaled=True, thresholds=1, norm_centroid=False,
+                 similarity="dotproduct", scaled=True, thresholds=0, norm_centroid=False,
                  gap_mean=None, gap_std=None):
         super(DFPNet, self).__init__()
         self.num_classes = num_classes
