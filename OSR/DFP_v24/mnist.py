@@ -168,21 +168,21 @@ def main_stage1():
     criterion = DFPLoss(alpha=args.alpha)
     optimizer = optim.SGD(net.parameters(), lr=args.stage1_lr, momentum=0.9, weight_decay=5e-4)
 
-    if not args.evaluate:
-        for epoch in range(start_epoch, args.stage1_es):
-            adjust_learning_rate(optimizer, epoch, args.stage1_lr, step=10)
-            print('\nStage_1 Epoch: %d | Learning rate: %f ' % (epoch + 1, optimizer.param_groups[0]['lr']))
-            train_out = stage1_train(net, trainloader, optimizer, criterion, device)
-            save_model(net, epoch, os.path.join(args.checkpoint, 'stage_1_last_model.pth'))
-            logger.append([epoch + 1, train_out["train_loss"], train_out["loss_similarity"],
-                           train_out["loss_distance"], train_out["accuracy"]])
-            if args.plot:
-                plot_feature(net, args, trainloader, device, args.plotfolder1, epoch=epoch,
-                             plot_class_num=args.train_class_num, maximum=args.plot_max,
-                             plot_quality=args.plot_quality, norm_centroid=args.norm_centroid)
-                plot_feature(net, args, testloader, device, args.plotfolder1, epoch="test"+str(epoch),
-                             plot_class_num=args.train_class_num + 1, maximum=args.plot_max,
-                             plot_quality=args.plot_quality, norm_centroid=args.norm_centroid)
+
+    for epoch in range(start_epoch, args.stage1_es):
+        adjust_learning_rate(optimizer, epoch, args.stage1_lr, step=10)
+        print('\nStage_1 Epoch: %d | Learning rate: %f ' % (epoch + 1, optimizer.param_groups[0]['lr']))
+        train_out = stage1_train(net, trainloader, optimizer, criterion, device)
+        save_model(net, epoch, os.path.join(args.checkpoint, 'stage_1_last_model.pth'))
+        logger.append([epoch + 1, train_out["train_loss"], train_out["loss_similarity"],
+                       train_out["loss_distance"], train_out["accuracy"]])
+        if args.plot:
+            plot_feature(net, args, trainloader, device, args.plotfolder1, epoch=epoch,
+                         plot_class_num=args.train_class_num, maximum=args.plot_max,
+                         plot_quality=args.plot_quality, norm_centroid=args.norm_centroid)
+            plot_feature(net, args, testloader, device, args.plotfolder1, epoch="test"+str(epoch),
+                         plot_class_num=args.train_class_num + 1, maximum=args.plot_max,
+                         plot_quality=args.plot_quality, norm_centroid=args.norm_centroid)
     if args.plot:
         # plot the test set
         plot_feature(net, args, testloader, device, args.plotfolder1, epoch="test",
@@ -203,7 +203,6 @@ def main_stage1():
 
     return {"net": net,
             "distance": distance_results,
-            # "estimator": estimator
             "stat": stat
             }
 
@@ -264,32 +263,21 @@ def stage1_test(net, testloader, device):
 
 
 def main_stage2(stage1_dict):
-    net1 = stage1_dict['net']
-    thresholds = stage1_dict['distance']['thresholds']
-    # estimator = stage1_dict['estimator']
-    stat = stage1_dict["stat"]
-    print(f"\n===> Start Stage-2 training...\n")
+    print('==> Building stage2 model..')
     start_epoch = 0  # start from epoch 0 or last checkpoint epoch
-    print('==> Building model..')
-    net2 = DFPNet(backbone=args.arch, num_classes=args.train_class_num, embed_dim=args.embed_dim,
-                  distance=args.distance, similarity=args.similarity, scaled=args.scaled, thresholds=thresholds,
-                  norm_centroid=args.norm_centroid, stat = stat)
-    net2 = net2.to(device)
+    net = stage1_dict['net']
     if not args.evaluate and not os.path.isfile(args.stage2_resume):
-        init_stage2_model(net1, net2)
-
-    if device == 'cuda':
-        net2 = torch.nn.DataParallel(net2)
-        cudnn.benchmark = True
-
+        thresholds = stage1_dict['distance']['thresholds']
+        # estimator = stage1_dict['estimator']
+        stat = stage1_dict["stat"]
+        net.set_threshold(thresholds)
+        net.set_gap(stat["mean"],stat["std"])
     if args.stage2_resume:
         # Load checkpoint.
         if os.path.isfile(args.stage2_resume):
             print('==> Resuming from checkpoint..')
             checkpoint = torch.load(args.stage2_resume)
-            net2.load_state_dict(checkpoint['net'])
-            # best_acc = checkpoint['acc']
-            # print("BEST_ACCURACY: "+str(best_acc))
+            net.load_state_dict(checkpoint['net'])
             start_epoch = checkpoint['epoch']
             logger = Logger(os.path.join(args.checkpoint, 'log_stage2.txt'), resume=True)
         else:
@@ -299,44 +287,51 @@ def main_stage2(stage1_dict):
         logger.set_names(['Epoch', 'Train Loss', 'Similarity Loss', 'Distance in', 'Distance out',
                           'Generate', 'Train Acc.'])
 
+    net = net.to(device)
+    if device == 'cuda':
+        net = torch.nn.DataParallel(net)
+        cudnn.benchmark = True
+
+    if args.evaluate:
+        stage2_test(net, testloader, device)
+        return net
+
     # after resume
     criterion = DFPLoss2(alpha=args.alpha, beta=args.beta, theta=args.theta)
-    optimizer = optim.SGD(net2.parameters(), lr=args.stage1_lr, momentum=0.9, weight_decay=5e-4)
+    optimizer = optim.SGD(net.parameters(), lr=args.stage1_lr, momentum=0.9, weight_decay=5e-4)
 
-    if not args.evaluate:
-        for epoch in range(start_epoch, args.stage2_es):
-            print('\nStage_2 Epoch: %d   Learning rate: %f' % (epoch + 1, optimizer.param_groups[0]['lr']))
-            # Here, I didn't set optimizers respectively, just for simplicity. Performance did not vary a lot.
-            adjust_learning_rate(optimizer, epoch, args.stage2_lr, step=10)
+    for epoch in range(start_epoch, args.stage2_es):
+        print('\nStage_2 Epoch: %d   Learning rate: %f' % (epoch + 1, optimizer.param_groups[0]['lr']))
+        # Here, I didn't set optimizers respectively, just for simplicity. Performance did not vary a lot.
+        adjust_learning_rate(optimizer, epoch, args.stage2_lr, step=10)
 
-            train_out = stage2_train(net2, trainloader, optimizer, criterion, device)
-            save_model(net2, epoch, os.path.join(args.checkpoint, 'stage_2_last_model.pth'))
-            stage2_test(net2, testloader, device)
-            # stat = get_gap_stat(net2, trainloader, device, args)
+        train_out = stage2_train(net, trainloader, optimizer, criterion, device)
+        save_model(net, epoch, os.path.join(args.checkpoint, 'stage_2_last_model.pth'))
+        stage2_test(net, testloader, device)
+        # stat = get_gap_stat(net2, trainloader, device, args)
 
-            logger.append([epoch + 1, train_out["train_loss"], train_out["loss_similarity"],
-                           train_out["distance_in"], train_out["distance_out"],
-                           train_out["generate"], train_out["accuracy"]])
-            if args.plot:
-                plot_feature(net2, args, trainloader, device, args.plotfolder2, epoch=epoch,
-                             plot_class_num=args.train_class_num, maximum=args.plot_max,
-                             plot_quality=args.plot_quality, norm_centroid=args.norm_centroid, thresholds=thresholds,
-                             testmode=True)
-                plot_feature(net2, args, testloader, device, args.plotfolder2, epoch="test_"+str(epoch),
-                             plot_class_num=args.train_class_num + 1, maximum=args.plot_max,
-                             plot_quality=args.plot_quality, norm_centroid=args.norm_centroid, thresholds=thresholds,
-                             testmode=True)
+        logger.append([epoch + 1, train_out["train_loss"], train_out["loss_similarity"],
+                       train_out["distance_in"], train_out["distance_out"],
+                       train_out["generate"], train_out["accuracy"]])
         if args.plot:
-            # plot the test set
-            plot_feature(net2, args, testloader, device, args.plotfolder2, epoch="test",
+            plot_feature(net, args, trainloader, device, args.plotfolder2, epoch=epoch,
+                         plot_class_num=args.train_class_num, maximum=args.plot_max,
+                         plot_quality=args.plot_quality, norm_centroid=args.norm_centroid, thresholds=thresholds,
+                         testmode=True)
+            plot_feature(net, args, testloader, device, args.plotfolder2, epoch="test_"+str(epoch),
                          plot_class_num=args.train_class_num + 1, maximum=args.plot_max,
-                         plot_quality=args.plot_quality, norm_centroid=args.norm_centroid, thresholds=thresholds,testmode=True)
-        print(f"\nFinish Stage-2 training...\n")
+                         plot_quality=args.plot_quality, norm_centroid=args.norm_centroid, thresholds=thresholds,
+                         testmode=True)
+    if args.plot:
+        # plot the test set
+        plot_feature(net, args, testloader, device, args.plotfolder2, epoch="test",
+                     plot_class_num=args.train_class_num + 1, maximum=args.plot_max,
+                     plot_quality=args.plot_quality, norm_centroid=args.norm_centroid, thresholds=thresholds,testmode=True)
+    print(f"\nFinish Stage-2 training...\n")
 
     logger.close()
-    stage2_test(net2, testloader, device)
-
-    return net2
+    stage2_test(net, testloader, device)
+    return net
 
 
 def stage2_train(net2, trainloader, optimizer, criterion, device):

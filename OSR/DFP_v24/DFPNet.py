@@ -7,37 +7,36 @@ import torch.nn as nn
 import torch.nn.functional as F
 import backbones.cifar as models
 from Distance import Similarity, Distance
-from Generater import CGDestimator
+
 
 
 class DFPNet(nn.Module):
-    def __init__(self, backbone='ResNet18', num_classes=1000, embed_dim=None, distance='l2',
+    def __init__(self, backbone='ResNet18', num_classes=1000, embed_dim=512, distance='l2',
                  similarity="dotproduct", scaled=True, thresholds=None, norm_centroid=False,
-                 stat=None):
+                 gap_mean=None, gap_std=None):
         super(DFPNet, self).__init__()
-        if stat is not None:
-            self.estimator = CGDestimator(stat)
         self.num_classes = num_classes
         self.backbone_name = backbone
         self.norm_centroid = norm_centroid
         self.backbone = models.__dict__[backbone](num_classes=num_classes, backbone_fc=False)
         self.feat_dim = self.get_backbone_last_layer_out_channel()  # get the channel number of backbone output
-        if embed_dim:
-            self.embeddingLayer = nn.Sequential(
-                nn.PReLU(),
-                nn.Linear(self.feat_dim, self.feat_dim // 16, bias=False),
-                nn.PReLU(),
-                nn.Linear(self.feat_dim // 16, embed_dim, bias=False)
-            )
-            self.feat_dim = embed_dim
+
+        self.embeddingLayer = nn.Sequential(
+            nn.PReLU(),
+            nn.Linear(self.feat_dim, self.feat_dim // 16, bias=False),
+            nn.PReLU(),
+            nn.Linear(self.feat_dim // 16, embed_dim, bias=False)
+        )
+        self.feat_dim = embed_dim
         self.centroids = nn.Parameter(torch.randn(num_classes, self.feat_dim))
-        self.register_buffer("origin", torch.zeros([1, self.feat_dim]))
 
         self.distance = distance
         self.similarity = similarity
         self.scaled = scaled
         if thresholds is not None:
             self.register_buffer("thresholds", thresholds)
+        self.gap_mean = gap_mean
+        self.gap_std = gap_std
 
     def get_backbone_last_layer_out_channel(self):
         if self.backbone_name.startswith("LeNet"):
@@ -56,14 +55,20 @@ class DFPNet(nn.Module):
         else:
             return last_layer.out_channels
 
+    def set_threshold(self,thresholds):
+        self.register_buffer("thresholds", thresholds)
+    def set_gap(self,gap_mean,gap_std):
+        self.gap_mean = gap_mean
+        self.gap_std = gap_std
+
     def forward(self, x):
         x = self.backbone(x)
         dis_gen2cen, dis_gen2ori, thresholds, amplified_thresholds, embed_gen = None, None, None, None, None
         gap = (F.adaptive_avg_pool2d(x, 1)).view(x.size(0), -1)
-        if hasattr(self, 'estimator'):
+        if hasattr(self, 'thresholds'):
             thresholds = self.thresholds
-            gen = self.estimator.sampler(gap)
-            embed_gen = self.embeddingLayer(gen) if hasattr(self, 'embeddingLayer') else gen
+            # gen = self.estimator.sampler(gap)
+            # embed_gen = self.embeddingLayer(gen) if hasattr(self, 'embeddingLayer') else gen
 
         embed_fea = self.embeddingLayer(gap) if hasattr(self, 'embeddingLayer') else gap
         centroids = F.normalize(self.centroids, dim=1, p=2) if self.norm_centroid else self.centroids
@@ -71,9 +76,9 @@ class DFPNet(nn.Module):
         sim_fea2cen = getattr(SIMI, self.similarity)(embed_fea, centroids)
         DIST = Distance(scaled=self.scaled)
         dis_fea2cen = getattr(DIST, self.distance)(embed_fea, centroids)
-        if hasattr(self, 'estimator'):
-            dis_gen2cen = getattr(DIST, self.distance)(embed_gen, centroids)
-            dis_gen2ori = getattr(DIST, self.distance)(embed_gen, self.origin)
+        # if hasattr(self, 'estimator'):
+        #     dis_gen2cen = getattr(DIST, self.distance)(embed_gen, centroids)
+        #     dis_gen2ori = getattr(DIST, self.distance)(embed_gen, self.origin)
 
         return {
             "gap": gap,

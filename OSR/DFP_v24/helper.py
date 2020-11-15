@@ -14,10 +14,10 @@ def get_gap_stat(net, trainloader, device, args):
                 (Result[target]["fea_bank"]).append(out[i])
 
             # start check bank storage
-            # we believe 1024 samples in each class is representive enough.
-            for i in range(args.train_class_num):
-                if len(Result[i]["fea_bank"])>2048:
-                    Result[i]["fea_bank"] = Result[i]["fea_bank"][:2048]
+            # # we believe 1024 samples in each class is representive enough.
+            # for i in range(args.train_class_num):
+            #     if len(Result[i]["fea_bank"])>2048:
+            #         Result[i]["fea_bank"] = Result[i]["fea_bank"][:2048]
             # end check bank storage
 
             progress_bar(batch_idx, len(trainloader), "calculating statistics ...")
@@ -32,12 +32,12 @@ def get_gap_stat(net, trainloader, device, args):
             list_feature.append(feature.unsqueeze(dim=0))
     list_std = torch.cat(list_std,dim=0)  # [class_num, channel]
     list_mean = torch.cat(list_mean, dim=0)  # [class_num, channel]
-    list_feature = torch.cat(list_feature, dim=0)  # [class_num, 1024, channel]
+    # list_feature = torch.cat(list_feature, dim=0)  # [class_num, 1024, channel]
 
     return {
         "std": list_std,
         "mean": list_mean,
-        "fea_bank": list_feature
+        # "fea_bank": list_feature
     }
 
 
