@@ -432,16 +432,17 @@ def stage2_test(net, testloader, device):
             compare_threshold = 1.1*threshold[predicted]
             predicted[(dis_predicted-compare_threshold)>0] = c
 
-
+            print(targets[:10])
+            print(predicted[:10])
+            print("__________________")
 
             _, predicted = (out["sim_fea2cen"]).max(1)
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
 
-            progress_bar(batch_idx, len(testloader), '| Acc: %.3f%% (%d/%d)'
-                         % (100. * correct / total, correct, total))
-        print(targets)
-        print(predicted)
+            # progress_bar(batch_idx, len(testloader), '| Acc: %.3f%% (%d/%d)'
+            #              % (100. * correct / total, correct, total))
+
     print("\nTesting results is {:.2f}%".format(100. * correct / total))
 
 
