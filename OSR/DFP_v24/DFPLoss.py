@@ -41,8 +41,7 @@ class DFPLoss2(nn.Module):
     def forward(self, net_out, targets):
         sim_fea2cen = net_out["sim_fea2cen"]
         dist_fea2cen = 0.5*(net_out["dis_fea2cen"])**2
-        dist_gen2cen = 0.5*(net_out["dis_gen2cen"])**2
-        dist_gen2ori = 0.5*(net_out["dis_gen2ori"])**2
+        # dist_gen2cen = 0.5*(net_out["dis_gen2cen"])**2
         thresholds = net_out["thresholds"]  # [class_num]
 
         # classification loss for input data
@@ -66,17 +65,17 @@ class DFPLoss2(nn.Module):
         loss_distance_out = self.alpha * self.theta* (loss_distance_out.sum()) /batch_size
 
         #  distance loss for generated data
-        loss_generate = F.relu((2*thresholds.unsqueeze(dim=0) - dist_gen2cen), inplace=True)
-        loss_generate = self.beta * (loss_generate.sum()) / (loss_generate.shape[0])
+        # loss_generate = F.relu((2*thresholds.unsqueeze(dim=0) - dist_gen2cen), inplace=True)
+        # loss_generate = self.beta * (loss_generate.sum()) / (loss_generate.shape[0])
 
 
-        loss = loss_similarity + loss_distance_in + loss_distance_out + loss_generate
+        loss = loss_similarity + loss_distance_in + loss_distance_out
         return {
             "total": loss,
             "similarity": loss_similarity,
             "distance_in": loss_distance_in,
             "distance_out": loss_distance_out,
-            "generate": loss_generate
+            "generate": loss_distance_out # placeholder
         }
 
 
