@@ -411,6 +411,7 @@ def detail_evalate(sim_list,dis_list,target_list, threshold):
     predicts = []
     labels = []
     c = sim_list.shape[1]
+    print(c)
     for i in range(target_list.shape[0]):
         sim, dis, target = sim_list[i], dis_list[i], target_list[i]
         sim_value, sim_ind = sim.min(0)
@@ -421,6 +422,7 @@ def detail_evalate(sim_list,dis_list,target_list, threshold):
             predict = sim_ind
         predicts.append(predict)
         labels.append(target)
+    predict(f"{predict} {type(predict)}  {target} {type(target)}")
     eval_result = Evaluation(predicts, labels)
     print(f"accuracy is %.3f" % (eval_result.accuracy))
 
