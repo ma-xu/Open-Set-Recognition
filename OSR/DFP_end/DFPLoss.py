@@ -40,7 +40,7 @@ class DFPLoss2(nn.Module):
 
     def forward(self, net_out, targets):
         sim_fea2cen = net_out["sim_fea2cen"]
-        dist_fea2cen = 0.5*(net_out["dis_fea2cen"])**2
+        dist_fea2cen = net_out["dis_fea2cen"]
         # dist_gen2cen = 0.5*(net_out["dis_gen2cen"])**2
         thresholds = net_out["thresholds"]  # [class_num]
 
@@ -60,8 +60,10 @@ class DFPLoss2(nn.Module):
         # print(f"batch: {batch_size} / in {batch_size_in} / {batch_size_out}"
         #       f" ---- equal {(batch_size_in+batch_size_out)==batch_size}")
         loss_distance_in = (dist_within * mask_in).sum(dim=1, keepdim=False)
+        loss_distance_in = 0.5*(loss_distance_in**2)
         loss_distance_in = self.alpha * (loss_distance_in.sum()) / batch_size
         loss_distance_out = (dist_within * mask_out).sum(dim=1, keepdim=False)
+        loss_distance_out = 0.5*(loss_distance_out**2)
         loss_distance_out = self.alpha * self.theta* (loss_distance_out.sum()) /batch_size
 
         #  distance loss for generated data
