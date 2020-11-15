@@ -1,2 +1,4 @@
 
 remove generalization。
+
+Good enough
