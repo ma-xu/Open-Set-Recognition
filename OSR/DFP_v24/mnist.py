@@ -436,7 +436,7 @@ def stage2_test(net, testloader, device):
 
             pred_list.extend(predicted.tolist())
             target_list.extend(targets.tolist())
-            score_list.extend(dis_fea2cen.tolist())
+            score_list.extend(sim_fea2cen.tolist())
 
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
