@@ -120,9 +120,9 @@ def main():
         logger.append([epoch + 1, train_loss])
         if args.plot:
             # plot training set
-            plot_feature(net, args, trainloader, device, args.plotfolder1, epoch=epoch, plot_quality=150)
+            plot_feature(net, args, trainloader, device, args.plotfolder, epoch=epoch, plot_quality=150)
             # plot testing set
-            plot_feature(net, args, testloader, device, args.plotfolder1, epoch='test_'+str(epoch), plot_quality=150)
+            plot_feature(net, args, testloader, device, args.plotfolder, epoch='test_'+str(epoch), plot_quality=150)
 
 
 # Training
