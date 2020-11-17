@@ -9,7 +9,7 @@ import backbones.cifar as models
 from Distance import Similarity, Distance
 
 class Decorrelation(nn.Module):
-    def __init__(self,channel,):
+    def __init__(self, channel,):
         super(Decorrelation, self).__init__()
         self.weight = nn.Parameter(torch.ones(1,channel))
         self.bias = nn.Parameter(torch.zeros(1,channel))
