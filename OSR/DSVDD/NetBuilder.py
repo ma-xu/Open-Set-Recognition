@@ -4,6 +4,7 @@ Ruff, Lukas, et al. "Deep one-class classification." International conference on
 """
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import backbones.cifar as models
 from Distance import Distance
 
@@ -51,8 +52,9 @@ class NetBuilder(nn.Module):
 
     def forward(self, x):
         x = self.backbone(x)
+        x = (F.adaptive_avg_pool2d(x, 1)).view(x.size(0), -1)
         x = self.embeddingLayer(x)
-        DIST = Distance(scaled=self.scaled)
+        DIST = Distance(scaled=True)
         dis = getattr(DIST, 'l2')(x, self.centroid)
         return {
             "embed_fea":x,
@@ -61,3 +63,11 @@ class NetBuilder(nn.Module):
         }
 
 
+def demo():
+    x = torch.rand([2,1,28,28])
+    net = NetBuilder()
+    y = net(x)
+    print(y)
+
+
+# demo()
