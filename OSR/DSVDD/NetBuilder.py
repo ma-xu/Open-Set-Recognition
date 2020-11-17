@@ -25,7 +25,7 @@ class NetBuilder(nn.Module):
             nn.PReLU(),
             nn.Linear(self.backbone_dim, self.embed_dim,bias=False)
         )
-        self.centroid = torch.zeros([self.embed_dim])
+        self.register_buffer("centroid",torch.zeros([self.embed_dim]))
 
     def _init_centroid(self, centroid, eps=0.1):
         # If c_i is too close to 0, set to +-eps. Reason: a zero unit can be trivially matched with zero weights.
@@ -70,4 +70,4 @@ def demo():
     print(y)
 
 
-# demo()
+demo()
