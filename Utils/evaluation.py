@@ -146,11 +146,11 @@ if __name__ == '__main__':
     test_one_hot_encoder.fit(np.array(label).reshape(-1, 1))
     rand_prediction_scores = 2 * test_one_hot_encoder.transform(np.array(predict).reshape(-1, 1))  # One hot
     rand_prediction_scores += np.random.rand(*rand_prediction_scores.shape)
-    rand_prediction_scores /= rand_prediction_scores.sum(axis=1)[:, None]
-    print('Area under ROC curve (with 100% confidence in prediction):', f'{eval.area_under_roc():.3f}')
-    print('Area under ROC curve (variable probability across classes):',
-          f'{eval.area_under_roc(prediction_scores=rand_prediction_scores):.3f}')
-    print(eval.confusion_matrix)
-    eval.plot_confusion_matrix()
+    # rand_prediction_scores /= rand_prediction_scores.sum(axis=1)[:, None]
+    # print('Area under ROC curve (with 100% confidence in prediction):', f'{eval.area_under_roc():.3f}')
+    # print('Area under ROC curve (variable probability across classes):',
+    #       f'{eval.area_under_roc(prediction_scores=rand_prediction_scores):.3f}')
+    # print(eval.confusion_matrix)
+    eval.plot_confusion_matrix(normalize="true")
 
     print(classification_report(label, predict, digits=3))
