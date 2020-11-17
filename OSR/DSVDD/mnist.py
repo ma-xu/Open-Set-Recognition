@@ -110,10 +110,10 @@ def main():
         logger.set_names(['Epoch', 'Train Loss'])
 
     criterion = DSVDDLoss()
-    optimizer = optim.SGD(net.parameters(), lr=args.stage1_lr, momentum=0.9, weight_decay=5e-4)
+    optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
 
-    for epoch in range(start_epoch, args.stage1_es):
-        adjust_learning_rate(optimizer, epoch, args.stage1_lr, step=20)
+    for epoch in range(start_epoch, args.epochs):
+        adjust_learning_rate(optimizer, epoch, args.lr, step=20)
         print('\nStage_1 Epoch: %d | Learning rate: %f ' % (epoch + 1, optimizer.param_groups[0]['lr']))
         train_loss = train(net, trainloader, optimizer, criterion, device)
         save_model(net, epoch, os.path.join(args.checkpoint, 'last_model.pth'))
