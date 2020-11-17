@@ -43,7 +43,7 @@ parser.add_argument('--bs', default=256, type=int, help='batch size')
 parser.add_argument('--evaluate', action='store_true', help='Evaluate without training')
 
 # General MODEL parameters
-parser.add_argument('--arch', default='LeNetPlus', choices=model_names, type=str, help='choosing network')
+parser.add_argument('--arch', default='LeNetNobias', choices=model_names, type=str, help='choosing network')
 parser.add_argument('--embed_dim', default=2, type=int, help='embedding feature dimension')
 
 parser.add_argument('--resume', default='', type=str, metavar='PATH', help='path to latest checkpoint')
