@@ -57,8 +57,8 @@ def plot_feature(net, args, plotloader, device, dirname, epoch=0, plot_quality=1
         legends.append('unknown')
 
     plt.scatter(
-        centroids[:, 0],
-        centroids[:, 1],
+        centroids[0],
+        centroids[1],
         c='black',
         marker="*",
         s=5,
