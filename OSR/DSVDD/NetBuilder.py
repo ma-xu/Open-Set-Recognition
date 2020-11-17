@@ -31,7 +31,7 @@ class NetBuilder(nn.Module):
         # If c_i is too close to 0, set to +-eps. Reason: a zero unit can be trivially matched with zero weights.
         centroid[(abs(centroid) < eps) & (centroid < 0)] = -eps
         centroid[(abs(centroid) < eps) & (centroid > 0)] = eps
-        self.centroid = centroid
+        self.centroid = centroid.to(self.device)
 
     def _get_backbone_channel(self):
         if self.backbone_name.startswith("LeNet"):
