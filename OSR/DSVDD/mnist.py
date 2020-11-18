@@ -51,7 +51,6 @@ parser.add_argument('--epochs', default=50, type=int, help='epoch size')
 parser.add_argument('--lr', default=0.01, type=float, help='learning rate')  # works for MNIST
 parser.add_argument('--plot', action='store_true', help='Plotting the training set.')
 
-parser.add_argument('--plot_quality', default=200, type=int, help='DPI of plot figure')
 
 args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
