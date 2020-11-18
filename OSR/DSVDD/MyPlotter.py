@@ -37,6 +37,7 @@ def plot_feature(net, args, plotloader, device, dirname, epoch=0, plot_quality=1
         centroids = centroids.data.numpy()
     colors = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C8', 'C9','C7']
     for label_idx in range(args.train_class_num):
+        print(label_idx)
         features = plot_features[plot_labels == label_idx, :]
         plt.scatter(
             features[:, 0],
