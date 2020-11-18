@@ -46,6 +46,7 @@ def plot_feature(net, args, plotloader, device, dirname, epoch=0, plot_quality=1
         )
     legends = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
     legends = legends[:label_idx]
+    print(f"max(plot_labels): {max(plot_labels)}")
     if max(plot_labels)!=args.train_class_num:
         features = plot_features[plot_labels == max(plot_labels), :]
         plt.scatter(
