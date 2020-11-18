@@ -16,6 +16,6 @@ class DSVDDLoss(nn.Module):
         # loss = radius ** 2 + (1 / self.nu) * (distance**2).mean()
 
         # loss for one-class
-        loss = 10*(distance**2).mean()
+        loss = 20*(distance**2).mean()
 
         return loss
