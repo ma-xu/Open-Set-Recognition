@@ -1,3 +1,13 @@
+"""
+Example to showcase the effect of dimension number on distance metrics.
+The figures will be saved to current folder + parameters combination.
+Author: Xu Ma
+Date: Nov/2020
+Email: xuma@my.unt.edu
+
+Run:
+python3 exampler.py [--n 500 --bins 50 --dims 16 256 1024 5096 1000 --scaled]
+"""
 import os
 import math
 import argparse
@@ -7,27 +17,26 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-
-
 parser = argparse.ArgumentParser(description='Test distance shifting')
 parser.add_argument('-n', default=500, type=int, help='Generated samplers number')
 parser.add_argument('--bins', default=50, type=int, help='Bins for histogram')
-parser.add_argument('--dims', nargs='+', default=[10, 100,1000,5000,10000], type=int, help='dim list for test')
-parser.add_argument('--scaled',  action='store_true', help='Distance scaled by dim')
+parser.add_argument('--dims', nargs='+', default=[10, 100, 1000, 5000, 10000], type=int, help='dim list for test')
+parser.add_argument('--scaled', action='store_true', help='Distance scaled by dim')
 args = parser.parse_args()
 
 # saving figures(folder) for current folder.
-folder = str(args.n)+'-'+str(args.bins)+'-'+str(args.scaled)
-args.save_path = os.path.join(os.getcwd(),folder)
+folder = str(args.n) + '-' + str(args.bins) + '-' + str(args.scaled)
+args.save_path = os.path.join(os.getcwd(), folder)
 if not os.path.isdir(args.save_path):
     os.makedirs(args.save_path)
 
 
-def _remove_diag(x: torch.Tensor )-> torch.Tensor:
-    assert  len(x.shape)==2 and x.shape[1] ==x.shape[0]
-    down_tril = torch.tril(x,diagonal=-1)
-    out = x[x==down_tril]
+def _remove_diag(x: torch.Tensor) -> torch.Tensor:
+    assert len(x.shape) == 2 and x.shape[1] == x.shape[0]
+    down_tril = torch.tril(x, diagonal=-1)
+    out = x[x == down_tril]
     return out  # vector
+
 
 class Distance(torch.nn.Module):
     # Distance should return a tensor with shape [n1, n2]
@@ -89,20 +98,15 @@ def main():
             distance = distance.tolist()
 
             # plot
-            plt.hist(distance, bins=args.bins,rwidth=0.8, alpha=0.7)
+            plt.hist(distance, bins=args.bins, rwidth=0.8, alpha=0.7)
             plt.xlabel("bins")
             plt.ylabel("hist")
             plt.title(f"Metric: {metric} Dim: {dim}")
-            file_name = os.path.join(args.save_path, str(dim)+'_'+str(metric) )
+            file_name = os.path.join(args.save_path, str(dim) + '_' + str(metric))
             plt.savefig(file_name, bbox_inches='tight', dpi=150)
             plt.close()
 
 
 if __name__ == '__main__':
     main()
-
-
-def _remove_diag(x: torch.Tensor )-> torch.Tensor:
-    assert  x.shape
-
 
