@@ -23,6 +23,12 @@ if not os.path.isdir(args.save_path):
     os.makedirs(args.save_path)
 
 
+def _remove_diag(x: torch.Tensor )-> torch.Tensor:
+    assert  len(x.shape)==2 and x.shape[1] ==x.shape[0]
+    down_tril = torch.tril(x,diagonal=-1)
+    out = x[x==down_tril]
+    return out  # vector
+
 class Distance(torch.nn.Module):
     # Distance should return a tensor with shape [n1, n2]
     def __init__(self, scaled=True):
@@ -79,7 +85,7 @@ def main():
         for metric in metrics:
             print(f"calculating dim:{dim} distance metric:{metric}...")
             distance = getattr(Dist, metric)(samplers, samplers)
-            distance = distance.reshape(-1)
+            distance = _remove_diag(distance)
             distance = distance.tolist()
 
             # plot
@@ -94,3 +100,9 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+def _remove_diag(x: torch.Tensor )-> torch.Tensor:
+    assert  x.shape
+
+
