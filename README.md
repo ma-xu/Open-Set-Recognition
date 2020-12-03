@@ -4,6 +4,8 @@ Ongoing Open Set Recognition project using PyTorch.
 
 For any issue and question, please email [xuma@my.unt.edu](mailto:xuma@my.unt.edu)
 
+Attention: need to be re-constrcuted due to my experimental implementations (especially my methods).
+
 ## Requirements
 For different Algorithms and different datasets, the requirements varies. In general, the basic and must requirements are:
 ```bash
