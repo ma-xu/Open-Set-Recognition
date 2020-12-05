@@ -71,8 +71,8 @@ parser.add_argument('--bins', default=50, type=int, help='divided into n bins')
 
 args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-args.checkpoint = './checkpoints/mnist/' + \
-                  '/%s-%s_%s_%s-%s_%s_%s' % (args.train_class_num, args.test_class_num, args.arch, args.embed_dim)
+args.checkpoint = './checkpoints/mnist/%s-%s_%s_%s-%s_alpha%s_temp%s' % (
+    args.train_class_num, args.test_class_num, args.arch, args.embed_dim, args.alpha, args.temperature)
 if not os.path.isdir(args.checkpoint):
     mkdir_p(args.checkpoint)
 
@@ -102,15 +102,6 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=args.bs, shuffle=Fa
 
 def main():
     print(device)
-    # stage1_dict = {
-    #     'distance': {'thresholds': torch.ones(args.train_class_num)},
-    #     'stat': None,
-    #     'net': None
-    # }
-    #
-    # if not args.evaluate and not os.path.isfile(args.stage2_resume):
-    #     stage1_dict = main_stage1()
-    # main_stage2(stage1_dict)
     stage1_dict = main_stage1()
 
 
