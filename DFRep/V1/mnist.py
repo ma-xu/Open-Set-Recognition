@@ -145,9 +145,9 @@ def main_stage1():
         logger.append([epoch + 1, train_out["train_loss"], train_out["loss_classification"],
                        train_out["loss_distance"], train_out["accuracy"]])
         if args.plot:
-            plot_feature(net, args, trainloader, device, args.plotfolder1, epoch=epoch,
+            plot_feature(net, args, trainloader, device, args.plotfolder, epoch=epoch,
                          plot_class_num=args.train_class_num, plot_quality=args.plot_quality)
-            plot_feature(net, args, testloader, device, args.plotfolder1, epoch="test" + str(epoch),
+            plot_feature(net, args, testloader, device, args.plotfolder, epoch="test" + str(epoch),
                          plot_class_num=args.train_class_num + 1, plot_quality=args.plot_quality, testmode=True)
 
     logger.close()
