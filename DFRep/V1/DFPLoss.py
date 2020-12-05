@@ -11,12 +11,12 @@ class DFPLoss(nn.Module):
         self.ce = nn.CrossEntropyLoss()
 
     def forward(self, net_out, targets):
-        sim_fea2cen = net_out["sim_fea2cen"]  # [n, class_num]; range [-1,1] greater indicates more similar.
-        sim_classification = sim_fea2cen / self.temperature
+        sim_classification = net_out["dotproduct_fea2cen"]  # [n, class_num]; range [-1,1] greater indicates more similar.
+        sim_classification = sim_classification / self.temperature
         loss_classification = self.ce(sim_classification, targets)
 
-        dist_fea2cen = (1.0 - sim_fea2cen) / 2.0  # re-range similarity to [0,1], smaller indicates closer.
-        dist_fea2cen = 0.5 * (dist_fea2cen ** 2)  # 0.5*||d||^2
+        distance_cosine_fea2cen = net_out["cosine_fea2cen"]
+        dist_fea2cen = 0.5 * (distance_cosine_fea2cen ** 2)  # 0.5*||d||^2
         batch_size, num_classes = dist_fea2cen.shape
         classes = torch.arange(num_classes, device=targets.device).long()
         labels = targets.unsqueeze(1).expand(batch_size, num_classes)
@@ -42,7 +42,8 @@ def demo():
     print(label)
     loss = DFPLoss(1.)
     netout = {
-        "sim_fea2cen": sim_fea2cen
+        "dotproduct_fea2cen": sim_fea2cen,
+        "cosine_fea2cen": sim_fea2cen
     }
     dist_loss = loss(netout, label)
     print(dist_loss)

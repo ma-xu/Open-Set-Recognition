@@ -23,8 +23,7 @@ class Decorrelation(nn.Module):
         return gap * y
 
 class DFPNet(nn.Module):
-    def __init__(self, backbone='ResNet18', num_classes=1000, embed_dim=512,
-                 similarity="cosine"):
+    def __init__(self, backbone='ResNet18', num_classes=1000, embed_dim=512):
         super(DFPNet, self).__init__()
         self.num_classes = num_classes
         self.backbone_name = backbone
@@ -40,7 +39,6 @@ class DFPNet(nn.Module):
             nn.Linear(self.feat_dim // 16, embed_dim, bias=False)
         )
         self.centroids = nn.Parameter(torch.randn(num_classes, embed_dim))
-        self.similarity = similarity
 
     def get_backbone_last_layer_out_channel(self):
         if self.backbone_name.startswith("LeNet"):
@@ -62,15 +60,22 @@ class DFPNet(nn.Module):
     def forward(self, x):
         x = self.backbone(x)
         gap = (F.adaptive_avg_pool2d(x, 1)).view(x.size(0), -1)
-        embed_fea = F.normalize(self.embeddingLayer(gap), dim=1, p=2)
-        centroids = F.normalize(self.centroids, dim=1, p=2)
+        embed_fea = self.embeddingLayer(gap)
+        embed_fea_norm = F.normalize(embed_fea, dim=1, p=2)
+        centroids = self.centroids
+        centroids_norm = F.normalize(centroids, dim=1, p=2)
         SIMI = Similarity()
-        sim_fea2cen = getattr(SIMI, self.similarity)(embed_fea, centroids)
+        dotproduct_fea2cen = getattr(SIMI, "dotproduct")(embed_fea, centroids)
+        # cosine distance equals l2-normalized dotproduct distance. For efficient computation.
+        cosine_fea2cen = getattr(SIMI, "dotproduct")(embed_fea_norm, centroids_norm)
+        # re-range to distance defination, [0,1], smaller indicates more similar.
+        cosine_fea2cen = (1.0-cosine_fea2cen)/2.0
 
         return {
             "gap": gap,  # [n,self.feat_dim]
             "embed_fea": embed_fea,  # [n,embed_dim]
-            "sim_fea2cen": sim_fea2cen  # [n,num_classes]
+            "dotproduct_fea2cen": dotproduct_fea2cen,  # [n,num_classes]
+            "cosine_fea2cen": cosine_fea2cen  # [n,num_classes]
         }
 
 

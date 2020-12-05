@@ -18,6 +18,7 @@ def plot_feature(net, args, plotloader, device, dirname, epoch=0, plot_class_num
             inputs, targets = inputs.to(device), targets.to(device)
             out = net(inputs)
             embed_fea = out["embed_fea"]
+            embed_fea = F.normalize(embed_fea, dim=1, p=2)
             try:
                 embed_fea = embed_fea.data.cpu().numpy()
                 targets = targets.data.cpu().numpy()

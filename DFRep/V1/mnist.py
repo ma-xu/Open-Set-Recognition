@@ -44,8 +44,7 @@ parser.add_argument('--evaluate', action='store_true', help='Evaluate without tr
 # General MODEL parameters
 parser.add_argument('--arch', default='LeNetPlus', choices=model_names, type=str, help='choosing network')
 parser.add_argument('--embed_dim', default=2, type=int, help='embedding feature dimension')
-parser.add_argument('--similarity', default='cosine', choices=['l2', 'l1', 'cosine', 'dotproduct'],
-                    type=str, help='choosing distance metric')
+
 
 # Parameters for optimizer
 parser.add_argument('--alpha', default=1.0, type=float, help='weight for similarity loss')
@@ -111,8 +110,7 @@ def main_stage1():
 
     # Model
     print('==> Building model..')
-    net = DFPNet(backbone=args.arch, num_classes=args.train_class_num, embed_dim=args.embed_dim,
-                 similarity=args.similarity)
+    net = DFPNet(backbone=args.arch, num_classes=args.train_class_num, embed_dim=args.embed_dim)
 
     net = net.to(device)
     if device == 'cuda':
@@ -181,7 +179,7 @@ def stage1_train(net, trainloader, optimizer, criterion, device):
         loss_classification += (loss_dict['classification']).item()
         loss_distance += (loss_dict['distance']).item()
 
-        _, predicted = (out['sim_fea2cen']).max(1)
+        _, predicted = (out['dotproduct_fea2cen']).max(1)
         total += targets.size(0)
         correct += predicted.eq(targets).sum().item()
 
@@ -202,7 +200,7 @@ def stage1_test(net, testloader, device):
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
             out = net(inputs)
-            _, predicted = (out["sim_fea2cen"]).max(1)
+            _, predicted = (out["dotproduct_fea2cen"]).max(1)
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
 

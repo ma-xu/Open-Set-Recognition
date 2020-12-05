@@ -51,7 +51,7 @@ class Distance(torch.nn.Module):
 
 class Similarity(torch.nn.Module):
 
-    def __init__(self, scaled=True):
+    def __init__(self, scaled=False):
         super(Similarity, self).__init__()
         self.scaled = scaled
 
