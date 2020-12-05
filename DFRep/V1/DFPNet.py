@@ -23,18 +23,15 @@ class Decorrelation(nn.Module):
         return gap * y
 
 class DFPNet(nn.Module):
-    def __init__(self, backbone='ResNet18', num_classes=1000, embed_dim=512, distance='l2',
-                 similarity="dotproduct", scaled=True, thresholds=torch.tensor(0), norm_centroid=False,
-                 decorrelation=False):
+    def __init__(self, backbone='ResNet18', num_classes=1000, embed_dim=512,
+                 similarity="cosine"):
         super(DFPNet, self).__init__()
         self.num_classes = num_classes
         self.backbone_name = backbone
-        self.norm_centroid = norm_centroid
+
         self.backbone = models.__dict__[backbone](num_classes=num_classes, backbone_fc=False)
         self.feat_dim = self.get_backbone_last_layer_out_channel()  # get the channel number of backbone output
-
-        if decorrelation:
-            self.decorrelation = Decorrelation(self.feat_dim)
+        self.embed_dim = embed_dim
 
         self.embeddingLayer = nn.Sequential(
             nn.PReLU(),
@@ -42,17 +39,8 @@ class DFPNet(nn.Module):
             nn.PReLU(),
             nn.Linear(self.feat_dim // 16, embed_dim, bias=False)
         )
-        self.feat_dim = embed_dim
-        self.centroids = nn.Parameter(torch.randn(num_classes, self.feat_dim))
-
-        self.distance = distance
+        self.centroids = nn.Parameter(torch.randn(num_classes, embed_dim))
         self.similarity = similarity
-        self.scaled = scaled
-
-        self.register_buffer("thresholds", thresholds)
-
-
-
 
     def get_backbone_last_layer_out_channel(self):
         if self.backbone_name.startswith("LeNet"):
@@ -71,53 +59,26 @@ class DFPNet(nn.Module):
         else:
             return last_layer.out_channels
 
-    def set_threshold(self,thresholds):
-        self.register_buffer("thresholds", thresholds)
-
-
-
-
     def forward(self, x):
         x = self.backbone(x)
-        dis_gen2cen, dis_gen2ori, thresholds, amplified_thresholds, embed_gen = None, None, None, None, None
         gap = (F.adaptive_avg_pool2d(x, 1)).view(x.size(0), -1)
-
-        if hasattr(self,'decorrelation'):
-            gap = self.decorrelation(gap)
-
-        embed_fea = self.embeddingLayer(gap) if hasattr(self, 'embeddingLayer') else gap
-        centroids = F.normalize(self.centroids, dim=1, p=2) if self.norm_centroid else self.centroids
-        SIMI = Similarity(scaled=self.scaled)
+        embed_fea = F.normalize(self.embeddingLayer(gap), dim=1, p=2)
+        centroids = F.normalize(self.centroids, dim=1, p=2)
+        SIMI = Similarity()
         sim_fea2cen = getattr(SIMI, self.similarity)(embed_fea, centroids)
-        DIST = Distance(scaled=self.scaled)
-        dis_fea2cen = getattr(DIST, self.distance)(embed_fea, centroids)
-        # if hasattr(self, 'estimator'):
-        #     dis_gen2cen = getattr(DIST, self.distance)(embed_gen, centroids)
-        #     dis_gen2ori = getattr(DIST, self.distance)(embed_gen, self.origin)
 
         return {
-            "gap": gap,
-            "embed_fea": embed_fea,
-            "embed_gen": embed_gen,
-            "sim_fea2cen": sim_fea2cen,
-            "dis_fea2cen": dis_fea2cen,
-            "dis_gen2cen": dis_gen2cen,
-            "dis_gen2ori": dis_gen2ori,
-            "thresholds": self.thresholds
+            "gap": gap,  # [n,self.feat_dim]
+            "embed_fea": embed_fea,  # [n,embed_dim]
+            "sim_fea2cen": sim_fea2cen  # [n,num_classes]
         }
 
 
 def demo():
-    x = torch.rand([10, 3, 32, 32])
+    x = torch.rand([3, 3, 32, 32])
     y = torch.rand([6, 3, 32, 32])
-    threshold = torch.rand([10])
-    net = DFPNet('ResNet18', num_classes=10, embed_dim=64, thresholds=None)
+    net = DFPNet('ResNet18', num_classes=10, embed_dim=64)
     output = net(x)
-    print(output["gap"].shape)
-    print(output["embed_fea"].shape)
-    print(output["sim_fea2cen"].shape)
-    # print(output["dis_gen2cen"].shape)
-    # print(output["dis_gen2ori"].shape)
+    print(output)
 
-
-# demo()
+demo()
