@@ -48,4 +48,4 @@ def demo():
     print(dist_loss)
 
 
-demo()
+# demo()
