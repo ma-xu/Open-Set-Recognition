@@ -15,8 +15,8 @@ class DFPLoss(nn.Module):
         sim_classification = sim_classification / self.temperature
         loss_classification = self.ce(sim_classification, targets)
 
-        distance_cosine_fea2cen = net_out["cosine_fea2cen"]
-        dist_fea2cen = 0.5 * (distance_cosine_fea2cen ** 2)  # 0.5*||d||^2
+        dist_fea2cen = net_out["cosine_fea2cen"]
+        # dist_fea2cen = 0.5 * (dist_fea2cen ** 2)  # 0.5*||d||^2
         batch_size, num_classes = dist_fea2cen.shape
         classes = torch.arange(num_classes, device=targets.device).long()
         labels = targets.unsqueeze(1).expand(batch_size, num_classes)
