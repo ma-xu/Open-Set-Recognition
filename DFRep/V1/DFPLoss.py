@@ -4,9 +4,10 @@ import torch.nn.functional as F
 
 
 class DFPLoss(nn.Module):
-    def __init__(self, alpha=1.0, temperature=1.0):
+    def __init__(self, alpha=1.0, temperature=1.0, scaling=1.0):
         super(DFPLoss, self).__init__()
         self.alpha = alpha
+        self.scaling = scaling
         self.temperature = temperature
         self.ce = nn.CrossEntropyLoss()
 
@@ -16,6 +17,7 @@ class DFPLoss(nn.Module):
         loss_classification = self.ce(sim_classification, targets)
 
         dist_fea2cen = net_out["cosine_fea2cen"]
+        dist_fea2cen = torch.exp(dist_fea2cen)-1.0
         # dist_fea2cen = 0.5 * (dist_fea2cen ** 2)  # 0.5*||d||^2
         batch_size, num_classes = dist_fea2cen.shape
         classes = torch.arange(num_classes, device=targets.device).long()
