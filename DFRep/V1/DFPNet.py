@@ -70,7 +70,6 @@ class DFPNet(nn.Module):
         cosine_fea2cen = getattr(SIMI, "dotproduct")(embed_fea_norm, centroids_norm)
         # re-range to distance defination, [0,1], smaller indicates more similar.
         cosine_fea2cen = (1.0-cosine_fea2cen)/2.0
-        print(f"Cosine distance max: {cosine_fea2cen.max()}|| min: {cosine_fea2cen.min()}")
 
         return {
             "gap": gap,  # [n,self.feat_dim]
