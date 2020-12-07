@@ -135,8 +135,9 @@ def main_stage1():
     optimizer = optim.SGD(net.parameters(), lr=args.stage1_lr, momentum=0.9, weight_decay=5e-4)
 
     for epoch in range(start_epoch, args.stage1_es):
-        adjust_learning_rate(optimizer, epoch, args.stage1_lr, step=10)
-        if epoch%10==0 and epoch!=0:
+        if epoch<30:
+            adjust_learning_rate(optimizer, epoch, args.stage1_lr, step=10)
+        if epoch%10 == 0 and epoch!=0:
             criterion._alpha_anneal(anneal=5)
         print('\nStage_1 Epoch: %d | Learning rate: %f ' % (epoch + 1, optimizer.param_groups[0]['lr']))
         train_out = stage1_train(net, trainloader, optimizer, criterion, device)
