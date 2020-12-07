@@ -47,7 +47,7 @@ parser.add_argument('--embed_dim', default=2, type=int, help='embedding feature 
 
 
 # Parameters for optimizer
-parser.add_argument('--scaling', default=1.0, type=float, help='scaling cosine distance for exp')
+# parser.add_argument('--scaling', default=1.0, type=float, help='scaling cosine distance for exp')
 
 # Parameters for stage 1
 parser.add_argument('--stage1_resume', default='', type=str, metavar='PATH', help='path to latest checkpoint')
@@ -68,8 +68,8 @@ parser.add_argument('--bins', default=50, type=int, help='divided into n bins')
 
 args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-args.checkpoint = './checkpoints/mnist/%s-%s_%s_dim%s_scale%s' % (
-    args.train_class_num, args.test_class_num, args.arch, args.embed_dim, args.scaling)
+args.checkpoint = './checkpoints/mnist/%s-%s_%s_dim%s' % (
+    args.train_class_num, args.test_class_num, args.arch, args.embed_dim)
 if not os.path.isdir(args.checkpoint):
     mkdir_p(args.checkpoint)
 
@@ -131,7 +131,7 @@ def main_stage1():
         logger.set_names(['Epoch', 'Train Loss', 'Train Acc.'])
 
     # after resume
-    criterion = DFPLoss( scaling=args.scaling)
+    criterion = DFPLoss()
     optimizer = optim.SGD(net.parameters(), lr=args.stage1_lr, momentum=0.9, weight_decay=5e-4)
 
     for epoch in range(start_epoch, args.stage1_es):
@@ -177,7 +177,7 @@ def stage1_train(net, trainloader, optimizer, criterion, device):
         # loss_classification += (loss_dict['classification']).item()
         # loss_distance += (loss_dict['distance']).item()
 
-        _, predicted = (out['cosine_fea2cen']).max(1)
+        _, predicted = (out['dotproduct_fea2cen']).max(1)
         total += targets.size(0)
         correct += predicted.eq(targets).sum().item()
 
@@ -198,7 +198,7 @@ def stage1_test(net, testloader, device):
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
             out = net(inputs)
-            _, predicted = (out["cosine_fea2cen"]).max(1)
+            _, predicted = (out["dotproduct_fea2cen"]).max(1)
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
 

@@ -4,9 +4,8 @@ import torch.nn.functional as F
 
 
 class DFPLoss(nn.Module):
-    def __init__(self,scaling=16):
+    def __init__(self):
         super(DFPLoss, self).__init__()
-        self.scaling = scaling
         self.ce = nn.CrossEntropyLoss()
 
     def forward(self, net_out, targets):
