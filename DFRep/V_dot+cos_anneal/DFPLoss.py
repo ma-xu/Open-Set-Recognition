@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 
 class DFPLoss(nn.Module):
-    def __init__(self,alpha=1.0, scaling=16):
+    def __init__(self, alpha=1.0, scaling=16):
         super(DFPLoss, self).__init__()
         self.alpha = alpha
         self.scaling = scaling
@@ -18,15 +18,15 @@ class DFPLoss(nn.Module):
         sim_classification = net_out["dotproduct_fea2cen"]  # [n, class_num]; range [-1,1] greater indicates more similar.
         loss_classification = self.ce(sim_classification, targets)
 
-        dist_fea2cen = net_out["cosine_fea2cen"]
+        dist_fea2cen = self.alpha * net_out["cosine_fea2cen"]
         # dist_fea2cen = torch.exp(dist_fea2cen)-1.0
-        # # dist_fea2cen = 0.5 * (dist_fea2cen ** 2)  # 0.5*||d||^2
+        dist_fea2cen = 0.5 * (dist_fea2cen ** 2)  # 0.5*||d||^2
         batch_size, num_classes = dist_fea2cen.shape
         classes = torch.arange(num_classes, device=targets.device).long()
         labels = targets.unsqueeze(1).expand(batch_size, num_classes)
         mask = labels.eq(classes.expand(batch_size, num_classes))
         dist_within = (dist_fea2cen * mask.float()).sum(dim=1, keepdim=True)
-        loss_distance = self.alpha * (dist_within.sum()) / batch_size
+        loss_distance =  (dist_within.sum()) / batch_size
 
         loss = loss_classification + loss_distance
         return {
