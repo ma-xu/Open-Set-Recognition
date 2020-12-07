@@ -10,8 +10,7 @@ class DFPLoss(nn.Module):
         self.ce = nn.CrossEntropyLoss()
 
     def forward(self, net_out, targets):
-        sim_classification = net_out["cosine_fea2cen"]  # [n, class_num]; range [-1,1] greater indicates more similar.
-        sim_classification = sim_classification * self.scaling
+        sim_classification = net_out["dotproduct_fea2cen"]  # [n, class_num]; range [-1,1] greater indicates more similar.
         loss_classification = self.ce(sim_classification, targets)
         return {
             "total": loss_classification
