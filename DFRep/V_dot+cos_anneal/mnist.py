@@ -138,7 +138,7 @@ def main_stage1():
         if epoch<30:
             adjust_learning_rate(optimizer, epoch, args.stage1_lr, step=10)
         if epoch%10 == 0 and epoch!=0:
-            criterion._alpha_anneal(anneal=5)
+            criterion._alpha_anneal(anneal=1)
         print('\nStage_1 Epoch: %d | Learning rate: %f ' % (epoch + 1, optimizer.param_groups[0]['lr']))
         train_out = stage1_train(net, trainloader, optimizer, criterion, device)
         save_model(net, epoch, os.path.join(args.checkpoint, 'stage_1_last_model.pth'))
