@@ -128,7 +128,7 @@ def main_stage1():
             print("=> no checkpoint found at '{}'".format(args.resume))
     else:
         logger = Logger(os.path.join(args.checkpoint, 'log_stage1.txt'))
-        logger.set_names(['Epoch', 'Train Loss', 'Classification Loss', 'Train Acc.'])
+        logger.set_names(['Epoch', 'Train Loss', 'Train Acc.'])
 
     # after resume
     criterion = DFPLoss( scaling=args.scaling)
