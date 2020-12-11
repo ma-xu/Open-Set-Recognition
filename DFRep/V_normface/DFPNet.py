@@ -8,20 +8,6 @@ import torch.nn.functional as F
 import backbones.cifar as models
 from Distance import Similarity, Distance
 
-class Decorrelation(nn.Module):
-    def __init__(self, channel,):
-        super(Decorrelation, self).__init__()
-        self.weight = nn.Parameter(torch.ones(1,channel))
-        self.bias = nn.Parameter(torch.zeros(1,channel))
-
-    def forward(self, gap):
-        _mean = gap.mean(dim=1,keepdim=True)
-        _std = gap.std(dim=1,keepdim=True)
-        y = (gap-_mean)/(_std+1e-5)
-        y =y * self.weight+self.bias
-        y = torch.sigmoid(y)
-        return gap * y
-
 class DFPNet(nn.Module):
     def __init__(self, backbone='ResNet18', num_classes=1000, embed_dim=512):
         super(DFPNet, self).__init__()
@@ -40,6 +26,7 @@ class DFPNet(nn.Module):
         )
         self.centroids = nn.Parameter(torch.randn(num_classes, embed_dim))
         nn.init.xavier_uniform_(self.centroids)
+        self.centroids.data.uniform_(-1, 1).renorm_(2, 1, 1e-5).mul_(1e5)
 
     def get_backbone_last_layer_out_channel(self):
         if self.backbone_name.startswith("LeNet"):
