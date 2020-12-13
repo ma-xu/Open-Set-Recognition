@@ -38,7 +38,7 @@ parser.add_argument('--includes_all_train_class', default=True, action='store_tr
                     help='If required all known classes included in testing')
 
 # Others
-parser.add_argument('--bs', default=256, type=int, help='batch size')
+parser.add_argument('--bs', default=128, type=int, help='batch size')
 parser.add_argument('--evaluate', action='store_true', help='Evaluate without training')
 
 # General MODEL parameters
@@ -47,11 +47,11 @@ parser.add_argument('--embed_dim', default=2, type=int, help='embedding feature 
 
 
 # Parameters for optimizer
-parser.add_argument('--alpha', default=1.0, type=float, help='scaling cosine distance for exp')
+parser.add_argument('--alpha', default=4.0, type=float, help='scaling cosine distance for exp')
 
 # Parameters for stage 1
 parser.add_argument('--stage1_resume', default='', type=str, metavar='PATH', help='path to latest checkpoint')
-parser.add_argument('--stage1_es', default=25, type=int, help='epoch size')
+parser.add_argument('--stage1_es', default=100, type=int, help='epoch size')
 parser.add_argument('--stage1_lr', default=0.01, type=float, help='learning rate')  # works for MNIST
 
 # Parameters for stage 2
@@ -135,7 +135,7 @@ def main_stage1():
     optimizer = optim.SGD(net.parameters(), lr=args.stage1_lr, momentum=0.9, weight_decay=5e-4)
 
     for epoch in range(start_epoch, args.stage1_es):
-        adjust_learning_rate(optimizer, epoch, args.stage1_lr, step=10)
+        adjust_learning_rate(optimizer, epoch, args.stage1_lr, factor=0.5, step=20)
         print('\nStage_1 Epoch: %d | Learning rate: %f ' % (epoch + 1, optimizer.param_groups[0]['lr']))
         train_out = stage1_train(net, trainloader, optimizer, criterion, device)
         save_model(net, epoch, os.path.join(args.checkpoint, 'stage_1_last_model.pth'))
