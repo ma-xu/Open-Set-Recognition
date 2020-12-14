@@ -78,9 +78,12 @@ def plot_feature(net, args, plotloader, device, dirname, epoch=0, plot_class_num
 
 def plot_beam(x, y, plt, color):
     x_min, x_max = plt.xlim()
+    y_min, y_max = plt.ylim()
     temp_x = x_min if x<0 else x_max
     slope = y/x
     input = np.linspace(0, temp_x, 100)
     output = slope*input
     plt.plot(input, output,c=color)
+    plt.xlim(x_min, x_max)
+    plt.ylim(y_min, y_max)
 
