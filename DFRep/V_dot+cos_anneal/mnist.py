@@ -134,11 +134,11 @@ def main_stage1():
     optimizer = optim.SGD(net.parameters(), lr=args.stage1_lr, momentum=0.9, weight_decay=5e-4)
 
     for epoch in range(start_epoch, args.stage1_es):
-        args.alpha += (epoch%20)
-        criterion = DFPLoss(alpha=args.alpha)
+        alpha = args.alpha + (epoch//20)
+        criterion = DFPLoss(alpha=alpha)
         adjust_learning_rate(optimizer, epoch, args.stage1_lr, factor=0.5, step=20)
         print('\nStage_1 Epoch: %d | Learning rate: %f | alpha: %f' %
-              (epoch + 1, optimizer.param_groups[0]['lr'], args.alpha))
+              (epoch + 1, optimizer.param_groups[0]['lr'], alpha))
         train_out = stage1_train(net, trainloader, optimizer, criterion, device)
         save_model(net, epoch, os.path.join(args.checkpoint, 'stage_1_last_model.pth'))
         logger.append([epoch + 1, train_out["train_loss"], train_out["loss_classification"],
