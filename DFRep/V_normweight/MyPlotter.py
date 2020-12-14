@@ -34,7 +34,7 @@ def plot_feature(net, args, plotloader, device, dirname, epoch=0, plot_class_num
 
     net_dict = net.state_dict()
     centroids = net_dict['module.centroids'] if isinstance(net, nn.DataParallel) else net_dict['centroids']
-    # centroids = F.normalize(centroids, dim=1, p=2)
+    centroids = F.normalize(centroids, dim=1, p=2)
     try:
         centroids = centroids.data.cpu().numpy()
     except:
