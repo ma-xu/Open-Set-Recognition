@@ -57,6 +57,13 @@ def plot_feature(net, args, plotloader, device, dirname, epoch=0, plot_class_num
         s=5,
     )
 
+    # plot beam
+    for i in range(args.train_class_num):
+        xx = centroids[i, 0]
+        yy = centroids[i, 1]
+        plot_beam(xx, yy, plt, colors[i])
+
+
     # currently only support 10 classes, for a good visualization.
     # change plot_class_num would lead to problems.
     legends = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
@@ -67,3 +74,13 @@ def plot_feature(net, args, plotloader, device, dirname, epoch=0, plot_class_num
     save_name = os.path.join(dirname, 'epoch_' + str(epoch) + '.png')
     plt.savefig(save_name, bbox_inches='tight', dpi=plot_quality)
     plt.close()
+
+
+def plot_beam(x, y, plt, color):
+    x_min, x_max = plt.xlim()
+    temp_x = x_min if x<0 else x_max
+    slope = y/x
+    input = np.linspace(0, temp_x, 100)
+    output = slope*input
+    plt.plot(input, output,c=color)
+
