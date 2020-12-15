@@ -200,7 +200,7 @@ def stage1_test(net, testloader, device):
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
             out = net(inputs) # shape [batch,class]
-            energy = out.sum(dim=1, keepdim=False)
+            energy = (out["normweight_fea2cen"]).sum(dim=1, keepdim=False)
             Energy_list.append(energy)
             Target_list.append(targets)
             Energy_list = torch.cat(Energy_list, dim=0)
