@@ -200,7 +200,8 @@ def stage1_test(net, testloader, device):
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
             out = net(inputs) # shape [batch,class]
-            energy = (out["normweight_fea2cen"]).sum(dim=1, keepdim=False)
+            # energy = (out["normweight_fea2cen"]).sum(dim=1, keepdim=False)
+            energy = torch.logsumexp(out["normweight_fea2cen"], dim=1, keepdim=False)
             Energy_list.append(energy)
             Target_list.append(targets)
 
@@ -224,7 +225,7 @@ def stage1_test(net, testloader, device):
     known_hist = torch.histc(known_Energy_list, bins=args.bins, min=Energy_list.min().data,
                                max=Energy_list.max().data)
     print(f"unknown_hist: \n{unknown_hist}")
-    print(f"unknown_hist: \n{known_hist}")
+    print(f"known_hist: \n{known_hist}")
 
 
 
