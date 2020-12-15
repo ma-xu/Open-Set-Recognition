@@ -203,8 +203,6 @@ def stage1_test(net, testloader, device):
             energy = (out["normweight_fea2cen"]).sum(dim=1, keepdim=False)
             Energy_list.append(energy)
             Target_list.append(targets)
-            Energy_list = torch.cat(Energy_list, dim=0)
-            Target_list = torch.cat(Target_list, dim=0)
 
             _, predicted = (out["normweight_fea2cen"]).max(1)
             total += targets.size(0)
@@ -215,6 +213,9 @@ def stage1_test(net, testloader, device):
 
     print("\nTesting results is {:.2f}%".format(100. * correct / total))
 
+    # Energy analysis
+    Energy_list = torch.cat(Energy_list, dim=0)
+    Target_list = torch.cat(Target_list, dim=0)
     unknown_label = Target_list.max()
     unknown_Energy_list = Energy_list[Target_list == unknown_label]
     known_Energy_list = Energy_list[Target_list != unknown_label]
