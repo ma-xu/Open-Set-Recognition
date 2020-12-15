@@ -64,7 +64,7 @@ parser.add_argument('--plot', action='store_true', help='Plotting the training s
 parser.add_argument('--plot_max', default=0, type=int, help='max examples to plot in each class, 0 indicates all.')
 
 parser.add_argument('--plot_quality', default=200, type=int, help='DPI of plot figure')
-parser.add_argument('--bins', default=50, type=int, help='divided into n bins')
+parser.add_argument('--bins', default=100, type=int, help='divided into n bins')
 
 args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -194,10 +194,18 @@ def stage1_train(net, trainloader, optimizer, criterion, device):
 def stage1_test(net, testloader, device):
     correct = 0
     total = 0
+    Energy_list = []
+    Target_list = []
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
-            out = net(inputs)
+            out = net(inputs) # shape [batch,class]
+            energy = out.sum(dim=1, keepdim=False)
+            Energy_list.append(energy)
+            Target_list.append(targets)
+            Energy_list = torch.cat(Energy_list, dim=0)
+            Target_list = torch.cat(Target_list, dim=0)
+
             _, predicted = (out["normweight_fea2cen"]).max(1)
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
@@ -206,6 +214,17 @@ def stage1_test(net, testloader, device):
                          % (100. * correct / total, correct, total))
 
     print("\nTesting results is {:.2f}%".format(100. * correct / total))
+
+    unknown_label = Target_list.max()
+    unknown_Energy_list = Energy_list[Target_list == unknown_label]
+    known_Energy_list = Energy_list[Target_list != unknown_label]
+    unknown_hist = torch.histc(unknown_Energy_list, bins=args.bins, min=Energy_list.min().data,
+                               max=Energy_list.max().data)
+    known_hist = torch.histc(known_Energy_list, bins=args.bins, min=Energy_list.min().data,
+                               max=Energy_list.max().data)
+    print(f"unknown_hist: \n{unknown_hist}")
+    print(f"unknown_hist: \n{known_hist}")
+
 
 
 def save_model(net, epoch, path, **kwargs):
