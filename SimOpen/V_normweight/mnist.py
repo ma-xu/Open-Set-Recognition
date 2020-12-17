@@ -22,6 +22,7 @@ from Utils import adjust_learning_rate, progress_bar, Logger, mkdir_p, Evaluatio
 from DFPLoss import DFPLoss
 from DFPNet import DFPNet
 from MyPlotter import plot_feature
+from energy_hist import energy_hist
 
 model_names = sorted(name for name in models.__dict__
                      if not name.startswith("__")
@@ -37,40 +38,38 @@ parser.add_argument('--test_class_num', default=10, type=int, help='Classes used
 parser.add_argument('--includes_all_train_class', default=True, action='store_true',
                     help='If required all known classes included in testing')
 
-# Others
-parser.add_argument('--bs', default=128, type=int, help='batch size')
-parser.add_argument('--evaluate', action='store_true', help='Evaluate without training')
-
 # General MODEL parameters
 parser.add_argument('--arch', default='LeNetPlus', choices=model_names, type=str, help='choosing network')
 parser.add_argument('--embed_dim', default=2, type=int, help='embedding feature dimension')
 
-
 # Parameters for optimizer
-parser.add_argument('--scaling', default=16, type=int, help='scaling cosine distance for exp')
 parser.add_argument('--temperature', default=1, type=int, help='scaling cosine distance for exp')
 
-# Parameters for stage 1
+# Parameters for stage 1 training
 parser.add_argument('--stage1_resume', default='', type=str, metavar='PATH', help='path to latest checkpoint')
-parser.add_argument('--stage1_es', default=100, type=int, help='epoch size')
+parser.add_argument('--stage1_es', default=70, type=int, help='epoch size')
 parser.add_argument('--stage1_lr', default=0.01, type=float, help='learning rate')  # works for MNIST
-
-# Parameters for stage 2
-parser.add_argument('--stage2_resume', default='', type=str, metavar='PATH', help='path to latest checkpoint')
-parser.add_argument('--stage2_es', default=25, type=int, help='epoch size')
-parser.add_argument('--stage2_lr', default=0.001, type=float, help='learning rate')  # works for MNIST
+parser.add_argument('--stage1_lr_factor', default=0.5, type=float, help='learning rate Decay factor')  # works for MNIST
+parser.add_argument('--stage1_lr_step', default=20, type=float, help='learning rate Decay step')  # works for MNIST
+parser.add_argument('--stage1_bs', default=128, type=int, help='batch size')
+parser.add_argument('--evaluate', action='store_true', help='Evaluate without training')
 
 # Parameters for stage plotting
 parser.add_argument('--plot', action='store_true', help='Plotting the training set.')
-parser.add_argument('--plot_max', default=0, type=int, help='max examples to plot in each class, 0 indicates all.')
-
 parser.add_argument('--plot_quality', default=200, type=int, help='DPI of plot figure')
-parser.add_argument('--bins', default=100, type=int, help='divided into n bins')
+
+# histogram figures for Energy model analysis
+parser.add_argument('--hist_bins', default=100, type=int, help='divided into n bins')
+parser.add_argument('--hist_norm', default = True, action='store_true', help='if norm the frequency to [0,1]')
+parser.add_argument('--hist_save', action='store_true', help='if save the histogram figures')
+parser.add_argument('--hist_list', default=["norm_fea","normweight_fea2cen","cosine_fea2cen"],
+                    type=str, nargs='+', help='what outputs to analysis')
+
 
 args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-args.checkpoint = './checkpoints/mnist/%s-%s_%s_dim%s' % (
-    args.train_class_num, args.test_class_num, args.arch, args.embed_dim)
+args.checkpoint = './checkpoints/mnist/%s-%s-%s-dim%s-T%s' % (
+    args.train_class_num, args.test_class_num, args.arch, args.embed_dim,args.temperature)
 if not os.path.isdir(args.checkpoint):
     mkdir_p(args.checkpoint)
 
@@ -78,24 +77,25 @@ if not os.path.isdir(args.checkpoint):
 args.plotfolder = os.path.join(args.checkpoint, "plotter")
 if not os.path.isdir(args.plotfolder):
     mkdir_p(args.plotfolder)
+# folder to save histogram
+args.histfolder = os.path.join(args.checkpoint, "histogram")
+if not os.path.isdir(args.histfolder):
+    mkdir_p(args.histfolder)
 
 print('==> Preparing data..')
 transform = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize((0.1307,), (0.3081,))
 ])
-
 trainset = MNIST(root='../../data', train=True, download=True, transform=transform,
                  train_class_num=args.train_class_num, test_class_num=args.test_class_num,
                  includes_all_train_class=args.includes_all_train_class)
-
 testset = MNIST(root='../../data', train=False, download=True, transform=transform,
                 train_class_num=args.train_class_num, test_class_num=args.test_class_num,
                 includes_all_train_class=args.includes_all_train_class)
-
 # data loader
-trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.bs, shuffle=True, num_workers=4)
-testloader = torch.utils.data.DataLoader(testset, batch_size=args.bs, shuffle=False, num_workers=4)
+trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.stage1_bs, shuffle=True, num_workers=4)
+testloader = torch.utils.data.DataLoader(testset, batch_size=args.stage1_bs, shuffle=False, num_workers=4)
 
 
 def main():
@@ -132,23 +132,23 @@ def main_stage1():
         logger.set_names(['Epoch', 'Train Loss', 'Train Acc.'])
 
     # after resume
-    criterion = DFPLoss()
+    criterion = DFPLoss(temperature=args.temperature)
     optimizer = optim.SGD(net.parameters(), lr=args.stage1_lr, momentum=0.9, weight_decay=5e-4)
+    if not args.evaluate:
+        for epoch in range(start_epoch, args.stage1_es):
+            adjust_learning_rate(optimizer, epoch, args.stage1_lr, factor=args.stage1_lr_factor, step=args.stage1_lr_step)
+            print('\nStage_1 Epoch: %d | Learning rate: %f ' % (epoch + 1, optimizer.param_groups[0]['lr']))
+            train_out = stage1_train(net, trainloader, optimizer, criterion, device)
+            save_model(net, epoch, os.path.join(args.checkpoint, 'stage_1_last_model.pth'))
+            logger.append([epoch + 1, train_out["train_loss"], train_out["accuracy"]])
+            if args.plot:
+                plot_feature(net, args, trainloader, device, args.plotfolder, epoch=epoch,
+                             plot_class_num=args.train_class_num, plot_quality=args.plot_quality)
+                plot_feature(net, args, testloader, device, args.plotfolder, epoch="test" + str(epoch),
+                             plot_class_num=args.train_class_num + 1, plot_quality=args.plot_quality, testmode=True)
+        logger.close()
+        print(f"\nFinish Stage-1 training...\n")
 
-    for epoch in range(start_epoch, args.stage1_es):
-        adjust_learning_rate(optimizer, epoch, args.stage1_lr, factor=0.5, step=20)
-        print('\nStage_1 Epoch: %d | Learning rate: %f ' % (epoch + 1, optimizer.param_groups[0]['lr']))
-        train_out = stage1_train(net, trainloader, optimizer, criterion, device)
-        save_model(net, epoch, os.path.join(args.checkpoint, 'stage_1_last_model.pth'))
-        logger.append([epoch + 1, train_out["train_loss"], train_out["accuracy"]])
-        if args.plot:
-            plot_feature(net, args, trainloader, device, args.plotfolder, epoch=epoch,
-                         plot_class_num=args.train_class_num, plot_quality=args.plot_quality)
-            plot_feature(net, args, testloader, device, args.plotfolder, epoch="test" + str(epoch),
-                         plot_class_num=args.train_class_num + 1, plot_quality=args.plot_quality, testmode=True)
-
-    logger.close()
-    print(f"\nFinish Stage-1 training...\n")
     print("===> Evaluating ...")
     stage1_test(net, testloader, device)
 
@@ -195,15 +195,18 @@ def stage1_train(net, trainloader, optimizer, criterion, device):
 def stage1_test(net, testloader, device):
     correct = 0
     total = 0
-    Energy_list = []
+    norm_fea_list, normweight_fea2cen_list, cosine_fea2cen_list,softmax_list = [], [], []
     Target_list = []
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
             out = net(inputs) # shape [batch,class]
             # energy = (out["normweight_fea2cen"]).sum(dim=1, keepdim=False)
-            energy = torch.logsumexp(out["normweight_fea2cen"], dim=1, keepdim=False)
-            Energy_list.append(energy)
+            # energy = torch.logsumexp(out["normweight_fea2cen"], dim=1, keepdim=False)
+            norm_fea_list.append(out["norm_fea"])
+            normweight_fea2cen_list.append(out["normweight_fea2cen"])
+            cosine_fea2cen_list.append(out["cosine_fea2cen"])
+            softmax_list.append(out["cosine_fea2cen"].softmax(dim=1).max(dim=1,keepdim=False))
             Target_list.append(targets)
 
             _, predicted = (out["normweight_fea2cen"]).max(1)
@@ -215,18 +218,35 @@ def stage1_test(net, testloader, device):
 
     print("\nTesting results is {:.2f}%".format(100. * correct / total))
 
-    # Energy analysis
-    Energy_list = torch.cat(Energy_list, dim=0)
+    norm_fea_list = torch.cat(norm_fea_list, dim=0)
+    normweight_fea2cen_list = torch.cat(normweight_fea2cen_list, dim=0)
+    cosine_fea2cen_list = torch.cat(cosine_fea2cen_list, dim=0)
+    softmax_list = torch.cat(softmax_list, dim=0)
     Target_list = torch.cat(Target_list, dim=0)
-    unknown_label = Target_list.max()
-    unknown_Energy_list = Energy_list[Target_list == unknown_label]
-    known_Energy_list = Energy_list[Target_list != unknown_label]
-    unknown_hist = torch.histc(unknown_Energy_list, bins=args.bins, min=Energy_list.min().data,
-                               max=Energy_list.max().data)
-    known_hist = torch.histc(known_Energy_list, bins=args.bins, min=Energy_list.min().data,
-                               max=Energy_list.max().data)
-    print(f"unknown_hist: \n{unknown_hist}")
-    print(f"known_hist: \n{known_hist}")
+
+    energy_hist(norm_fea_list, Target_list, args, "norm")
+    energy_hist(torch.logsumexp(norm_fea_list, dim=1, keepdim=False), Target_list, args, "norm_energy")
+
+    energy_hist(normweight_fea2cen_list, Target_list, args, "normweight")
+    energy_hist(torch.logsumexp(normweight_fea2cen_list, dim=1, keepdim=False), Target_list, args, "normweight_energy")
+
+    energy_hist(cosine_fea2cen_list, Target_list, args, "cosine")
+    energy_hist(torch.logsumexp(cosine_fea2cen_list, dim=1, keepdim=False), Target_list, args, "cosine_energy")
+
+    energy_hist(softmax_list, Target_list, args, "softmax")
+
+    # # Energy analysis
+    # Energy_list = torch.cat(Energy_list, dim=0)
+    # Target_list = torch.cat(Target_list, dim=0)
+    # unknown_label = Target_list.max()
+    # unknown_Energy_list = Energy_list[Target_list == unknown_label]
+    # known_Energy_list = Energy_list[Target_list != unknown_label]
+    # unknown_hist = torch.histc(unknown_Energy_list, bins=args.hist_bins, min=Energy_list.min().data,
+    #                            max=Energy_list.max().data)
+    # known_hist = torch.histc(known_Energy_list, bins=args.hist_bins, min=Energy_list.min().data,
+    #                            max=Energy_list.max().data)
+    # print(f"unknown_hist: \n{unknown_hist}")
+    # print(f"known_hist: \n{known_hist}")
 
 
 
