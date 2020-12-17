@@ -47,7 +47,7 @@ parser.add_argument('--temperature', default=1, type=int, help='scaling cosine d
 
 # Parameters for stage 1 training
 parser.add_argument('--stage1_resume', default='', type=str, metavar='PATH', help='path to latest checkpoint')
-parser.add_argument('--stage1_es', default=70, type=int, help='epoch size')
+parser.add_argument('--stage1_es', default=50, type=int, help='epoch size')
 parser.add_argument('--stage1_lr', default=0.01, type=float, help='learning rate')  # works for MNIST
 parser.add_argument('--stage1_lr_factor', default=0.5, type=float, help='learning rate Decay factor')  # works for MNIST
 parser.add_argument('--stage1_lr_step', default=20, type=float, help='learning rate Decay step')  # works for MNIST
@@ -60,7 +60,7 @@ parser.add_argument('--plot_quality', default=200, type=int, help='DPI of plot f
 
 # histogram figures for Energy model analysis
 parser.add_argument('--hist_bins', default=100, type=int, help='divided into n bins')
-parser.add_argument('--hist_norm', default = True, action='store_true', help='if norm the frequency to [0,1]')
+parser.add_argument('--hist_norm', default=True, action='store_true', help='if norm the frequency to [0,1]')
 parser.add_argument('--hist_save', action='store_true', help='if save the histogram figures')
 parser.add_argument('--hist_list', default=["norm_fea","normweight_fea2cen","cosine_fea2cen"],
                     type=str, nargs='+', help='what outputs to analysis')
@@ -195,7 +195,7 @@ def stage1_train(net, trainloader, optimizer, criterion, device):
 def stage1_test(net, testloader, device):
     correct = 0
     total = 0
-    norm_fea_list, normweight_fea2cen_list, cosine_fea2cen_list,softmax_list = [], [], []
+    norm_fea_list, normweight_fea2cen_list, cosine_fea2cen_list,softmax_list = [], [], [], [] 
     Target_list = []
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
