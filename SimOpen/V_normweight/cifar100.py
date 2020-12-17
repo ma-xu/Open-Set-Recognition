@@ -104,8 +104,8 @@ testset = CIFAR100(root='../../data', train=False, download=True, transform=tran
                    includes_all_train_class=args.includes_all_train_class)
 
 # data loader
-trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.bs, shuffle=True, num_workers=4)
-testloader = torch.utils.data.DataLoader(testset, batch_size=args.bs, shuffle=False, num_workers=4)
+trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.stage1_bs, shuffle=True, num_workers=4)
+testloader = torch.utils.data.DataLoader(testset, batch_size=args.stage1_bs, shuffle=False, num_workers=4)
 
 
 def main():
