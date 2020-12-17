@@ -195,7 +195,7 @@ def stage1_train(net, trainloader, optimizer, criterion, device):
 def stage1_test(net, testloader, device):
     correct = 0
     total = 0
-    norm_fea_list, normweight_fea2cen_list, cosine_fea2cen_list,softmax_list = [], [], [], [] 
+    norm_fea_list, normweight_fea2cen_list, cosine_fea2cen_list,softmax_list = [], [], [], []
     Target_list = []
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
@@ -206,7 +206,7 @@ def stage1_test(net, testloader, device):
             norm_fea_list.append(out["norm_fea"])
             normweight_fea2cen_list.append(out["normweight_fea2cen"])
             cosine_fea2cen_list.append(out["cosine_fea2cen"])
-            softmax_list.append(out["cosine_fea2cen"].softmax(dim=1).max(dim=1,keepdim=False))
+            softmax_list.append((out["cosine_fea2cen"].softmax(dim=1).max(dim=1,keepdim=False))[0])
             Target_list.append(targets)
 
             _, predicted = (out["normweight_fea2cen"]).max(1)
