@@ -68,7 +68,7 @@ parser.add_argument('--hist_list', default=["norm_fea","normweight_fea2cen","cos
 
 args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-args.checkpoint = './checkpoints/mnist/%s-%s-%s-dim%s-T%s' % (
+args.checkpoint = './checkpoints/cifar100/%s-%s-%s-dim%s-T%s' % (
     args.train_class_num, args.test_class_num, args.arch, args.embed_dim,args.temperature)
 if not os.path.isdir(args.checkpoint):
     mkdir_p(args.checkpoint)
