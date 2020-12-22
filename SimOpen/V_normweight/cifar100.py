@@ -62,8 +62,8 @@ parser.add_argument('--plot_quality', default=200, type=int, help='DPI of plot f
 parser.add_argument('--hist_bins', default=100, type=int, help='divided into n bins')
 parser.add_argument('--hist_norm', default=True, action='store_true', help='if norm the frequency to [0,1]')
 parser.add_argument('--hist_save', action='store_true', help='if save the histogram figures')
-parser.add_argument('--hist_list', default=["norm_fea","normweight_fea2cen","cosine_fea2cen"],
-                    type=str, nargs='+', help='what outputs to analysis')
+# parser.add_argument('--hist_list', default=["norm_fea","normweight_fea2cen","cosine_fea2cen"],
+#                     type=str, nargs='+', help='what outputs to analysis')
 
 
 args = parser.parse_args()
