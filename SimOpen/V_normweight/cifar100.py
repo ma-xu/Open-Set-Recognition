@@ -246,6 +246,7 @@ def stage1_test(net, testloader, device):
     normweight_fea2cen_list_energy = -args.temperature * \
                                      torch.logsumexp(normweight_fea2cen_list / args.temperature, dim=1, keepdim=False)
     energy_hist(normweight_fea2cen_list_energy, Target_list, args, "normweight_energy")
+    energy_hist(torch.logsumexp(normweight_fea2cen_list, dim=1, keepdim=False), Target_list, args, "normweight_noT_energy")
 
     energy_hist(cosine_fea2cen_list, Target_list, args, "cosine")
     cosine_fea2cen_list_energy = -args.temperature * \
