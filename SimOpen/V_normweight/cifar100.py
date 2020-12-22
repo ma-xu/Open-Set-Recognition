@@ -236,6 +236,10 @@ def stage1_test(net, testloader, device):
     cosine_fea2cen_list = torch.cat(cosine_fea2cen_list, dim=0)
     softmax_list = torch.cat(softmax_list, dim=0)
     Target_list = torch.cat(Target_list, dim=0)
+    print(f"Shape of norm_fea_list             is {norm_fea_list.shape}")
+    print(f"Shape of normweight_fea2cen_list   is {normweight_fea2cen_list.shape}")
+    print(f"Shape of cosine_fea2cen_list       is {cosine_fea2cen_list.shape}")
+    print(f"Shape of softmax_list              is {softmax_list.shape}")
 
     energy_hist(norm_fea_list, Target_list, args, "norm")
     norm_fea_list_energy = -args.temperature * \
