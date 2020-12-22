@@ -25,7 +25,7 @@ from MyPlotter import plot_feature
 from energy_hist import energy_hist
 
 
-# python3 cifar.py
+# python3 cifar.py --temperature 1 --hist_save
 
 model_names = sorted(name for name in models.__dict__
                      if not name.startswith("__")
