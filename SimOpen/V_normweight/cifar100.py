@@ -24,6 +24,9 @@ from DFPNet import DFPNet
 from MyPlotter import plot_feature
 from energy_hist import energy_hist
 
+
+# python3 cifar.py
+
 model_names = sorted(name for name in models.__dict__
                      if not name.startswith("__")
                      and callable(models.__dict__[name]))
@@ -235,13 +238,19 @@ def stage1_test(net, testloader, device):
     Target_list = torch.cat(Target_list, dim=0)
 
     energy_hist(norm_fea_list, Target_list, args, "norm")
-    energy_hist(torch.logsumexp(norm_fea_list, dim=1, keepdim=False), Target_list, args, "norm_energy")
+    norm_fea_list_energy = -args.temperature * \
+                           torch.logsumexp(norm_fea_list/args.temperature, dim=1, keepdim=False)
+    energy_hist(norm_fea_list_energy, Target_list, args, "norm_energy")
 
     energy_hist(normweight_fea2cen_list, Target_list, args, "normweight")
-    energy_hist(torch.logsumexp(normweight_fea2cen_list, dim=1, keepdim=False), Target_list, args, "normweight_energy")
+    normweight_fea2cen_list_energy = -args.temperature * \
+                                     torch.logsumexp(normweight_fea2cen_list / args.temperature, dim=1, keepdim=False)
+    energy_hist(normweight_fea2cen_list_energy, Target_list, args, "normweight_energy")
 
     energy_hist(cosine_fea2cen_list, Target_list, args, "cosine")
-    energy_hist(torch.logsumexp(cosine_fea2cen_list, dim=1, keepdim=False), Target_list, args, "cosine_energy")
+    cosine_fea2cen_list_energy = -args.temperature * \
+                                     torch.logsumexp(cosine_fea2cen_list / args.temperature, dim=1, keepdim=False)
+    energy_hist(cosine_fea2cen_list_energy, Target_list, args, "cosine_energy")
 
     energy_hist(softmax_list, Target_list, args, "softmax")
 
