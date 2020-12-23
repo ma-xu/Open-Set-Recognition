@@ -1,28 +1,21 @@
-"""
-Version2: includes centroids into model, and shares embedding layers.
-"""
-import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import backbones.cifar as models
-from Distance import Similarity, Distance
+from Distance import Similarity
+
 
 class DFPNet(nn.Module):
-    def __init__(self, backbone='ResNet18', num_classes=1000, embed_dim=512):
+    def __init__(self, backbone='ResNet18', num_classes=10, embed_dim=512):
         super(DFPNet, self).__init__()
         self.num_classes = num_classes
         self.backbone_name = backbone
-
         self.backbone = models.__dict__[backbone](num_classes=num_classes, backbone_fc=False)
         self.feat_dim = self.get_backbone_last_layer_out_channel()  # get the channel number of backbone output
         self.embed_dim = embed_dim
-
         self.embeddingLayer = nn.Sequential(
-            nn.PReLU(),
-            nn.Linear(self.feat_dim, self.feat_dim // 16, bias=False),
-            nn.PReLU(),
-            nn.Linear(self.feat_dim // 16, embed_dim, bias=False)
+            nn.Linear(self.feat_dim, self.embed_dim, bias=False),
+            nn.PReLU()
         )
         self.centroids = nn.Parameter(torch.randn(num_classes, embed_dim))
         nn.init.xavier_uniform_(self.centroids)
@@ -46,36 +39,38 @@ class DFPNet(nn.Module):
 
     def forward(self, x):
         x = self.backbone(x)
-        gap = (F.adaptive_avg_pool2d(x, 1)).view(x.size(0), -1)
-        embed_fea = self.embeddingLayer(gap)
-        norm_fea = torch.norm(embed_fea, dim=1, p=2,keepdim=True)
-        embed_fea_normed = F.normalize(embed_fea, dim=1, p=2)
-        centroids = self.centroids
-        centroids_normed = F.normalize(centroids, dim=1, p=2)
+        gap = (F.adaptive_avg_pool2d(x, 1)).view(x.size(0), -1)  # [n, backbone_c]
+        embed_fea = self.embeddingLayer(gap)  # [n, embed_dim]
+        norm_fea = torch.norm(embed_fea, dim=1, p=2, keepdim=True)  # norm length for each image [n,1]
+        embed_fea_normed = F.normalize(embed_fea, dim=1, p=2)  # [n, embed_dim]
+        centroids = self.centroids  # [class, embed_dim]
+        centroids_normed = F.normalize(centroids, dim=1, p=2)  # [class, embed_dim]
         SIMI = Similarity()
-        # dotproduct: X*W = ||X|| * ||W|| * cos(X,W)  ignoring transposition operation
+        # dotproduct: X*W = ||X|| * ||W|| * cos(X,W)  # [n,class]
         dotproduct_fea2cen = getattr(SIMI, "dotproduct")(embed_fea, centroids)
-        # cosine: cos(X,W)   ignoring transposition operation
+        # cosine: cos(X,W)  # [n,class]
         cosine_fea2cen = getattr(SIMI, "dotproduct")(embed_fea_normed, centroids_normed)
-        # normweight: ||X|| * cos(X,W)
+        # normweight: ||X|| * cos(X,W)  # [n,class]
         normweight_fea2cen = getattr(SIMI, "dotproduct")(embed_fea, centroids_normed)
 
+        energy = torch.logsumexp(normweight_fea2cen, dim=1, keepdim=False)  # [n]
 
         return {
             "gap": gap,  # [n,self.feat_dim] gap extracted by backbone
             "embed_fea": embed_fea,  # [n,embed_dim] embedded features
-            "norm_fea": norm_fea, # [n,1]  the norm value of one images features, keepdim for post-processing
+            "norm_fea": norm_fea,  # [n,1]  the norm value of one images features, keepdim for post-processing
             "dotproduct_fea2cen": dotproduct_fea2cen,  # [n,num_classes]
             "cosine_fea2cen": cosine_fea2cen,  # [n,num_classes]
-            "normweight_fea2cen": normweight_fea2cen
+            "normweight_fea2cen": normweight_fea2cen,
+            "energy": energy
         }
 
 
 def demo():
     x = torch.rand([3, 3, 32, 32])
-    y = torch.rand([6, 3, 32, 32])
     net = DFPNet('ResNet18', num_classes=10, embed_dim=64)
     output = net(x)
     print(output)
 
-# demo()
+
+demo()
