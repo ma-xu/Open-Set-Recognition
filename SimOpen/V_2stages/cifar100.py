@@ -68,6 +68,9 @@ parser.add_argument('--hist_save', action='store_true', help='if save the histog
 #                     type=str, nargs='+', help='what outputs to analysis')
 
 
+# parameters for mixup
+parser.add_argument('--mixup', default=1., type=float, help='the parameters for mixup')
+
 args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 args.checkpoint = './checkpoints/cifar100/%s-%s-%s-dim%s-T%s' % (
@@ -269,18 +272,17 @@ def stage1_test(net, testloader, device):
 def stage1_validate(net, trainloader, mixuploader, device):
     print("validating mixup ...")
     with torch.no_grad():
+        batch_idx = 0
         for (inputs, targets), (inputs_bak, targets_bak) in zip(trainloader, mixuploader):
+            batch_idx += 1
             inputs, targets = inputs.to(device), targets.to(device)
             inputs_bak, targets_bak = inputs_bak.to(device), targets_bak.to(device)
+            minxed = mixup(inputs, targets, inputs_bak, targets_bak, args)
+            out_known = net(inputs)
+            out_unkown = net(minxed)
 
-            dis_matchers = ~targets.eq(targets_bak)
-            mix1 = inputs[dis_matchers]
-            mix2 = inputs_bak[dis_matchers]
-            print(mix1.shape)
-            print(mix2.shape)
+            progress_bar(batch_idx, len(trainloader))
 
-
-            print(f"matching {dis_matchers.sum().item()}/{args.stage1_bs}...")
 
 
 
@@ -295,6 +297,14 @@ def save_model(net, epoch, path, **kwargs):
         state[key] = value
     torch.save(state, path)
 
+def mixup(inputs, targets, inputs_bak, targets_bak, args):
+    dis_matchers = ~targets.eq(targets_bak)
+    mix1 = inputs[dis_matchers]
+    mix2 = inputs_bak[dis_matchers]
+    lam = np.random.beta(args.mixup, args.mixup)
+    lam = max(0.1, min(lam, 0.9))
+    mixed = lam * mix1 + (1. - lam) * mix2
+    return mixed
 
 if __name__ == '__main__':
     main()
