@@ -242,14 +242,14 @@ def stage1_test(net, testloader, device):
     energy_hist(norm_fea_list.max(dim=1, keepdim=False)[0], Target_list, args, "norm")
 
     energy_hist(normweight_fea2cen_list.max(dim=1, keepdim=False)[0], Target_list, args, "normweight")
-    normweight_fea2cen_list_energy = -args.temperature * \
+    normweight_fea2cen_list_energy = args.temperature * \
                                      torch.logsumexp(normweight_fea2cen_list / args.temperature, dim=1, keepdim=False)
     energy_hist(normweight_fea2cen_list_energy, Target_list, args, "normweight_energy")
     energy_hist(torch.logsumexp(normweight_fea2cen_list, dim=1, keepdim=False), Target_list, args,
                 "normweight_noT_energy")
 
     energy_hist(cosine_fea2cen_list.max(dim=1, keepdim=False)[0], Target_list, args, "cosine")
-    cosine_fea2cen_list_energy = -args.temperature * \
+    cosine_fea2cen_list_energy = args.temperature * \
                                  torch.logsumexp(cosine_fea2cen_list / args.temperature, dim=1, keepdim=False)
     energy_hist(cosine_fea2cen_list_energy, Target_list, args, "cosine_energy")
 
