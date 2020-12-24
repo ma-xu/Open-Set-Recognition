@@ -273,12 +273,14 @@ def stage1_validate(net, trainloader, mixuploader, device):
             inputs, targets = inputs.to(device), targets.to(device)
             inputs_bak, targets_bak = inputs_bak.to(device), targets_bak.to(device)
 
-            dis_matchers = (~targets.eq(targets_bak)).sum().item
-            mix1 = inputs[dis_matchers, :]
-            mix2 = inputs_bak[dis_matchers, :]
+            dis_matchers = ~targets.eq(targets_bak)
+            mix1 = inputs[dis_matchers]
+            mix2 = inputs_bak[dis_matchers]
+            print(mix1.shape)
+            print(mix2.shape)
 
 
-            print(f"matching {dis_matchers}/{args.stage1_bs}...")
+            print(f"matching {dis_matchers.sum().item}/{args.stage1_bs}...")
 
 
 
