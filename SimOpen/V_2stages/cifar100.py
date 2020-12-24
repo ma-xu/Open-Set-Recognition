@@ -281,11 +281,7 @@ def stage1_validate(net, trainloader, mixuploader, device):
             out_known = net(inputs)
             out_unkown = net(minxed)
 
-            progress_bar(batch_idx, len(trainloader))
-
-
-
-
+            progress_bar(batch_idx, len(trainloader),"{batch_idx}")
 
 
 def save_model(net, epoch, path, **kwargs):
@@ -296,6 +292,7 @@ def save_model(net, epoch, path, **kwargs):
     for key, value in kwargs.items():
         state[key] = value
     torch.save(state, path)
+
 
 def mixup(inputs, targets, inputs_bak, targets_bak, args):
     dis_matchers = ~targets.eq(targets_bak)
