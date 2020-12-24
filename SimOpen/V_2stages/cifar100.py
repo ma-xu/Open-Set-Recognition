@@ -24,7 +24,6 @@ from DFPNet import DFPNet
 from MyPlotter import plot_feature
 from energy_hist import energy_hist
 
-
 # python3 cifar100.py --temperature 1 --hist_save
 
 model_names = sorted(name for name in models.__dict__
@@ -72,7 +71,7 @@ parser.add_argument('--hist_save', action='store_true', help='if save the histog
 args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 args.checkpoint = './checkpoints/cifar100/%s-%s-%s-dim%s-T%s' % (
-    args.train_class_num, args.test_class_num, args.arch, args.embed_dim,args.temperature)
+    args.train_class_num, args.test_class_num, args.arch, args.embed_dim, args.temperature)
 if not os.path.isdir(args.checkpoint):
     mkdir_p(args.checkpoint)
 
@@ -92,23 +91,21 @@ transform_train = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
 ])
-
 transform_test = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
 ])
-
 trainset = CIFAR100(root='../../data', train=True, download=True, transform=transform_train,
                     train_class_num=args.train_class_num, test_class_num=args.test_class_num,
                     includes_all_train_class=args.includes_all_train_class)
-
 testset = CIFAR100(root='../../data', train=False, download=True, transform=transform_test,
                    train_class_num=args.train_class_num, test_class_num=args.test_class_num,
                    includes_all_train_class=args.includes_all_train_class)
-
 # data loader
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.stage1_bs, shuffle=True, num_workers=4)
 testloader = torch.utils.data.DataLoader(testset, batch_size=args.stage1_bs, shuffle=False, num_workers=4)
+### for mixup loader
+mixuploader = torch.utils.data.DataLoader(trainset, batch_size=args.stage1_bs, shuffle=True, num_workers=4)
 
 
 def main():
@@ -118,13 +115,9 @@ def main():
 
 def main_stage1():
     print(f"\nStart Stage-1 training ...\n")
-    # for  initializing backbone, two branches, and centroids.
     start_epoch = 0  # start from epoch 0 or last checkpoint epoch
-
-    # Model
     print('==> Building model..')
     net = DFPNet(backbone=args.arch, num_classes=args.train_class_num, embed_dim=args.embed_dim)
-
     net = net.to(device)
     if device == 'cuda':
         net = torch.nn.DataParallel(net)
@@ -146,10 +139,11 @@ def main_stage1():
 
     # after resume
     criterion = DFPLoss(temperature=args.temperature)
-    optimizer = optim.SGD(net.parameters(), lr=args.stage1_lr, momentum=0.9, weight_decay=5e-4)
+    optimizer = torch.optim.SGD(net.parameters(), lr=args.stage1_lr, momentum=0.9, weight_decay=5e-4)
     if not args.evaluate:
         for epoch in range(start_epoch, args.stage1_es):
-            adjust_learning_rate(optimizer, epoch, args.stage1_lr, factor=args.stage1_lr_factor, step=args.stage1_lr_step)
+            adjust_learning_rate(optimizer, epoch, args.stage1_lr,
+                                 factor=args.stage1_lr_factor, step=args.stage1_lr_step)
             print('\nStage_1 Epoch: %d | Learning rate: %f ' % (epoch + 1, optimizer.param_groups[0]['lr']))
             train_out = stage1_train(net, trainloader, optimizer, criterion, device)
             save_model(net, epoch, os.path.join(args.checkpoint, 'stage_1_last_model.pth'))
@@ -162,8 +156,9 @@ def main_stage1():
         logger.close()
         print(f"\nFinish Stage-1 training...\n")
 
-    print("===> Evaluating ...")
+    print("===> Evaluating stage-1 ...")
     stage1_test(net, testloader, device)
+    stage1_validate(net, trainloader, mixuploader, device)
 
     return {
         "net": net
@@ -208,18 +203,18 @@ def stage1_train(net, trainloader, optimizer, criterion, device):
 def stage1_test(net, testloader, device):
     correct = 0
     total = 0
-    norm_fea_list, normweight_fea2cen_list, cosine_fea2cen_list,softmax_list = [], [], [], []
+    norm_fea_list, normweight_fea2cen_list, cosine_fea2cen_list, softmax_list = [], [], [], []
     Target_list = []
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
-            out = net(inputs) # shape [batch,class]
+            out = net(inputs)  # shape [batch,class]
             # energy = (out["normweight_fea2cen"]).sum(dim=1, keepdim=False)
             # energy = torch.logsumexp(out["normweight_fea2cen"], dim=1, keepdim=False)
             norm_fea_list.append(out["norm_fea"])
             normweight_fea2cen_list.append(out["normweight_fea2cen"])
             cosine_fea2cen_list.append(out["cosine_fea2cen"])
-            softmax_list.append((out["cosine_fea2cen"].softmax(dim=1).max(dim=1,keepdim=False))[0])
+            softmax_list.append((out["cosine_fea2cen"].softmax(dim=1).max(dim=1, keepdim=False))[0])
             Target_list.append(targets)
 
             _, predicted = (out["normweight_fea2cen"]).max(1)
@@ -241,17 +236,18 @@ def stage1_test(net, testloader, device):
     print(f"Shape of cosine_fea2cen_list       is {cosine_fea2cen_list.shape}")
     print(f"Shape of softmax_list              is {softmax_list.shape}")
 
-    energy_hist(norm_fea_list.max(dim=1,keepdim=False)[0], Target_list, args, "norm")
+    energy_hist(norm_fea_list.max(dim=1, keepdim=False)[0], Target_list, args, "norm")
 
-    energy_hist(normweight_fea2cen_list.max(dim=1,keepdim=False)[0], Target_list, args, "normweight")
+    energy_hist(normweight_fea2cen_list.max(dim=1, keepdim=False)[0], Target_list, args, "normweight")
     normweight_fea2cen_list_energy = -args.temperature * \
                                      torch.logsumexp(normweight_fea2cen_list / args.temperature, dim=1, keepdim=False)
     energy_hist(normweight_fea2cen_list_energy, Target_list, args, "normweight_energy")
-    energy_hist(torch.logsumexp(normweight_fea2cen_list, dim=1, keepdim=False), Target_list, args, "normweight_noT_energy")
+    energy_hist(torch.logsumexp(normweight_fea2cen_list, dim=1, keepdim=False), Target_list, args,
+                "normweight_noT_energy")
 
-    energy_hist(cosine_fea2cen_list.max(dim=1,keepdim=False)[0], Target_list, args, "cosine")
+    energy_hist(cosine_fea2cen_list.max(dim=1, keepdim=False)[0], Target_list, args, "cosine")
     cosine_fea2cen_list_energy = -args.temperature * \
-                                     torch.logsumexp(cosine_fea2cen_list / args.temperature, dim=1, keepdim=False)
+                                 torch.logsumexp(cosine_fea2cen_list / args.temperature, dim=1, keepdim=False)
     energy_hist(cosine_fea2cen_list_energy, Target_list, args, "cosine_energy")
 
     energy_hist(softmax_list, Target_list, args, "softmax")
@@ -268,6 +264,19 @@ def stage1_test(net, testloader, device):
     #                            max=Energy_list.max().data)
     # print(f"unknown_hist: \n{unknown_hist}")
     # print(f"known_hist: \n{known_hist}")
+
+
+def stage1_validate(net, trainloader, mixuploader, device):
+    print("validating mixup ...")
+    with torch.no_grad():
+        for (inputs, targets), (inputs2, targets2) in zip(trainloader, mixuploader):
+            inputs, targets = inputs.to(device), targets.to(device)
+            inputs2, targets2 = inputs2.to(device), targets2.to(device)
+
+            matchers = targets.eq(targets2).sum().item()
+            print(f"matching {matchers}/{args.stage1_bs}...")
+
+
 
 
 
