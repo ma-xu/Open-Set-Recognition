@@ -22,7 +22,7 @@ from Utils import adjust_learning_rate, progress_bar, Logger, mkdir_p, Evaluatio
 from DFPLoss import DFPLoss
 from DFPNet import DFPNet
 from MyPlotter import plot_feature
-from energy_hist import energy_hist
+from energy_hist import energy_hist, energy_hist_sperate
 
 # python3 cifar100.py --temperature 1 --hist_save
 
@@ -271,18 +271,23 @@ def stage1_test(net, testloader, device):
 
 def stage1_validate(net, trainloader, mixuploader, device):
     print("validating mixup ...")
+    known_energy, unknown_energy = [], []
     with torch.no_grad():
         batch_idx = 0
         for (inputs, targets), (inputs_bak, targets_bak) in zip(trainloader, mixuploader):
             batch_idx += 1
             inputs, targets = inputs.to(device), targets.to(device)
             inputs_bak, targets_bak = inputs_bak.to(device), targets_bak.to(device)
-            minxed = mixup(inputs, targets, inputs_bak, targets_bak, args)
+            mixed = mixup(inputs, targets, inputs_bak, targets_bak, args)
             out_known = net(inputs)
-            out_unkown = net(minxed)
+            out_unkown = net(mixed)
+            known_energy.append(out_known["energy"])
+            unknown_energy.append(out_unkown["energy"])
+            progress_bar(batch_idx, len(trainloader))
 
-            progress_bar(batch_idx, len(trainloader),"{batch_idx}")
-
+    known_energy = torch.cat(known_energy,dim=0)
+    unknown_energy = torch.cat(unknown_energy, dim=0)
+    energy_hist_sperate(known_energy, unknown_energy, args, "mixed")
 
 def save_model(net, epoch, path, **kwargs):
     state = {

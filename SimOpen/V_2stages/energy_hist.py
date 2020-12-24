@@ -29,6 +29,26 @@ def energy_hist(Out_list: torch.Tensor, Target_list:torch.Tensor, args, name:str
     print(f"{name} processed.")
 
 
+def energy_hist_sperate(known: torch.Tensor, unknown:torch.Tensor, args, name:str):
+    min_value = min(known.min().data, unknown.min().data)
+    max_value = max(known.max().data, unknown.max().data)
+    unknown_hist = torch.histc(known, bins=args.hist_bins, min=min_value, max=max_value)
+    known_hist = torch.histc(unknown, bins=args.hist_bins, min=min_value, max=max_value)
+    if args.hist_norm:
+        unknown_hist = unknown_hist/(unknown_hist.sum())
+        known_hist = known_hist/(known_hist.sum())
+        name += "_normed"
+    if args.hist_save:
+        plot_bar(unknown_hist, known_hist, args, name)
+    torch.save(
+        {"unknown": unknown_hist,
+         "known": known_hist,
+         },
+        os.path.join(args.histfolder, name + '.pkl')
+    )
+    print(f"{name} processed.")
+
+
 def plot_bar(unknown_hist, known_hist, args, name):
     x = np.arange(args.hist_bins)
     unknown_hist = unknown_hist.data.cpu().numpy()
