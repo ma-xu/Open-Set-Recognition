@@ -280,7 +280,7 @@ def stage1_validate(net, trainloader, mixuploader, device):
             print(mix2.shape)
 
 
-            print(f"matching {dis_matchers.sum().item}/{args.stage1_bs}...")
+            print(f"matching {dis_matchers.sum().item()}/{args.stage1_bs}...")
 
 
 
