@@ -269,12 +269,16 @@ def stage1_test(net, testloader, device):
 def stage1_validate(net, trainloader, mixuploader, device):
     print("validating mixup ...")
     with torch.no_grad():
-        for (inputs, targets), (inputs2, targets2) in zip(trainloader, mixuploader):
+        for (inputs, targets), (inputs_bak, targets_bak) in zip(trainloader, mixuploader):
             inputs, targets = inputs.to(device), targets.to(device)
-            inputs2, targets2 = inputs2.to(device), targets2.to(device)
+            inputs_bak, targets_bak = inputs_bak.to(device), targets_bak.to(device)
 
-            matchers = targets.eq(targets2).sum().item()
-            print(f"matching {matchers}/{args.stage1_bs}...")
+            dis_matchers = (~targets.eq(targets_bak)).sum().item
+            mix1 = inputs[dis_matchers]
+            mix2 = inputs_bak[dis_matchers]
+
+
+            print(f"matching {dis_matchers}/{args.stage1_bs}...")
 
 
 
