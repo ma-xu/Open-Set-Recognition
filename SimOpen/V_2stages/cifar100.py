@@ -323,7 +323,7 @@ def main_stage2(net, mid_energy):
             print("=> no checkpoint found at '{}'".format(args.resume))
     else:
         logger = Logger(os.path.join(args.checkpoint, 'log_stage2.txt'))
-        logger.set_names(['Epoch', 'Train Loss', 'Class Loss', 'Energy Loss' 'Train Acc.'])
+        logger.set_names(['Epoch', 'Train Loss', 'Class Loss', 'Energy Loss', 'Train Acc.'])
 
     # after resume
     criterion = DFPEnergyLoss(mid_known=mid_energy["mid_known"], mid_unknown=mid_energy["mid_unknown"],
