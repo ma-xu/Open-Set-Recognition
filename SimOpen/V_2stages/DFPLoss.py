@@ -50,6 +50,7 @@ class DFPEnergyLoss(nn.Module):
         energy_unknown = net_out_unknown["energy"]
         loss_energy_known = (F.relu(self.mid_known-energy_known,inplace=True).pow(2).sum()) / (energy_known.shape[0])
         loss_energy_unknown = (F.relu(energy_unknown-self.mid_unknown, inplace=True).pow(2).sum()) / (energy_unknown.shape[0])
+        print(f"loss_energy_known: {loss_energy_known} | loss_energy_unknown: {loss_energy_unknown}")
         loss_energy = loss_energy_known + loss_energy_unknown
         loss_energy = self.alpha*loss_energy
         total = loss_classification + loss_energy
