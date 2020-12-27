@@ -48,6 +48,9 @@ class DFPEnergyLoss(nn.Module):
 
         energy_known = net_out["energy"]
         energy_unknown = net_out_unknown["energy"]
+        print(f"self.mid_known-energy_known is {self.mid_known-energy_known}")
+        print(f"max(0, self.mid_known-energy_known) is {max(0, self.mid_known-energy_known)}")
+        print(f"(max(0, self.mid_known-energy_known)).pow(2) is {(max(0, self.mid_known-energy_known)).pow(2)}")
         loss_energy = (max(0, self.mid_known-energy_known)).pow(2) \
                       + (max(0, energy_unknown-self.mid_unknown)).pow(2)
         loss_energy = self.alpha*loss_energy
