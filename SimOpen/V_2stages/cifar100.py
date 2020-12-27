@@ -285,8 +285,10 @@ def stage1_validate(net, trainloader, mixuploader, device):
             unknown_energy.append(out_unkown["energy"])
             progress_bar(batch_idx, len(trainloader))
 
-    known_energy = torch.cat(known_energy,dim=0)
+    known_energy = torch.cat(known_energy, dim=0)
+    print(f"known_energy shape {known_energy.shape}")
     unknown_energy = torch.cat(unknown_energy, dim=0)
+    print(f"unknown_energy shape {unknown_energy.shape}")
     energy_hist_sperate(known_energy, unknown_energy, args, "mixed")
 
 def save_model(net, epoch, path, **kwargs):
