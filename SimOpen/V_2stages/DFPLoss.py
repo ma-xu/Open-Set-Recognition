@@ -35,7 +35,7 @@ class DFPLoss(nn.Module):
 
 class DFPEnergyLoss(nn.Module):
     def __init__(self, mid_known, mid_unknown, temperature=1, alpha=1.0):
-        super(DFPLoss, self).__init__()
+        super(DFPEnergyLoss, self).__init__()
         self.mid_known = mid_known
         self.mid_unknown = mid_unknown
         self.temperature = temperature
