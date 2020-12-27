@@ -33,32 +33,6 @@ class DFPLoss(nn.Module):
         #     "distance": loss_distance
         # }
 
-class DFPEnergyLoss(nn.Module):
-    def __init__(self, mid_known, mid_unknown, temperature=1, alpha=1.0):
-        super(DFPLoss, self).__init__()
-        self.mid_known = mid_known
-        self.mid_unknown = mid_unknown
-        self.temperature = temperature
-        self.alpha = alpha
-        self.ce = nn.CrossEntropyLoss()
-
-    def forward(self, net_out, targets,net_out_unknown):
-        sim_classification = net_out["normweight_fea2cen"]  # [n, class_num];
-        loss_classification = self.ce(sim_classification/self.temperature, targets)
-
-        energy_known = net_out["energy"]
-        energy_unknown = net_out_unknown["energy"]
-        loss_energy = (max(0, self.mid_known-energy_known)).pow(2) \
-                      + (max(0, energy_unknown-self.mid_unknown)).pow(2)
-        loss_energy = self.alpha*loss_energy
-        total = loss_classification + loss_energy
-
-        return {
-            "total": total,
-            "loss_classification": loss_classification,
-            "loss_energy": loss_energy
-        }
-
 
 def demo():
     n = 3

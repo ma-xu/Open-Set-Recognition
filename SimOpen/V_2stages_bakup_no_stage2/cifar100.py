@@ -19,7 +19,7 @@ sys.path.append("../..")
 import backbones.cifar as models
 from datasets import CIFAR100
 from Utils import adjust_learning_rate, progress_bar, Logger, mkdir_p, Evaluation
-from DFPLoss import DFPLoss, DFPEnergyLoss
+from DFPLoss import DFPLoss
 from DFPNet import DFPNet
 from MyPlotter import plot_feature
 from energy_hist import energy_hist, energy_hist_sperate
@@ -46,12 +46,11 @@ parser.add_argument('--embed_dim', default=512, type=int, help='embedding featur
 
 # Parameters for optimizer
 parser.add_argument('--temperature', default=1, type=int, help='scaling cosine distance for exp')
-parser.add_argument('--alpha', default=1., type=float, help='balance for classfication and energy loss')
 
 # Parameters for stage 1 training
 parser.add_argument('--stage1_resume', default='', type=str, metavar='PATH', help='path to latest checkpoint')
 parser.add_argument('--stage1_es', default=100, type=int, help='epoch size')
-parser.add_argument('--stage1_lr', default=0.1, type=float, help='learning rate')
+parser.add_argument('--stage1_lr', default=0.1, type=float, help='learning rate')  # works for MNIST
 parser.add_argument('--stage1_lr_factor', default=0.1, type=float, help='learning rate Decay factor')  # works for MNIST
 parser.add_argument('--stage1_lr_step', default=30, type=float, help='learning rate Decay step')  # works for MNIST
 parser.add_argument('--stage1_bs', default=128, type=int, help='batch size')
@@ -71,16 +70,6 @@ parser.add_argument('--hist_save', action='store_true', help='if save the histog
 
 # parameters for mixup
 parser.add_argument('--mixup', default=1., type=float, help='the parameters for mixup')
-
-
-# Parameters for stage 1 training
-parser.add_argument('--stage2_resume', default='', type=str, metavar='PATH', help='path to latest checkpoint')
-parser.add_argument('--stage2_es', default=100, type=int, help='epoch size')
-parser.add_argument('--stage2_lr', default=0.1, type=float, help='learning rate')
-parser.add_argument('--stage2_lr_factor', default=0.1, type=float, help='learning rate Decay factor')  # works for MNIST
-parser.add_argument('--stage2_lr_step', default=30, type=float, help='learning rate Decay step')  # works for MNIST
-parser.add_argument('--stage2_bs', default=128, type=int, help='batch size')
-
 
 args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -310,34 +299,31 @@ def stage1_validate(net, trainloader, mixuploader, device):
 
 def main_stage2(net, mid_energy):
     print("Starting stage-2 fine-tuning ...")
-    start_epoch = 0
     if args.stage2_resume:
         # Load checkpoint.
-        if os.path.isfile(args.stage2_resume):
+        if os.path.isfile(args.stage1_resume):
             print('==> Resuming from checkpoint..')
-            checkpoint = torch.load(args.stage2_resume)
+            checkpoint = torch.load(args.stage1_resume)
             net.load_state_dict(checkpoint['net'])
             start_epoch = checkpoint['epoch']
-            logger = Logger(os.path.join(args.checkpoint, 'log_stage2.txt'), resume=True)
+            logger = Logger(os.path.join(args.checkpoint, 'log_stage1.txt'), resume=True)
         else:
             print("=> no checkpoint found at '{}'".format(args.resume))
     else:
-        logger = Logger(os.path.join(args.checkpoint, 'log_stage2.txt'))
-        logger.set_names(['Epoch', 'Train Loss', 'Class Loss', 'Energy Loss' 'Train Acc.'])
+        logger = Logger(os.path.join(args.checkpoint, 'log_stage1.txt'))
+        logger.set_names(['Epoch', 'Train Loss', 'Train Acc.'])
 
     # after resume
-    criterion = DFPEnergyLoss(mid_known=mid_energy["mid_known"], mid_unknown=mid_energy["mid_unknown"],
-                              alpha=args.alpha, temperature=args.temperature)
-    optimizer = torch.optim.SGD(net.parameters(), lr=args.stage2_lr, momentum=0.9, weight_decay=5e-4)
+    criterion = DFPLoss(temperature=args.temperature)
+    optimizer = torch.optim.SGD(net.parameters(), lr=args.stage1_lr, momentum=0.9, weight_decay=5e-4)
     if not args.evaluate:
-        for epoch in range(start_epoch, args.stage2_es):
-            adjust_learning_rate(optimizer, epoch, args.stage2_lr,
-                                 factor=args.stage2_lr_factor, step=args.stage2_lr_step)
-            print('\nStage_2 Epoch: %d | Learning rate: %f ' % (epoch + 1, optimizer.param_groups[0]['lr']))
-            train_out = stage2_train(net, trainloader, optimizer, criterion, device)
-            save_model(net, epoch, os.path.join(args.checkpoint, 'stage_2_last_model.pth'))
-            logger.append([epoch + 1, train_out["train_loss"], train_out["loss_classification"],
-                           train_out["loss_energy"], train_out["accuracy"]])
+        for epoch in range(start_epoch, args.stage1_es):
+            adjust_learning_rate(optimizer, epoch, args.stage1_lr,
+                                 factor=args.stage1_lr_factor, step=args.stage1_lr_step)
+            print('\nStage_1 Epoch: %d | Learning rate: %f ' % (epoch + 1, optimizer.param_groups[0]['lr']))
+            train_out = stage1_train(net, trainloader, optimizer, criterion, device)
+            save_model(net, epoch, os.path.join(args.checkpoint, 'stage_1_last_model.pth'))
+            logger.append([epoch + 1, train_out["train_loss"], train_out["accuracy"]])
             if args.plot:
                 plot_feature(net, args, trainloader, device, args.plotfolder, epoch=epoch,
                              plot_class_num=args.train_class_num, plot_quality=args.plot_quality)
@@ -345,49 +331,6 @@ def main_stage2(net, mid_energy):
                              plot_class_num=args.train_class_num + 1, plot_quality=args.plot_quality, testmode=True)
         logger.close()
         print(f"\nFinish Stage-1 training...\n")
-
-        print("===> Evaluating stage-2 ...")
-        stage1_test(net, testloader, device)
-
-# Training
-def stage2_train(net, trainloader, optimizer, criterion, device):
-    net.train()
-    train_loss = 0
-    loss_classification = 0
-    loss_energy = 0
-    correct = 0
-    total = 0
-    batch_idx = 0
-    for (inputs, targets), (inputs_bak, targets_bak) in zip(trainloader, mixuploader):
-        batch_idx += 1
-        inputs, targets = inputs.to(device), targets.to(device)
-        inputs_bak, targets_bak = inputs_bak.to(device), targets_bak.to(device)
-        mixed = mixup(inputs, targets, inputs_bak, targets_bak, args)
-        optimizer.zero_grad()
-        out = net(inputs)
-        out_unkown = net(mixed)
-        loss_dict = criterion(out, targets, out_unkown)
-        loss = loss_dict['total']
-        loss.backward()
-        optimizer.step()
-
-        train_loss += loss.item()
-        loss_classification += (loss_dict['loss_classification']).item()
-        loss_energy += (loss_dict['loss_energy']).item()
-
-        _, predicted = (out['normweight_fea2cen']).max(1)
-        total += targets.size(0)
-        correct += predicted.eq(targets).sum().item()
-
-        progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
-                     % (train_loss / (batch_idx + 1), 100. * correct / total, correct, total))
-    return {
-        "train_loss": train_loss / (batch_idx + 1),
-        "loss_classification": loss_classification / (batch_idx + 1),
-        "loss_energy": loss_energy / (batch_idx + 1),
-        "accuracy": correct / total
-    }
-
 
 
 def save_model(net, epoch, path, **kwargs):
