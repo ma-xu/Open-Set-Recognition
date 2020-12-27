@@ -58,7 +58,9 @@ class DFPEnergyLoss(nn.Module):
         return {
             "total": total,
             "loss_classification": loss_classification,
-            "loss_energy": loss_energy
+            "loss_energy": loss_energy,
+            "loss_energy_known": loss_energy_known,
+            "loss_energy_unknown": loss_energy_unknown
         }
 
 

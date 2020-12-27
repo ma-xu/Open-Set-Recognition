@@ -323,7 +323,7 @@ def main_stage2(net, mid_energy):
             print("=> no checkpoint found at '{}'".format(args.resume))
     else:
         logger = Logger(os.path.join(args.checkpoint, 'log_stage2.txt'))
-        logger.set_names(['Epoch', 'Train Loss', 'Class Loss', 'Energy Loss', 'Train Acc.'])
+        logger.set_names(['Epoch', 'Train Loss', 'Class Loss', 'Energy Loss','Energy Known', 'Energy Unknown', 'Train Acc.'])
 
     # after resume
     criterion = DFPEnergyLoss(mid_known=mid_energy["mid_known"], mid_unknown=mid_energy["mid_unknown"],
@@ -337,7 +337,8 @@ def main_stage2(net, mid_energy):
             train_out = stage2_train(net, trainloader, optimizer, criterion, device)
             save_model(net, epoch, os.path.join(args.checkpoint, 'stage_2_last_model.pth'))
             logger.append([epoch + 1, train_out["train_loss"], train_out["loss_classification"],
-                           train_out["loss_energy"], train_out["accuracy"]])
+                           train_out["loss_energy"], train_out["loss_energy_known"],
+                           train_out["loss_energy_unknown"], train_out["accuracy"]])
             if args.plot:
                 plot_feature(net, args, trainloader, device, args.plotfolder, epoch=epoch,
                              plot_class_num=args.train_class_num, plot_quality=args.plot_quality)
@@ -349,12 +350,15 @@ def main_stage2(net, mid_energy):
         print("===> Evaluating stage-2 ...")
         stage1_test(net, testloader, device)
 
+
 # Training
 def stage2_train(net, trainloader, optimizer, criterion, device):
     net.train()
     train_loss = 0
     loss_classification = 0
     loss_energy = 0
+    loss_energy_known = 0
+    loss_energy_unknown = 0
     correct = 0
     total = 0
     batch_idx = 0
@@ -374,6 +378,8 @@ def stage2_train(net, trainloader, optimizer, criterion, device):
         train_loss += loss.item()
         loss_classification += (loss_dict['loss_classification']).item()
         loss_energy += (loss_dict['loss_energy']).item()
+        loss_energy_known += (loss_dict['loss_energy_known']).item()
+        loss_energy_unknown += (loss_dict['loss_energy_unknown']).item()
 
         _, predicted = (out['normweight_fea2cen']).max(1)
         total += targets.size(0)
@@ -385,6 +391,8 @@ def stage2_train(net, trainloader, optimizer, criterion, device):
         "train_loss": train_loss / (batch_idx + 1),
         "loss_classification": loss_classification / (batch_idx + 1),
         "loss_energy": loss_energy / (batch_idx + 1),
+        "loss_energy_known": loss_energy_known / (batch_idx + 1),
+        "loss_energy_unknown" loss_energy_unknown / (batch_idx + 1),
         "accuracy": correct / total
     }
 
