@@ -247,10 +247,6 @@ def stage1_test(net, testloader, device):
     cosine_fea2cen_list = torch.cat(cosine_fea2cen_list, dim=0)
     softmax_list = torch.cat(softmax_list, dim=0)
     Target_list = torch.cat(Target_list, dim=0)
-    print(f"Shape of norm_fea_list             is {norm_fea_list.shape}")
-    print(f"Shape of normweight_fea2cen_list   is {normweight_fea2cen_list.shape}")
-    print(f"Shape of cosine_fea2cen_list       is {cosine_fea2cen_list.shape}")
-    print(f"Shape of softmax_list              is {softmax_list.shape}")
 
     energy_hist(norm_fea_list.max(dim=1, keepdim=False)[0], Target_list, args, "norm")
 
@@ -267,19 +263,6 @@ def stage1_test(net, testloader, device):
     energy_hist(cosine_fea2cen_list_energy, Target_list, args, "cosine_energy")
 
     energy_hist(softmax_list, Target_list, args, "softmax")
-
-    # # Energy analysis
-    # Energy_list = torch.cat(Energy_list, dim=0)
-    # Target_list = torch.cat(Target_list, dim=0)
-    # unknown_label = Target_list.max()
-    # unknown_Energy_list = Energy_list[Target_list == unknown_label]
-    # known_Energy_list = Energy_list[Target_list != unknown_label]
-    # unknown_hist = torch.histc(unknown_Energy_list, bins=args.hist_bins, min=Energy_list.min().data,
-    #                            max=Energy_list.max().data)
-    # known_hist = torch.histc(known_Energy_list, bins=args.hist_bins, min=Energy_list.min().data,
-    #                            max=Energy_list.max().data)
-    # print(f"unknown_hist: \n{unknown_hist}")
-    # print(f"known_hist: \n{known_hist}")
 
 
 def stage1_validate(net, trainloader, mixuploader, device):
@@ -334,7 +317,7 @@ def main_stage2(net, mid_energy):
             adjust_learning_rate(optimizer, epoch, args.stage2_lr,
                                  factor=args.stage2_lr_factor, step=args.stage2_lr_step)
             print('\nStage_2 Epoch: %d | Learning rate: %f ' % (epoch + 1, optimizer.param_groups[0]['lr']))
-            train_out = stage2_train(net, trainloader, optimizer, criterion, device)
+            train_out = stage2_train(net, trainloader, mixuploader, optimizer, criterion, device)
             save_model(net, epoch, os.path.join(args.checkpoint, 'stage_2_last_model.pth'))
             logger.append([epoch + 1, train_out["train_loss"], train_out["loss_classification"],
                            train_out["loss_energy"], train_out["loss_energy_known"],
@@ -345,14 +328,14 @@ def main_stage2(net, mid_energy):
                 plot_feature(net, args, testloader, device, args.plotfolder, epoch="test" + str(epoch),
                              plot_class_num=args.train_class_num + 1, plot_quality=args.plot_quality, testmode=True)
         logger.close()
-        print(f"\nFinish Stage-1 training...\n")
+        print(f"\nFinish Stage-2 training...\n")
 
         print("===> Evaluating stage-2 ...")
-        stage1_test(net, testloader, device)
+        stage2_test(net, testloader, device)
 
 
 # Training
-def stage2_train(net, trainloader, optimizer, criterion, device):
+def stage2_train(net, trainloader,mixuploader, optimizer, criterion, device):
     net.train()
     train_loss = 0
     loss_classification = 0
@@ -392,10 +375,37 @@ def stage2_train(net, trainloader, optimizer, criterion, device):
         "loss_classification": loss_classification / (batch_idx + 1),
         "loss_energy": loss_energy / (batch_idx + 1),
         "loss_energy_known": loss_energy_known / (batch_idx + 1),
-        "loss_energy_unknown" loss_energy_unknown / (batch_idx + 1),
+        "loss_energy_unknown": loss_energy_unknown / (batch_idx + 1),
         "accuracy": correct / total
     }
 
+
+def stage2_test(net, testloader, trainloader, mixuploader, device ):
+    correct = 0
+    total = 0
+    energy_list = []
+    Target_list = []
+    with torch.no_grad():
+        for batch_idx, (inputs, targets) in enumerate(testloader):
+            inputs, targets = inputs.to(device), targets.to(device)
+            out = net(inputs)  # shape [batch,class]
+            energy_list.append(out["energy"])
+            Target_list.append(targets)
+
+            _, predicted = (out["normweight_fea2cen"]).max(1)
+            total += targets.size(0)
+            correct += predicted.eq(targets).sum().item()
+
+            progress_bar(batch_idx, len(testloader), '| Acc: %.3f%% (%d/%d)'
+                         % (100. * correct / total, correct, total))
+
+    print("\nTesting results is {:.2f}%".format(100. * correct / total))
+
+    energy_list = torch.cat(energy_list, dim=0)
+    Target_list = torch.cat(Target_list, dim=0)
+    energy_hist(energy_list, Target_list, args, "testing_energy")
+
+    stage1_validate(net, trainloader, mixuploader, device)
 
 
 def save_model(net, epoch, path, **kwargs):
