@@ -269,7 +269,7 @@ def stage1_validate(net, trainloader, mixuploader, device):
     print("validating mixup ...")
     known_energy, unknown_energy = [], []
     with torch.no_grad():
-        batch_idx = 0
+        batch_idx = -1
         for (inputs, targets), (inputs_bak, targets_bak) in zip(trainloader, mixuploader):
             batch_idx += 1
             inputs, targets = inputs.to(device), targets.to(device)
