@@ -73,7 +73,7 @@ parser.add_argument('--hist_save', action='store_true', help='if save the histog
 parser.add_argument('--mixup', default=1., type=float, help='the parameters for mixup')
 
 
-# Parameters for stage 1 training
+# Parameters for stage 2 training
 parser.add_argument('--stage2_resume', default='', type=str, metavar='PATH', help='path to latest checkpoint')
 parser.add_argument('--stage2_es', default=50, type=int, help='epoch size')
 parser.add_argument('--stage2_lr', default=0.01, type=float, help='learning rate')
@@ -322,7 +322,7 @@ def main_stage2(net, mid_energy):
         print(f"\nFinish Stage-2 training...\n")
 
         print("===> Evaluating stage-2 ...")
-        stage2_test(net, testloader, device)
+        stage2_test(net, testloader, trainloader, mixuploader, device)
 
 
 # Training
