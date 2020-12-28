@@ -331,11 +331,11 @@ def main_stage2(net, mid_energy):
         print(f"\nFinish Stage-2 training...\n")
 
         print("===> Evaluating stage-2 ...")
-        stage2_test(net, testloader, device)
+        stage2_test(net, testloader, trainloader, mixuploader, device)
 
 
 # Training
-def stage2_train(net, trainloader,mixuploader, optimizer, criterion, device):
+def stage2_train(net, trainloader, mixuploader, optimizer, criterion, device):
     net.train()
     train_loss = 0
     loss_classification = 0
