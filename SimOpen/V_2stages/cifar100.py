@@ -344,7 +344,7 @@ def stage2_train(net, trainloader, mixuploader, optimizer, criterion, device):
     loss_energy_unknown = 0
     correct = 0
     total = 0
-    batch_idx = 0
+    batch_idx = -1
     for (inputs, targets), (inputs_bak, targets_bak) in zip(trainloader, mixuploader):
         batch_idx += 1
         inputs, targets = inputs.to(device), targets.to(device)
