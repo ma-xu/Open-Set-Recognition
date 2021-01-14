@@ -50,10 +50,10 @@ parser.add_argument('--alpha', default=0.1, type=float, help='balance for classf
 
 # Parameters for stage 1 training
 parser.add_argument('--stage1_resume', default='', type=str, metavar='PATH', help='path to latest checkpoint')
-parser.add_argument('--stage1_es', default=25, type=int, help='epoch size')
+parser.add_argument('--stage1_es', default=15, type=int, help='epoch size')
 parser.add_argument('--stage1_lr', default=0.01, type=float, help='learning rate')
 parser.add_argument('--stage1_lr_factor', default=0.1, type=float, help='learning rate Decay factor')  # works for MNIST
-parser.add_argument('--stage1_lr_step', default=10, type=float, help='learning rate Decay step')  # works for MNIST
+parser.add_argument('--stage1_lr_step', default=6, type=float, help='learning rate Decay step')  # works for MNIST
 parser.add_argument('--stage1_bs', default=128, type=int, help='batch size')
 parser.add_argument('--evaluate', action='store_true', help='Evaluate without training')
 
@@ -75,10 +75,10 @@ parser.add_argument('--mixup', default=1., type=float, help='the parameters for 
 
 # Parameters for stage 2 training
 parser.add_argument('--stage2_resume', default='', type=str, metavar='PATH', help='path to latest checkpoint')
-parser.add_argument('--stage2_es', default=25, type=int, help='epoch size')
+parser.add_argument('--stage2_es', default=15, type=int, help='epoch size')
 parser.add_argument('--stage2_lr', default=0.001, type=float, help='learning rate')
 parser.add_argument('--stage2_lr_factor', default=0.1, type=float, help='learning rate Decay factor')  # works for MNIST
-parser.add_argument('--stage2_lr_step', default=10, type=float, help='learning rate Decay step')  # works for MNIST
+parser.add_argument('--stage2_lr_step', default=6, type=float, help='learning rate Decay step')  # works for MNIST
 parser.add_argument('--stage2_bs', default=128, type=int, help='batch size')
 
 
