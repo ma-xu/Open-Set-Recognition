@@ -209,16 +209,13 @@ def stage1_train(net, trainloader, optimizer, criterion, device):
 def stage1_test(net, testloader, device):
     correct = 0
     total = 0
-    norm_fea_list, normweight_fea2cen_list, cosine_fea2cen_list, softmax_list = [], [], [], []
+    normweight_fea2cen_list = []
     Target_list = []
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
             out = net(inputs)  # shape [batch,class]
-            norm_fea_list.append(out["norm_fea"])
             normweight_fea2cen_list.append(out["normweight_fea2cen"])
-            cosine_fea2cen_list.append(out["cosine_fea2cen"])
-            softmax_list.append((out["cosine_fea2cen"].softmax(dim=1).max(dim=1, keepdim=False))[0])
             Target_list.append(targets)
             _, predicted = (out["normweight_fea2cen"]).max(1)
             total += targets.size(0)
@@ -227,27 +224,25 @@ def stage1_test(net, testloader, device):
                          % (100. * correct / total, correct, total))
     print("\nTesting results is {:.2f}%".format(100. * correct / total))
 
-    norm_fea_list = torch.cat(norm_fea_list, dim=0)
     normweight_fea2cen_list = torch.cat(normweight_fea2cen_list, dim=0)
-    cosine_fea2cen_list = torch.cat(cosine_fea2cen_list, dim=0)
-    softmax_list = torch.cat(softmax_list, dim=0)
     Target_list = torch.cat(Target_list, dim=0)
 
-    energy_hist(norm_fea_list.max(dim=1, keepdim=False)[0], Target_list, args, "norm")
-
-    energy_hist(normweight_fea2cen_list.max(dim=1, keepdim=False)[0], Target_list, args, "normweight")
-    normweight_fea2cen_list_energy = args.temperature * \
+    logsumexp_result = args.temperature * \
                                      torch.logsumexp(normweight_fea2cen_list / args.temperature, dim=1, keepdim=False)
-    energy_hist(normweight_fea2cen_list_energy, Target_list, args, "normweight_energy")
-    energy_hist(torch.logsumexp(normweight_fea2cen_list, dim=1, keepdim=False), Target_list, args,
-                "normweight_noT_energy")
+    max_result = normweight_fea2cen_list.max(dim=1, keepdim=False)[0]
+    softmax_result = normweight_fea2cen_list.softmax(dim=1).max(dim=1, keepdim=False)[0]
 
-    energy_hist(cosine_fea2cen_list.max(dim=1, keepdim=False)[0], Target_list, args, "cosine")
-    cosine_fea2cen_list_energy = args.temperature * \
-                                 torch.logsumexp(cosine_fea2cen_list / args.temperature, dim=1, keepdim=False)
-    energy_hist(cosine_fea2cen_list_energy, Target_list, args, "cosine_energy")
+    smoothmaximum_factor = normweight_fea2cen_list.exp_()
+    smoothmaximum_result = (normweight_fea2cen_list*smoothmaximum_factor).sum(dim=1, keepdim=False) \
+                          / smoothmaximum_factor.sum(dim=1, keepdim=False)
+    p4norm_result = normweight_fea2cen_list.norm(p=4,dim=1,keepdim=False)
 
-    energy_hist(softmax_list, Target_list, args, "softmax")
+    energy_hist(normweight_fea2cen_list, Target_list, args, "logits_result")
+    energy_hist(logsumexp_result, Target_list, args, "logsumexp_result")
+    energy_hist(max_result, Target_list, args, "max_result")
+    energy_hist(softmax_result, Target_list, args, "softmax_result")
+    energy_hist(smoothmaximum_result, Target_list, args, "smoothmaximum_result")
+    energy_hist(p4norm_result, Target_list, args, "p4norm_result")
 
 
 def mixup_validate(net, trainloader, mixuploader, device, stage="1"):

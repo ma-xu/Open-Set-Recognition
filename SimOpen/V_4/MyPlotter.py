@@ -58,10 +58,10 @@ def plot_feature(net, args, plotloader, device, dirname, epoch=0, plot_class_num
     )
 
     # plot beam
-    for i in range(args.train_class_num):
-        xx = centroids[i, 0]
-        yy = centroids[i, 1]
-        # plot_beam(xx, yy, plt, colors[i])
+    # for i in range(args.train_class_num):
+    #     xx = centroids[i, 0]
+    #     yy = centroids[i, 1]
+    #     plot_beam(xx, yy, plt, colors[i])
 
 
     # currently only support 10 classes, for a good visualization.
