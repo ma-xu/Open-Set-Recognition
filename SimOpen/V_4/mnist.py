@@ -24,7 +24,7 @@ from DFPNet import DFPNet
 from MyPlotter import plot_feature
 from energy_hist import energy_hist, energy_hist_sperate
 
-# python3 cifar100.py --temperature 1 --hist_save
+# python3 mnist.py --temperature 1 --hist_save
 
 model_names = sorted(name for name in models.__dict__
                      if not name.startswith("__")
@@ -50,10 +50,10 @@ parser.add_argument('--alpha', default=0.1, type=float, help='balance for classf
 
 # Parameters for stage 1 training
 parser.add_argument('--stage1_resume', default='', type=str, metavar='PATH', help='path to latest checkpoint')
-parser.add_argument('--stage1_es', default=15, type=int, help='epoch size')
+parser.add_argument('--stage1_es', default=35, type=int, help='epoch size')
 parser.add_argument('--stage1_lr', default=0.01, type=float, help='learning rate')
 parser.add_argument('--stage1_lr_factor', default=0.1, type=float, help='learning rate Decay factor')  # works for MNIST
-parser.add_argument('--stage1_lr_step', default=6, type=float, help='learning rate Decay step')  # works for MNIST
+parser.add_argument('--stage1_lr_step', default=10, type=float, help='learning rate Decay step')  # works for MNIST
 parser.add_argument('--stage1_bs', default=128, type=int, help='batch size')
 parser.add_argument('--evaluate', action='store_true', help='Evaluate without training')
 
