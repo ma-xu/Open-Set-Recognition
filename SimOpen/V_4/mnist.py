@@ -231,6 +231,7 @@ def stage1_test(net, testloader, device):
                                      torch.logsumexp(normweight_fea2cen_list / args.temperature, dim=1, keepdim=False)
     max_result = normweight_fea2cen_list.max(dim=1, keepdim=False)[0]
     print(f"max_result: {max_result}")
+    print(f"max_result max: {max_result.max()}")
     softmax_result = normweight_fea2cen_list.softmax(dim=1).max(dim=1, keepdim=False)[0]
 
     smoothmaximum_factor = normweight_fea2cen_list.exp_()
