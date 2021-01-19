@@ -24,7 +24,7 @@ from DFPNet import DFPNet
 from MyPlotter import plot_feature
 from energy_hist import energy_hist, energy_hist_sperate
 
-# python3 mnist.py --temperature 1 --hist_save
+# python3 mnist.py --temperature 1 --hist_save --plot
 
 model_names = sorted(name for name in models.__dict__
                      if not name.startswith("__")
@@ -230,6 +230,7 @@ def stage1_test(net, testloader, device):
     logsumexp_result = args.temperature * \
                                      torch.logsumexp(normweight_fea2cen_list / args.temperature, dim=1, keepdim=False)
     max_result = normweight_fea2cen_list.max(dim=1, keepdim=False)[0]
+    print(f"max_result: {max_result}")
     softmax_result = normweight_fea2cen_list.softmax(dim=1).max(dim=1, keepdim=False)[0]
 
     smoothmaximum_factor = normweight_fea2cen_list.exp_()
