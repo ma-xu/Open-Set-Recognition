@@ -232,6 +232,7 @@ def stage1_test(net, testloader, device):
     max_result = normweight_fea2cen_list.max(dim=1, keepdim=False)[0]
     print(f"max_result: {max_result}")
     print(f"max_result max: {max_result.max()}")
+    print(f"max_result min: {max_result.min()}")
     softmax_result = normweight_fea2cen_list.softmax(dim=1).max(dim=1, keepdim=False)[0]
 
     smoothmaximum_factor = normweight_fea2cen_list.exp_()
