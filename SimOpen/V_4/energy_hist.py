@@ -10,6 +10,9 @@ def energy_hist(Out_list: torch.Tensor, Target_list:torch.Tensor, args, name:str
     unknown_label = Target_list.max()
     unknown_list = Out_list[Target_list == unknown_label]
     known_list = Out_list[Target_list != unknown_label]
+    print(f"Out_list: {Out_list}")
+    print(f"Out_list.min(): {Out_list.min()}")
+    print(f"Out_list.max(): {Out_list.max()}")
     print(f"Out_list.min().data: {Out_list.min().data}")
     print(f"Out_list.max().data: {Out_list.max().data}")
     unknown_hist = torch.histc(unknown_list, bins=args.hist_bins, min=Out_list.min(),
