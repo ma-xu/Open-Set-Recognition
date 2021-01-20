@@ -233,7 +233,9 @@ def stage1_test(net, testloader, device):
     softmax_result = torch.softmax(normweight_fea2cen_list,dim=1).max(dim=1, keepdim=False)[0]
 
 
-    smoothmaximum_factor = torch.exp(1.0 * torch.log(normweight_fea2cen_list))
+    scaled_ = (normweight_fea2cen_list - normweight_fea2cen_list.min())\
+              /(normweight_fea2cen_list.max()-normweight_fea2cen_list.min())
+    smoothmaximum_factor = torch.exp(1.0 * scaled_)
     smoothmaximum_result = (normweight_fea2cen_list*smoothmaximum_factor).sum(dim=1, keepdim=False) \
                           / smoothmaximum_factor.sum(dim=1, keepdim=False)
     p4norm_result = normweight_fea2cen_list.norm(p=4,dim=1,keepdim=False)
