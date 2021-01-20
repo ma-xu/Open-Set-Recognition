@@ -239,13 +239,21 @@ def stage1_test(net, testloader, device):
     smoothmaximum_result = (normweight_fea2cen_list*smoothmaximum_factor).sum(dim=1, keepdim=False) \
                           / smoothmaximum_factor.sum(dim=1, keepdim=False)
     p4norm_result = normweight_fea2cen_list.norm(p=4,dim=1,keepdim=False)
+    p3norm_result = normweight_fea2cen_list.norm(p=3, dim=1, keepdim=False)
+    p2norm_result = normweight_fea2cen_list.norm(p=2, dim=1, keepdim=False)
+    p1norm_result = normweight_fea2cen_list.norm(p=1, dim=1, keepdim=False)
+    p5norm_result = normweight_fea2cen_list.norm(p=5, dim=1, keepdim=False)
 
     energy_hist(normweight_fea2cen_list, Target_list, args, "logits_result")
     energy_hist(logsumexp_result, Target_list, args, "logsumexp_result")
     energy_hist(max_result, Target_list, args, "max_result")
     energy_hist(softmax_result, Target_list, args, "softmax_result")
     energy_hist(smoothmaximum_result, Target_list, args, "smoothmaximum_result")
+    energy_hist(p1norm_result, Target_list, args, "p1norm_result")
+    energy_hist(p2norm_result, Target_list, args, "p2norm_result")
+    energy_hist(p3norm_result, Target_list, args, "p3norm_result")
     energy_hist(p4norm_result, Target_list, args, "p4norm_result")
+    energy_hist(p5norm_result, Target_list, args, "p5norm_result")
 
 
 def mixup_validate(net, trainloader, mixuploader, device, stage="1"):
