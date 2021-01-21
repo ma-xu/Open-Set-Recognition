@@ -23,12 +23,12 @@ def energy_hist(Out_list: torch.Tensor, Target_list:torch.Tensor, args, name:str
         name += "_normed"
     if args.hist_save:
         plot_bar(unknown_hist, known_hist, args, name)
-    torch.save(
-        {"unknown": unknown_hist,
-         "known": known_hist,
-         },
-        os.path.join(args.histfolder, name + '.pkl')
-    )
+    # torch.save(
+    #     {"unknown": unknown_hist,
+    #      "known": known_hist,
+    #      },
+    #     os.path.join(args.histfolder, name + '.pkl')
+    # )
     print(f"{name} processed.")
 
 
@@ -43,12 +43,12 @@ def energy_hist_sperate(known: torch.Tensor, unknown:torch.Tensor, args, name:st
         name += "_normed"
     if args.hist_save:
         plot_bar(unknown_hist, known_hist, args, name)
-    torch.save(
-        {"unknown": unknown_hist,
-         "known": known_hist,
-         },
-        os.path.join(args.histfolder, name + '.pkl')
-    )
+    # torch.save(
+    #     {"unknown": unknown_hist,
+    #      "known": known_hist,
+    #      },
+    #     os.path.join(args.histfolder, name + '.pkl')
+    # )
     print(f"{name} processed.")
 
 
