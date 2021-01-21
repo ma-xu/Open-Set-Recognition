@@ -398,6 +398,7 @@ def stage2_test(net, testloader, trainloader, mixuploader, device ):
     print("\nTesting results is {:.2f}%".format(100. * correct / total))
 
     energy_list = torch.cat(energy_list, dim=0)
+    normweight_fea2cen_list = torch.cat(normweight_fea2cen_list, dim=0)
     Target_list = torch.cat(Target_list, dim=0)
     energy_hist(energy_list, Target_list, args, "testing_energy")
 
