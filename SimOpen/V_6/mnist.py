@@ -17,14 +17,14 @@ import sys
 # from models import *
 sys.path.append("../..")
 import backbones.cifar as models
-from datasets import CIFAR100
+from datasets import MNIST
 from Utils import adjust_learning_rate, progress_bar, Logger, mkdir_p, Evaluation
 from DFPLoss import DFPLoss, DFPEnergyLoss
 from DFPNet import DFPNet
 from MyPlotter import plot_feature
 from energy_hist import energy_hist, energy_hist_sperate
 
-# python3 cifar100.py --temperature 1 --hist_save
+# python3 mnist.py --temperature 1 --hist_save --plot
 
 model_names = sorted(name for name in models.__dict__
                      if not name.startswith("__")
@@ -35,14 +35,14 @@ os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
 
 # Dataset preperation
-parser.add_argument('--train_class_num', default=50, type=int, help='Classes used in training')
-parser.add_argument('--test_class_num', default=100, type=int, help='Classes used in testing')
+parser.add_argument('--train_class_num', default=7, type=int, help='Classes used in training')
+parser.add_argument('--test_class_num', default=10, type=int, help='Classes used in testing')
 parser.add_argument('--includes_all_train_class', default=True, action='store_true',
                     help='If required all known classes included in testing')
 
 # General MODEL parameters
-parser.add_argument('--arch', default='ResNet18', choices=model_names, type=str, help='choosing network')
-parser.add_argument('--embed_dim', default=512, type=int, help='embedding feature dimension')
+parser.add_argument('--arch', default='LeNetPlus', choices=model_names, type=str, help='choosing network')
+parser.add_argument('--embed_dim', default=2, type=int, help='embedding feature dimension')
 
 # Parameters for optimizer
 parser.add_argument('--temperature', default=1, type=int, help='scaling cosine distance for exp')
@@ -50,10 +50,10 @@ parser.add_argument('--alpha', default=0.1, type=float, help='balance for classf
 
 # Parameters for stage 1 training
 parser.add_argument('--stage1_resume', default='', type=str, metavar='PATH', help='path to latest checkpoint')
-parser.add_argument('--stage1_es', default=100, type=int, help='epoch size')
-parser.add_argument('--stage1_lr', default=0.1, type=float, help='learning rate')
+parser.add_argument('--stage1_es', default=35, type=int, help='epoch size')
+parser.add_argument('--stage1_lr', default=0.01, type=float, help='learning rate')
 parser.add_argument('--stage1_lr_factor', default=0.1, type=float, help='learning rate Decay factor')  # works for MNIST
-parser.add_argument('--stage1_lr_step', default=30, type=float, help='learning rate Decay step')  # works for MNIST
+parser.add_argument('--stage1_lr_step', default=10, type=float, help='learning rate Decay step')  # works for MNIST
 parser.add_argument('--stage1_bs', default=128, type=int, help='batch size')
 parser.add_argument('--evaluate', action='store_true', help='Evaluate without training')
 
@@ -75,16 +75,16 @@ parser.add_argument('--mixup', default=1., type=float, help='the parameters for 
 
 # Parameters for stage 2 training
 parser.add_argument('--stage2_resume', default='', type=str, metavar='PATH', help='path to latest checkpoint')
-parser.add_argument('--stage2_es', default=50, type=int, help='epoch size')
-parser.add_argument('--stage2_lr', default=0.01, type=float, help='learning rate')
+parser.add_argument('--stage2_es', default=15, type=int, help='epoch size')
+parser.add_argument('--stage2_lr', default=0.0001, type=float, help='learning rate')
 parser.add_argument('--stage2_lr_factor', default=0.1, type=float, help='learning rate Decay factor')  # works for MNIST
-parser.add_argument('--stage2_lr_step', default=20, type=float, help='learning rate Decay step')  # works for MNIST
+parser.add_argument('--stage2_lr_step', default=6, type=float, help='learning rate Decay step')  # works for MNIST
 parser.add_argument('--stage2_bs', default=128, type=int, help='batch size')
 
 
 args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-args.checkpoint = './checkpoints/cifar100/%s-%s-%s-dim%s-T%s-alpha%s' % (
+args.checkpoint = './checkpoints/mnist/%s-%s-%s-dim%s-T%s-alpha%s' % (
     args.train_class_num, args.test_class_num, args.arch, args.embed_dim, args.temperature,args.alpha)
 if not os.path.isdir(args.checkpoint):
     mkdir_p(args.checkpoint)
@@ -99,22 +99,16 @@ if not os.path.isdir(args.histfolder):
     mkdir_p(args.histfolder)
 
 print('==> Preparing data..')
-transform_train = transforms.Compose([
-    transforms.RandomCrop(32, padding=4),
-    transforms.RandomHorizontalFlip(),
+transform = transforms.Compose([
     transforms.ToTensor(),
-    transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    transforms.Normalize((0.1307,), (0.3081,))
 ])
-transform_test = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-])
-trainset = CIFAR100(root='../../data', train=True, download=True, transform=transform_train,
-                    train_class_num=args.train_class_num, test_class_num=args.test_class_num,
-                    includes_all_train_class=args.includes_all_train_class)
-testset = CIFAR100(root='../../data', train=False, download=True, transform=transform_test,
-                   train_class_num=args.train_class_num, test_class_num=args.test_class_num,
-                   includes_all_train_class=args.includes_all_train_class)
+trainset = MNIST(root='../../data', train=True, download=True, transform=transform,
+                 train_class_num=args.train_class_num, test_class_num=args.test_class_num,
+                 includes_all_train_class=args.includes_all_train_class)
+testset = MNIST(root='../../data', train=False, download=True, transform=transform,
+                train_class_num=args.train_class_num, test_class_num=args.test_class_num,
+                includes_all_train_class=args.includes_all_train_class)
 # data loader
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.stage1_bs, shuffle=True, num_workers=4)
 testloader = torch.utils.data.DataLoader(testset, batch_size=args.stage1_bs, shuffle=False, num_workers=4)
@@ -381,14 +375,12 @@ def stage2_test(net, testloader, trainloader, mixuploader, device ):
     correct = 0
     total = 0
     energy_list = []
-    normweight_fea2cen_list = []
     Target_list = []
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
             out = net(inputs)  # shape [batch,class]
             energy_list.append(out["energy"])
-            normweight_fea2cen_list.append(out["normweight_fea2cen"])
             Target_list.append(targets)
             _, predicted = (out["normweight_fea2cen"]).max(1)
             total += targets.size(0)
@@ -399,21 +391,7 @@ def stage2_test(net, testloader, trainloader, mixuploader, device ):
 
     energy_list = torch.cat(energy_list, dim=0)
     Target_list = torch.cat(Target_list, dim=0)
-    normweight_fea2cen_list = torch.cat(normweight_fea2cen_list, dim=0)
     energy_hist(energy_list, Target_list, args, "testing_energy")
-
-    p4norm_result = normweight_fea2cen_list.norm(p=4, dim=1, keepdim=False)
-    p3norm_result = normweight_fea2cen_list.norm(p=3, dim=1, keepdim=False)
-    p2norm_result = normweight_fea2cen_list.norm(p=2, dim=1, keepdim=False)
-    p1norm_result = normweight_fea2cen_list.norm(p=1, dim=1, keepdim=False)
-    p5norm_result = normweight_fea2cen_list.norm(p=5, dim=1, keepdim=False)
-    energy_hist(p1norm_result, Target_list, args, "stage2_p1norm_result")
-    energy_hist(p2norm_result, Target_list, args, "stage2_p2norm_result")
-    energy_hist(p3norm_result, Target_list, args, "stage2_p3norm_result")
-    energy_hist(p4norm_result, Target_list, args, "stage2_p4norm_result")
-    energy_hist(p5norm_result, Target_list, args, "stage2_p5norm_result")
-
-
 
     mixup_validate(net, trainloader, mixuploader, device, stage="2")
 

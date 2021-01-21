@@ -19,7 +19,7 @@ sys.path.append("../..")
 import backbones.cifar as models
 from datasets import CIFAR100
 from Utils import adjust_learning_rate, progress_bar, Logger, mkdir_p, Evaluation
-from DFPLoss import DFPLoss, DFPEnergyLoss
+from DFPLoss import DFPLoss, DFPEnergyLoss, DFPNormLoss
 from DFPNet import DFPNet
 from MyPlotter import plot_feature
 from energy_hist import energy_hist, energy_hist_sperate
@@ -274,8 +274,8 @@ def mixup_validate(net, trainloader, mixuploader, device, stage="1"):
             mixed = mixup(inputs, targets, inputs_bak, targets_bak, args)
             out_known = net(inputs)
             out_unkown = net(mixed)
-            known_energy.append(out_known["energy"])
-            unknown_energy.append(out_unkown["energy"])
+            known_energy.append(out_known["pnorm"])
+            unknown_energy.append(out_unkown["pnorm"])
             progress_bar(batch_idx, len(trainloader))
 
     known_energy = torch.cat(known_energy, dim=0)
@@ -291,7 +291,7 @@ def mixup_validate(net, trainloader, mixuploader, device, stage="1"):
 def main_stage2(net, mid_energy):
     print("Starting stage-2 fine-tuning ...")
     start_epoch = 0
-    criterion = DFPEnergyLoss(mid_known=mid_energy["mid_known"], mid_unknown=mid_energy["mid_unknown"],
+    criterion = DFPNormLoss(mid_known=mid_energy["mid_known"], mid_unknown=mid_energy["mid_unknown"],
                               alpha=args.alpha, temperature=args.temperature)
     optimizer = torch.optim.SGD(net.parameters(), lr=args.stage2_lr, momentum=0.9, weight_decay=5e-4)
     if args.stage2_resume:
@@ -399,9 +399,9 @@ def stage2_test(net, testloader, trainloader, mixuploader, device ):
 
     energy_list = torch.cat(energy_list, dim=0)
     Target_list = torch.cat(Target_list, dim=0)
-    normweight_fea2cen_list = torch.cat(normweight_fea2cen_list, dim=0)
     energy_hist(energy_list, Target_list, args, "testing_energy")
 
+    mixup_validate(net, trainloader, mixuploader, device, stage="2")
     p4norm_result = normweight_fea2cen_list.norm(p=4, dim=1, keepdim=False)
     p3norm_result = normweight_fea2cen_list.norm(p=3, dim=1, keepdim=False)
     p2norm_result = normweight_fea2cen_list.norm(p=2, dim=1, keepdim=False)
@@ -412,10 +412,6 @@ def stage2_test(net, testloader, trainloader, mixuploader, device ):
     energy_hist(p3norm_result, Target_list, args, "stage2_p3norm_result")
     energy_hist(p4norm_result, Target_list, args, "stage2_p4norm_result")
     energy_hist(p5norm_result, Target_list, args, "stage2_p5norm_result")
-
-
-
-    mixup_validate(net, trainloader, mixuploader, device, stage="2")
 
 
 def save_model(net, optimizer, epoch, path, **kwargs):
