@@ -11,9 +11,10 @@ import shutil
 import torch
 import torch.nn as nn
 import torch.nn.init as init
+import torchvision.utils as vutils
 
 __all__=["get_mean_and_std","progress_bar","format_time",
-         'adjust_learning_rate', 'AverageMeter','Logger','mkdir_p']
+         'adjust_learning_rate', 'AverageMeter','Logger','mkdir_p', 'save_binary_img', 'save_model']
 
 def get_mean_and_std(dataset):
     '''Compute the mean and std value of dataset.'''
@@ -271,3 +272,20 @@ def mkdir_p(path):
             pass
         else:
             raise
+
+
+def save_model(net, optimizer, epoch, path, **kwargs):
+    state = {
+        'net': net.state_dict(),
+        'optimizer': optimizer.state_dict(),
+        'epoch': epoch
+    }
+    for key, value in kwargs.items():
+        state[key] = value
+    torch.save(state, path)
+
+
+def save_binary_img(tensor, file_path="./val.png", nrow=8):
+    # tensor [b,1,w,h]
+    predicted = torch.sigmoid(tensor) > 0.5
+    vutils.save_image(predicted.float(), file_path,nrow=nrow)
