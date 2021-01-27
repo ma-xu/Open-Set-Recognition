@@ -70,7 +70,7 @@ if not os.path.isdir(args.checkpoint):
 print('==> Preparing data..')
 transform = transforms.Compose([
     transforms.ToTensor(),
-    transforms.Normalize((0.1307,), (0.3081,))
+    # transforms.Normalize((0.1307,), (0.3081,))
 ])
 trainset = MNIST(root='../../data', train=True, download=True, transform=transform,
                  train_class_num=args.train_class_num, test_class_num=args.test_class_num,
