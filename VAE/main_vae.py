@@ -16,7 +16,7 @@ import sys
 
 
 # from models import *
-sys.path.append("../..")
+sys.path.append("../")
 from datasets import MNIST
 from backbones import VanillaVAE
 
