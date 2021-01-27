@@ -1,5 +1,5 @@
 import torch
-from .base import BaseVAE
+from base import BaseVAE
 from torch import nn
 from torch.nn import functional as F
 from abc import abstractmethod
@@ -23,13 +23,17 @@ class VanillaVAE(BaseVAE):
 
         modules = []
         if hidden_dims is None:
-            hidden_dims = [32, 64, 128, 256, 512]
+            hidden_dims = [32, 64]
 
         # Build Encoder
         for h_dim in hidden_dims:
             modules.append(
                 nn.Sequential(
                     nn.Conv2d(in_channels, out_channels=h_dim,
+                              kernel_size=3, stride=1, padding=1),
+                    nn.BatchNorm2d(h_dim),
+                    nn.LeakyReLU(),
+                    nn.Conv2d(h_dim, out_channels=h_dim,
                               kernel_size=3, stride=2, padding=1),
                     nn.BatchNorm2d(h_dim),
                     nn.LeakyReLU())
@@ -37,13 +41,13 @@ class VanillaVAE(BaseVAE):
             in_channels = h_dim
 
         self.encoder = nn.Sequential(*modules)
-        self.fc_mu = nn.Linear(hidden_dims[-1] * 4, latent_dim)
-        self.fc_var = nn.Linear(hidden_dims[-1] * 4, latent_dim)
+        self.fc_mu = nn.Linear(hidden_dims[-1] * 49, latent_dim)
+        self.fc_var = nn.Linear(hidden_dims[-1] * 49, latent_dim)
 
         # Build Decoder
         modules = []
 
-        self.decoder_input = nn.Linear(latent_dim, hidden_dims[-1] * 4)
+        self.decoder_input = nn.Linear(latent_dim, hidden_dims[-1] * 49)
 
         hidden_dims.reverse()
 
@@ -55,7 +59,16 @@ class VanillaVAE(BaseVAE):
                                        kernel_size=3,
                                        stride=2,
                                        padding=1,
-                                       output_padding=1),
+                                       output_padding=1
+                                       ),
+                    nn.BatchNorm2d(hidden_dims[i + 1]),
+                    nn.LeakyReLU(),
+                    nn.Conv2d(hidden_dims[i + 1],
+                                       hidden_dims[i + 1],
+                                       kernel_size=3,
+                                       stride=1,
+                                       padding=1,
+                                       ),
                     nn.BatchNorm2d(hidden_dims[i + 1]),
                     nn.LeakyReLU())
             )
@@ -68,12 +81,13 @@ class VanillaVAE(BaseVAE):
                                kernel_size=3,
                                stride=2,
                                padding=1,
-                               output_padding=1),
+                               output_padding=1
+                               ),
             nn.BatchNorm2d(hidden_dims[-1]),
             nn.LeakyReLU(),
             nn.Conv2d(hidden_dims[-1], out_channels=1,
                       kernel_size=3, padding=1),
-            nn.Tanh())
+            nn.Sigmoid())
 
     def encode(self, input: Tensor) -> List[Tensor]:
         """
@@ -100,7 +114,7 @@ class VanillaVAE(BaseVAE):
         :return: (Tensor) [B x C x H x W]
         """
         result = self.decoder_input(z)
-        result = result.view(-1, 512, 2, 2)
+        result = result.view(-1, 64, 7, 7)
         result = self.decoder(result)
         result = self.final_layer(result)
         return result
@@ -169,3 +183,12 @@ class VanillaVAE(BaseVAE):
         """
 
         return self.forward(x)[0]
+
+
+def demo():
+    input = torch.rand([3,1,28,28])
+    vae = VanillaVAE(in_channels=1,latent_dim=100)
+    output = vae(input)[0]
+    print(output.shape)
+
+# demo()
