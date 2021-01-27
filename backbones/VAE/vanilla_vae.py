@@ -1,5 +1,5 @@
 import torch
-from base import BaseVAE
+from .base import BaseVAE
 from torch import nn
 from torch.nn import functional as F
 from abc import abstractmethod
