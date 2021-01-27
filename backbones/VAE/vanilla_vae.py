@@ -33,7 +33,7 @@ class VanillaVAE(BaseVAE):
                               kernel_size=3, stride=1, padding=1),
                     nn.BatchNorm2d(h_dim),
                     nn.LeakyReLU(),
-                    nn.Conv2d(in_channels, out_channels=h_dim,
+                    nn.Conv2d(h_dim, out_channels=h_dim,
                               kernel_size=3, stride=1, padding=1),
                     nn.BatchNorm2d(h_dim),
                     nn.LeakyReLU(),
