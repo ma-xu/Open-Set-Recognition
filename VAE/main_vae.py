@@ -13,11 +13,12 @@ import torchvision.transforms as transforms
 import os
 import argparse
 import sys
-from datasets import MNIST
+
 
 # from models import *
 sys.path.append("../..")
 from backbones.VAE.vanilla_vae import VanillaVAE
+from datasets import MNIST
 
 import torch
 import torch.nn as nn
