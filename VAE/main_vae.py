@@ -150,6 +150,7 @@ def train(net, trainloader, optimizer):
         inputs = inputs.to(device)
         print(f"max: {inputs.max()} min {inputs.min()}")
         print(f"data is : {inputs}")
+        print(f"data unique is : {inputs.unique()}")
         optimizer.zero_grad()
         result = net(inputs)
         loss_dict = net.module.loss_function(*result, M_N=M_N)  # loss, Reconstruction_Loss, KLD
