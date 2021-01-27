@@ -17,8 +17,9 @@ import sys
 
 # from models import *
 sys.path.append("../..")
-from backbones import VanillaVAE
 from datasets import MNIST
+from backbones import VanillaVAE
+
 
 import torch
 import torch.nn as nn
