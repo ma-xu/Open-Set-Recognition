@@ -271,9 +271,7 @@ def middle_validate(net, trainloader, device, stage="1"):
         print('==> Resuming vae from checkpoint, loaded..')
 
     with torch.no_grad():
-        batch_idx = -1
-        for (inputs, targets) in zip(trainloader):
-            batch_idx += 1
+        for batch_idx, (inputs, targets) in enumerate(trainloader):
             inputs, targets = inputs.to(device), targets.to(device)
             sampled = sampler(vae,device,args)
             out_known = net(inputs)
@@ -346,9 +344,7 @@ def stage2_train(net, trainloader,vae, optimizer, criterion, device):
     loss_energy_unknown = 0
     correct = 0
     total = 0
-    batch_idx = -1
-    for (inputs, targets) in zip(trainloader):
-        batch_idx += 1
+    for batch_idx, (inputs, targets) in enumerate(trainloader):
         inputs, targets = inputs.to(device), targets.to(device)
         sampled = sampler(vae, device, args)
         optimizer.zero_grad()
