@@ -121,6 +121,7 @@ def main():
     print(device)
     stage1_dict = main_stage1()  # {"net": net, "mid_energy": {"mid_known":, "mid_unkown":}}}
     middle_dict = middle_validate(stage1_dict["net"], trainloader, device, stage="1")
+    mid_energy = {"mid_known":middle_dict["middle_dict"], "mid_unkown": middle_dict["mid_unkown"]}
     main_stage2(stage1_dict["net"],middle_dict["vae"], middle_dict["mid_energy"])
 
 
