@@ -427,8 +427,7 @@ def sampler(vae, device, args):
     z = torch.randn(args.stage1_bs, args.latent_dim)
     z = z.to(device)
     sampled = vae.module.sample(z)
-    sampled = functional.normalize(sampled, 0.1307, 0.3081)
-    return sampled
+    return sampled.sub_(0.1307).div_(0.3081)
 
 if __name__ == '__main__':
     main()
