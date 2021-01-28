@@ -119,9 +119,9 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=args.stage1_bs, shu
 
 def main():
     print(device)
-    stage1_dict = main_stage1()  # {"net": net, "mid_energy": {"mid_known":, "mid_unkown":}}}
+    stage1_dict = main_stage1()  # {"net": net, "mid_energy": {"mid_known":, "mid_unknown":}}}
     middle_dict = middle_validate(stage1_dict["net"], trainloader, device, stage="1")
-    mid_energy = {"mid_known":middle_dict["mid_known"], "mid_unkown": middle_dict["mid_unkown"]}
+    mid_energy = {"mid_known": middle_dict["mid_known"], "mid_unknown": middle_dict["mid_unknown"]}
     main_stage2(stage1_dict["net"],middle_dict["vae"], mid_energy)
 
 
