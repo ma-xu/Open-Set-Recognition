@@ -122,6 +122,7 @@ def main():
     stage1_dict = main_stage1()  # {"net": net, "mid_energy": {"mid_known":, "mid_unknown":}}}
     middle_dict = middle_validate(stage1_dict["net"], trainloader, device, name="middle_vae_pnorm_result")
     mid_energy = {"mid_known": middle_dict["mid_known"], "mid_unknown": middle_dict["mid_unknown"]}
+    print(f"The middle p-norm is: {mid_energy}")
     main_stage2(stage1_dict["net"],middle_dict["vae"], mid_energy)
 
 
