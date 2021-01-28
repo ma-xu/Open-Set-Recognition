@@ -21,7 +21,7 @@ import backbones.cifar as models
 from backbones import VanillaVAE
 from datasets import MNIST
 from Utils import adjust_learning_rate, progress_bar, Logger, mkdir_p, Evaluation
-from DFPLoss import DFPLoss, DFPEnergyLoss
+from DFPLoss import DFPLoss, DFPEnergyLoss, DFPNormLoss
 from DFPNet import DFPNet
 from MyPlotter import plot_feature
 from energy_hist import energy_hist, energy_hist_sperate
@@ -120,7 +120,7 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=args.stage1_bs, shu
 def main():
     print(device)
     stage1_dict = main_stage1()  # {"net": net, "mid_energy": {"mid_known":, "mid_unknown":}}}
-    middle_dict = middle_validate(stage1_dict["net"], trainloader, device, stage="1")
+    middle_dict = middle_validate(stage1_dict["net"], trainloader, device, stage="middle_vae_pnorm_result")
     mid_energy = {"mid_known": middle_dict["mid_known"], "mid_unknown": middle_dict["mid_unknown"]}
     main_stage2(stage1_dict["net"],middle_dict["vae"], mid_energy)
 
@@ -244,19 +244,19 @@ def stage1_test(net, testloader, device):
     p1norm_result = normweight_fea2cen_list.norm(p=1, dim=1, keepdim=False)
     p5norm_result = normweight_fea2cen_list.norm(p=5, dim=1, keepdim=False)
 
-    energy_hist(normweight_fea2cen_list, Target_list, args, "logits_result")
-    energy_hist(logsumexp_result, Target_list, args, "logsumexp_result")
-    energy_hist(max_result, Target_list, args, "max_result")
-    energy_hist(softmax_result, Target_list, args, "softmax_result")
-    energy_hist(smoothmaximum_result, Target_list, args, "smoothmaximum_result")
-    energy_hist(p1norm_result, Target_list, args, "p1norm_result")
-    energy_hist(p2norm_result, Target_list, args, "p2norm_result")
-    energy_hist(p3norm_result, Target_list, args, "p3norm_result")
-    energy_hist(p4norm_result, Target_list, args, "p4norm_result")
-    energy_hist(p5norm_result, Target_list, args, "p5norm_result")
+    energy_hist(normweight_fea2cen_list, Target_list, args, "stage1_test_logits_result")
+    energy_hist(logsumexp_result, Target_list, args, "stage1_test_logsumexp_result")
+    energy_hist(max_result, Target_list, args, "stage1_test_max_result")
+    energy_hist(softmax_result, Target_list, args, "stage1_test_softmax_result")
+    energy_hist(smoothmaximum_result, Target_list, args, "stage1_test_smoothmaximum_result")
+    energy_hist(p1norm_result, Target_list, args, "stage1_test_p1norm_result")
+    energy_hist(p2norm_result, Target_list, args, "stage1_test_p2norm_result")
+    energy_hist(p3norm_result, Target_list, args, "stage1_test_p3norm_result")
+    energy_hist(p4norm_result, Target_list, args, "stage1_test_p4norm_result")
+    energy_hist(p5norm_result, Target_list, args, "stage1_test_p5norm_result")
 
 
-def middle_validate(net, trainloader, device, stage="1"):
+def middle_validate(net, trainloader, device, name=""):
     print("validating vae and net ...")
     known_energy, unknown_energy = [], []
 
@@ -277,13 +277,13 @@ def middle_validate(net, trainloader, device, stage="1"):
             sampled = sampler(vae,device,args)
             out_known = net(inputs)
             out_unkown = net(sampled)
-            known_energy.append(out_known["energy"])
-            unknown_energy.append(out_unkown["energy"])
+            known_energy.append(out_known["pnorm"])
+            unknown_energy.append(out_unkown["pnorm"])
             progress_bar(batch_idx, len(trainloader))
 
     known_energy = torch.cat(known_energy, dim=0)
     unknown_energy = torch.cat(unknown_energy, dim=0)
-    energy_hist_sperate(known_energy, unknown_energy, args, "mixup_stage"+stage)
+    energy_hist_sperate(known_energy, unknown_energy, args, name)
     return{
         # unkown is smaller than known
         "vae": vae,
@@ -295,8 +295,8 @@ def middle_validate(net, trainloader, device, stage="1"):
 def main_stage2(net, vae, mid_energy):
     print("Starting stage-2 fine-tuning ...")
     start_epoch = 0
-    criterion = DFPEnergyLoss(mid_known=mid_energy["mid_known"], mid_unknown=mid_energy["mid_unknown"],
-                              alpha=args.alpha, temperature=args.temperature)
+    criterion = DFPNormLoss(mid_known=mid_energy["mid_known"], mid_unknown=mid_energy["mid_unknown"],
+                            alpha=args.alpha, temperature=args.temperature)
     optimizer = torch.optim.SGD(net.parameters(), lr=args.stage2_lr, momentum=0.9, weight_decay=5e-4)
     if args.stage2_resume:
         # Load checkpoint.
@@ -381,13 +381,13 @@ def stage2_train(net, trainloader,vae, optimizer, criterion, device):
 def stage2_test(net, testloader, trainloader, device ):
     correct = 0
     total = 0
-    energy_list = []
+    normweight_fea2cen_list = []
     Target_list = []
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
             out = net(inputs)  # shape [batch,class]
-            energy_list.append(out["energy"])
+            normweight_fea2cen_list.append(out["normweight_fea2cen"])
             Target_list.append(targets)
             _, predicted = (out["normweight_fea2cen"]).max(1)
             total += targets.size(0)
@@ -396,11 +396,37 @@ def stage2_test(net, testloader, trainloader, device ):
                          % (100. * correct / total, correct, total))
     print("\nTesting results is {:.2f}%".format(100. * correct / total))
 
-    energy_list = torch.cat(energy_list, dim=0)
+    normweight_fea2cen_list = torch.cat(normweight_fea2cen_list, dim=0)
     Target_list = torch.cat(Target_list, dim=0)
-    energy_hist(energy_list, Target_list, args, "testing_energy")
 
-    middle_validate(net, trainloader, device, stage="2")
+    logsumexp_result = args.temperature * \
+                       torch.logsumexp(normweight_fea2cen_list / args.temperature, dim=1, keepdim=False)
+    max_result = torch.max(normweight_fea2cen_list, dim=1, keepdim=False)[0]
+    softmax_result = torch.softmax(normweight_fea2cen_list, dim=1).max(dim=1, keepdim=False)[0]
+
+    scaled_ = (normweight_fea2cen_list - normweight_fea2cen_list.min()) \
+              / (normweight_fea2cen_list.max() - normweight_fea2cen_list.min())
+    smoothmaximum_factor = torch.exp(1.0 * scaled_)
+    smoothmaximum_result = (normweight_fea2cen_list * smoothmaximum_factor).sum(dim=1, keepdim=False) \
+                           / smoothmaximum_factor.sum(dim=1, keepdim=False)
+    p4norm_result = normweight_fea2cen_list.norm(p=4, dim=1, keepdim=False)
+    p3norm_result = normweight_fea2cen_list.norm(p=3, dim=1, keepdim=False)
+    p2norm_result = normweight_fea2cen_list.norm(p=2, dim=1, keepdim=False)
+    p1norm_result = normweight_fea2cen_list.norm(p=1, dim=1, keepdim=False)
+    p5norm_result = normweight_fea2cen_list.norm(p=5, dim=1, keepdim=False)
+
+    energy_hist(normweight_fea2cen_list, Target_list, args, "stage2_test_logits_result")
+    energy_hist(logsumexp_result, Target_list, args, "stage2_test_logsumexp_result")
+    energy_hist(max_result, Target_list, args, "stage2_test_max_result")
+    energy_hist(softmax_result, Target_list, args, "stage2_test_softmax_result")
+    energy_hist(smoothmaximum_result, Target_list, args, "stage2_test_smoothmaximum_result")
+    energy_hist(p1norm_result, Target_list, args, "stage2_test_p1norm_result")
+    energy_hist(p2norm_result, Target_list, args, "stage2_test_p2norm_result")
+    energy_hist(p3norm_result, Target_list, args, "stage2_test_p3norm_result")
+    energy_hist(p4norm_result, Target_list, args, "stage2_test_p4norm_result")
+    energy_hist(p5norm_result, Target_list, args, "stage2_test_p5norm_result")
+
+    middle_validate(net, trainloader, device, name="end_vae_pnorm_result")
 
 
 def save_model(net, optimizer, epoch, path, **kwargs):
