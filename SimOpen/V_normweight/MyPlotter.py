@@ -40,13 +40,16 @@ def plot_feature(net, args, plotloader, device, dirname, epoch=0, plot_class_num
     except:
         centroids = centroids.data.numpy()
     # print(centroids)
-    colors = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9']
+    colors = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C8', 'C9', 'C7'] # C7 is gray
     for label_idx in range(plot_class_num):
+        color = colors[label_idx]
+        if testmode and label_idx == plot_class_num-1:
+            color = 'C7'
         features = plot_features[plot_labels == label_idx, :]
         plt.scatter(
             features[:, 0],
             features[:, 1],
-            c=colors[label_idx],
+            c=color,
             s=1,
         )
     plt.scatter(
@@ -57,18 +60,11 @@ def plot_feature(net, args, plotloader, device, dirname, epoch=0, plot_class_num
         s=5,
     )
 
-    # plot beam
-    for i in range(args.train_class_num):
-        xx = centroids[i, 0]
-        yy = centroids[i, 1]
-        plot_beam(xx, yy, plt, colors[i])
-
-
     # currently only support 10 classes, for a good visualization.
     # change plot_class_num would lead to problems.
     legends = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
     if testmode:
-        legends[plot_class_num] = 'unkown'
+        legends[plot_class_num-1] = 'unkown'
     plt.legend(legends[0:plot_class_num] + ['center'], loc='upper right')
 
     save_name = os.path.join(dirname, 'epoch_' + str(epoch) + '.png')
