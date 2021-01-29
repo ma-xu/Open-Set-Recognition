@@ -34,19 +34,22 @@ def plot_feature(net, args, plotloader, device, dirname, epoch=0, plot_class_num
 
     net_dict = net.state_dict()
     centroids = net_dict['module.centroids'] if isinstance(net, nn.DataParallel) else net_dict['centroids']
-    # centroids = F.normalize(centroids, dim=1, p=2)
+    centroids = F.normalize(centroids, dim=1, p=2)
     try:
         centroids = centroids.data.cpu().numpy()
     except:
         centroids = centroids.data.numpy()
     # print(centroids)
-    colors = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9']
+    colors = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C8', 'C9', 'C7'] # C7 is gray
     for label_idx in range(plot_class_num):
+        color = colors[label_idx]
+        if testmode and label_idx == plot_class_num-1:
+            color = 'C7'
         features = plot_features[plot_labels == label_idx, :]
         plt.scatter(
             features[:, 0],
             features[:, 1],
-            c=colors[label_idx],
+            c=color,
             s=1,
         )
     plt.scatter(
@@ -61,9 +64,22 @@ def plot_feature(net, args, plotloader, device, dirname, epoch=0, plot_class_num
     # change plot_class_num would lead to problems.
     legends = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
     if testmode:
-        legends[plot_class_num] = 'unkown'
+        legends[plot_class_num-1] = 'unkown'
     plt.legend(legends[0:plot_class_num] + ['center'], loc='upper right')
 
     save_name = os.path.join(dirname, 'epoch_' + str(epoch) + '.png')
     plt.savefig(save_name, bbox_inches='tight', dpi=plot_quality)
     plt.close()
+
+
+def plot_beam(x, y, plt, color):
+    x_min, x_max = plt.xlim()
+    y_min, y_max = plt.ylim()
+    temp_x = x_min if x<0 else x_max
+    slope = y/x
+    input = np.linspace(0, temp_x, 100)
+    output = slope*input
+    plt.plot(input, output,c=color)
+    plt.xlim(x_min, x_max)
+    plt.ylim(y_min, y_max)
+
