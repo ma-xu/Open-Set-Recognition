@@ -80,7 +80,7 @@ class DFPNormLoss(nn.Module):
         pnorm_known = net_out["pnorm"]
         pnorm_unknown = net_out_unknown["pnorm"]
         loss_energy_known = 1.0 - pnorm_known/self.mid_known
-        loss_energy_known = (F.relu(loss_energy_known,inplace=True).sum()) / (pnorm_known.shape[0])
+        loss_energy_known = (F.relu(loss_energy_known, inplace=True).sum()) / (pnorm_known.shape[0])
         loss_energy_unknown = pnorm_unknown/self.mid_unknown - 1.0
         loss_energy_unknown = (F.relu(loss_energy_unknown, inplace=True).sum()) / (pnorm_unknown.shape[0])
         # print(f"loss_energy_known: {loss_energy_known} | loss_energy_unknown: {loss_energy_unknown}")

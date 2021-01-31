@@ -45,6 +45,7 @@ parser.add_argument('--includes_all_train_class', default=True, action='store_tr
 # General MODEL parameters
 parser.add_argument('--arch', default='LeNetPlus', choices=model_names, type=str, help='choosing network')
 parser.add_argument('--embed_dim', default=2, type=int, help='embedding feature dimension')
+parser.add_argument('--p', default=2, type=int, help='p-norm')
 
 # Parameters for optimizer
 parser.add_argument('--temperature', default=1, type=int, help='scaling cosine distance for exp')
@@ -78,17 +79,17 @@ parser.add_argument('--vae_resume', default='/home/UNT/jg0737/Open-Set-Recogniti
 
 # Parameters for stage 2 training
 parser.add_argument('--stage2_resume', default='', type=str, metavar='PATH', help='path to latest checkpoint')
-parser.add_argument('--stage2_es', default=15, type=int, help='epoch size')
+parser.add_argument('--stage2_es', default=25, type=int, help='epoch size')
 parser.add_argument('--stage2_lr', default=0.0001, type=float, help='learning rate')
 parser.add_argument('--stage2_lr_factor', default=0.1, type=float, help='learning rate Decay factor')  # works for MNIST
-parser.add_argument('--stage2_lr_step', default=6, type=float, help='learning rate Decay step')  # works for MNIST
+parser.add_argument('--stage2_lr_step', default=10, type=float, help='learning rate Decay step')  # works for MNIST
 parser.add_argument('--stage2_bs', default=128, type=int, help='batch size')
 
 
 args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-args.checkpoint = './checkpoints/mnist/%s-%s-%s-dim%s-T%s-alpha%s' % (
-    args.train_class_num, args.test_class_num, args.arch, args.embed_dim, args.temperature,args.alpha)
+args.checkpoint = './checkpoints/mnist/%s_%s_%s_dim%s_T%s_alpha%s_p%s' % (
+    args.train_class_num, args.test_class_num, args.arch, args.embed_dim, args.temperature,args.alpha,args.p)
 if not os.path.isdir(args.checkpoint):
     mkdir_p(args.checkpoint)
 
@@ -130,7 +131,7 @@ def main_stage1():
     print(f"\nStart Stage-1 training ...\n")
     start_epoch = 0  # start from epoch 0 or last checkpoint epoch
     print('==> Building model..')
-    net = DFPNet(backbone=args.arch, num_classes=args.train_class_num, embed_dim=args.embed_dim)
+    net = DFPNet(backbone=args.arch, num_classes=args.train_class_num, embed_dim=args.embed_dim, p=args.p)
     net = net.to(device)
     if device == 'cuda':
         net = torch.nn.DataParallel(net)
@@ -382,13 +383,13 @@ def stage2_train(net, trainloader,vae, optimizer, criterion, device):
 def stage2_test(net, testloader, trainloader, device ):
     correct = 0
     total = 0
-    normweight_fea2cen_list = []
+    pnorm_list = []
     Target_list = []
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
             out = net(inputs)  # shape [batch,class]
-            normweight_fea2cen_list.append(out["normweight_fea2cen"])
+            pnorm_list.append(out["pnorm"])
             Target_list.append(targets)
             _, predicted = (out["normweight_fea2cen"]).max(1)
             total += targets.size(0)
@@ -397,38 +398,13 @@ def stage2_test(net, testloader, trainloader, device ):
                          % (100. * correct / total, correct, total))
     print("\nTesting results is {:.2f}%".format(100. * correct / total))
 
-    normweight_fea2cen_list = torch.cat(normweight_fea2cen_list, dim=0)
+    pnorm_list = torch.cat(pnorm_list, dim=0)
     Target_list = torch.cat(Target_list, dim=0)
 
-    logsumexp_result = args.temperature * \
-                       torch.logsumexp(normweight_fea2cen_list / args.temperature, dim=1, keepdim=False)
-    max_result = torch.max(normweight_fea2cen_list, dim=1, keepdim=False)[0]
-    softmax_result = torch.softmax(normweight_fea2cen_list, dim=1).max(dim=1, keepdim=False)[0]
-
-    scaled_ = (normweight_fea2cen_list - normweight_fea2cen_list.min()) \
-              / (normweight_fea2cen_list.max() - normweight_fea2cen_list.min())
-    smoothmaximum_factor = torch.exp(1.0 * scaled_)
-    smoothmaximum_result = (normweight_fea2cen_list * smoothmaximum_factor).sum(dim=1, keepdim=False) \
-                           / smoothmaximum_factor.sum(dim=1, keepdim=False)
-    p4norm_result = normweight_fea2cen_list.norm(p=4, dim=1, keepdim=False)
-    p3norm_result = normweight_fea2cen_list.norm(p=3, dim=1, keepdim=False)
-    p2norm_result = normweight_fea2cen_list.norm(p=2, dim=1, keepdim=False)
-    p1norm_result = normweight_fea2cen_list.norm(p=1, dim=1, keepdim=False)
-    p5norm_result = normweight_fea2cen_list.norm(p=5, dim=1, keepdim=False)
-
-    energy_hist(normweight_fea2cen_list, Target_list, args, "stage2_test_logits_result")
-    energy_hist(logsumexp_result, Target_list, args, "stage2_test_logsumexp_result")
-    energy_hist(max_result, Target_list, args, "stage2_test_max_result")
-    energy_hist(softmax_result, Target_list, args, "stage2_test_softmax_result")
-    energy_hist(smoothmaximum_result, Target_list, args, "stage2_test_smoothmaximum_result")
-    energy_hist(p1norm_result, Target_list, args, "stage2_test_p1norm_result")
-    energy_hist(p2norm_result, Target_list, args, "stage2_test_p2norm_result")
-    energy_hist(p3norm_result, Target_list, args, "stage2_test_p3norm_result")
-    energy_hist(p4norm_result, Target_list, args, "stage2_test_p4norm_result")
-    energy_hist(p5norm_result, Target_list, args, "stage2_test_p5norm_result")
-
-    middle_validate(net, trainloader, device, name="end_vae_pnorm_result")
-
+    energy_hist(pnorm_list, Target_list, args, "stage2_test_pnorm_result")
+    stage2_mid_dict = middle_validate(net, trainloader, device, name="stage2_vae_pnorm_result")
+    print(f"After training, the validation (training set and VAE data) mid norm is:")
+    print(f"mid_known: {stage2_mid_dict['mid_known']}   mid_unknown: {stage2_mid_dict['mid_unknown']}")
 
 def save_model(net, optimizer, epoch, path, **kwargs):
     state = {

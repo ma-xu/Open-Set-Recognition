@@ -55,7 +55,7 @@ class DFPNet(nn.Module):
         normweight_fea2cen = getattr(SIMI, "dotproduct")(embed_fea, centroids_normed)
 
         energy = torch.logsumexp(normweight_fea2cen, dim=1, keepdim=False)  # [n]
-        pnorm = normweight_fea2cen.norm(p=4,dim=1,keepdim=False)
+        pnorm = normweight_fea2cen.norm(p=self.p, dim=1, keepdim=False)
 
         return {
             "gap": gap,  # [n,self.feat_dim] gap extracted by backbone
