@@ -211,13 +211,13 @@ def stage1_train(net, trainloader, optimizer, criterion, device):
 def stage1_test(net, testloader, device):
     correct = 0
     total = 0
-    normweight_fea2cen_list = []
+    pnorm_list = []
     Target_list = []
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
             out = net(inputs)  # shape [batch,class]
-            normweight_fea2cen_list.append(out["normweight_fea2cen"])
+            pnorm_list.append(out["pnorm"])
             Target_list.append(targets)
             _, predicted = (out["normweight_fea2cen"]).max(1)
             total += targets.size(0)
@@ -226,37 +226,9 @@ def stage1_test(net, testloader, device):
                          % (100. * correct / total, correct, total))
     print("\nTesting results is {:.2f}%".format(100. * correct / total))
 
-    normweight_fea2cen_list = torch.cat(normweight_fea2cen_list, dim=0)
+    pnorm_list = torch.cat(pnorm_list, dim=0)
     Target_list = torch.cat(Target_list, dim=0)
-
-    logsumexp_result = args.temperature * \
-                                     torch.logsumexp(normweight_fea2cen_list / args.temperature, dim=1, keepdim=False)
-    max_result = torch.max(normweight_fea2cen_list, dim=1, keepdim=False)[0]
-    softmax_result = torch.softmax(normweight_fea2cen_list,dim=1).max(dim=1, keepdim=False)[0]
-
-
-    scaled_ = (normweight_fea2cen_list - normweight_fea2cen_list.min())\
-              /(normweight_fea2cen_list.max()-normweight_fea2cen_list.min())
-    smoothmaximum_factor = torch.exp(1.0 * scaled_)
-    smoothmaximum_result = (normweight_fea2cen_list*smoothmaximum_factor).sum(dim=1, keepdim=False) \
-                          / smoothmaximum_factor.sum(dim=1, keepdim=False)
-    p4norm_result = normweight_fea2cen_list.norm(p=4,dim=1,keepdim=False)
-    p3norm_result = normweight_fea2cen_list.norm(p=3, dim=1, keepdim=False)
-    p2norm_result = normweight_fea2cen_list.norm(p=2, dim=1, keepdim=False)
-    p1norm_result = normweight_fea2cen_list.norm(p=1, dim=1, keepdim=False)
-    p5norm_result = normweight_fea2cen_list.norm(p=5, dim=1, keepdim=False)
-
-    energy_hist(normweight_fea2cen_list, Target_list, args, "stage1_test_logits_result")
-    energy_hist(logsumexp_result, Target_list, args, "stage1_test_logsumexp_result")
-    energy_hist(max_result, Target_list, args, "stage1_test_max_result")
-    energy_hist(softmax_result, Target_list, args, "stage1_test_softmax_result")
-    energy_hist(smoothmaximum_result, Target_list, args, "stage1_test_smoothmaximum_result")
-    energy_hist(p1norm_result, Target_list, args, "stage1_test_p1norm_result")
-    energy_hist(p2norm_result, Target_list, args, "stage1_test_p2norm_result")
-    energy_hist(p3norm_result, Target_list, args, "stage1_test_p3norm_result")
-    energy_hist(p4norm_result, Target_list, args, "stage1_test_p4norm_result")
-    energy_hist(p5norm_result, Target_list, args, "stage1_test_p5norm_result")
-
+    energy_hist(pnorm_list, Target_list, args, "stage1_test_pnorm_result")
 
 def middle_validate(net, trainloader, device, name=""):
     print("validating vae and net ...")
