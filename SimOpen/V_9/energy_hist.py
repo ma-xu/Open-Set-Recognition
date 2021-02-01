@@ -88,5 +88,5 @@ def stackbar_hist(Out_list: torch.Tensor, Target_list:torch.Tensor, args, name:s
                                max=Out_list.max())
     known_hist = torch.histc(known_list, bins=args.hist_bins, min=Out_list.min(),
                              max=Out_list.max())
-    plot_bar(unknown_hist, known_hist, args, name)
+    plot_stackbar(unknown_hist, known_hist, args, name)
     print(f"Stacked bar: - {name} - processed.")
