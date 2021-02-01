@@ -24,7 +24,7 @@ from Utils import adjust_learning_rate, progress_bar, Logger, mkdir_p, Evaluatio
 from DFPLoss import DFPLoss, DFPEnergyLoss, DFPNormLoss
 from DFPNet import DFPNet
 from MyPlotter import plot_feature
-from energy_hist import energy_hist, energy_hist_sperate, stackbar_hist
+from energy_hist import energy_hist, energy_hist_sperate, stackbar_hist, singlebar_hist
 
 # python3 mnist.py  --hist_save --plot
 
@@ -173,7 +173,7 @@ def main_stage1():
 
     print("===> Evaluating stage-1 ...")
     stage1_test(net, testloader, device)
-
+    stage1_valtrain(net, trainloader, device)
     return {
         "net": net,
     }
@@ -229,6 +229,19 @@ def stage1_test(net, testloader, device):
     pnorm_list = torch.cat(pnorm_list, dim=0)
     Target_list = torch.cat(Target_list, dim=0)
     stackbar_hist(pnorm_list, Target_list, args, "stage1_test_pnorm_result")
+
+
+def stage1_valtrain(net, trainloader, device):
+    pnorm_list = []
+    with torch.no_grad():
+        for batch_idx, (inputs, targets) in enumerate(trainloader):
+            inputs, targets = inputs.to(device), targets.to(device)
+            out = net(inputs)  # shape [batch,class]
+            pnorm_list.append(out["pnorm"])
+            progress_bar(batch_idx, len(testloader))
+
+    pnorm_list = torch.cat(pnorm_list, dim=0)
+    singlebar_hist(pnorm_list, args, "stage1_valtrain_pnorm_result")
 
 
 def middle_validate(net, trainloader, device, name=""):

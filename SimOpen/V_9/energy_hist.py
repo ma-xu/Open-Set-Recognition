@@ -90,3 +90,13 @@ def stackbar_hist(Out_list: torch.Tensor, Target_list:torch.Tensor, args, name:s
                              max=Out_list.max())
     plot_stackbar(unknown_hist, known_hist, args, name)
     print(f"Stacked bar: - {name} - processed.")
+
+
+def singlebar_hist(Out_list: torch.Tensor, args, name:str):
+    out_hist = torch.histc(Out_list, bins=args.hist_bins, min=Out_list.min(), max=Out_list.max())
+    x = np.arange(args.hist_bins)
+    out_hist = out_hist.data.cpu().numpy()
+    plt.bar(x, out_hist)
+    save_name = os.path.join(args.histfolder, name + '.png')
+    plt.savefig(save_name, bbox_inches='tight', dpi=args.plot_quality)
+    plt.close()
