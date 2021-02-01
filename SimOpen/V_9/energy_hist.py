@@ -66,7 +66,6 @@ def plot_bar(unknown_hist, known_hist, args, name):
     plt.close()
 
 
-
 def plot_stackbar(unknown_hist, known_hist, args, name):
     x = np.arange(args.hist_bins)
     unknown_hist = unknown_hist.data.cpu().numpy()
@@ -77,7 +76,6 @@ def plot_stackbar(unknown_hist, known_hist, args, name):
     save_name = os.path.join(args.histfolder, name + '.png')
     plt.savefig(save_name, bbox_inches='tight', dpi=args.plot_quality)
     plt.close()
-
 
 
 def stackbar_hist(Out_list: torch.Tensor, Target_list:torch.Tensor, args, name:str):
