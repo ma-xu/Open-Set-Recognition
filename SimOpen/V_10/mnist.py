@@ -61,10 +61,12 @@ parser.add_argument('--stage2_lr', default=0.001, type=float, help='learning rat
 
 # Parameters for stage plotting
 parser.add_argument('--plot', action='store_true', help='Plotting the training set.')
-parser.add_argument('--plot_max', default=0, type=int, help='max examples to plot in each class, 0 indicates all.')
-
 parser.add_argument('--plot_quality', default=200, type=int, help='DPI of plot figure')
-parser.add_argument('--bins', default=50, type=int, help='divided into n bins')
+
+# histogram figures for Energy model analysis
+parser.add_argument('--hist_bins', default=100, type=int, help='divided into n bins')
+parser.add_argument('--hist_norm', default=True, action='store_true', help='if norm the frequency to [0,1]')
+parser.add_argument('--hist_save', action='store_true', help='if save the histogram figures')
 
 args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
