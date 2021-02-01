@@ -242,6 +242,8 @@ def stage1_valtrain(net, trainloader, device):
 
     pnorm_list = torch.cat(pnorm_list, dim=0)
     singlebar_hist(pnorm_list, args, "stage1_valtrain_pnorm_result")
+    print(f"The middle value is: {pnorm_list.median().data}")
+    return pnorm_list.median().data
 
 
 def middle_validate(net, trainloader, device, name=""):
