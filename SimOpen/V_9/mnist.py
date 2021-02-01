@@ -238,11 +238,11 @@ def stage1_valtrain(net, trainloader, device):
             inputs, targets = inputs.to(device), targets.to(device)
             out = net(inputs)  # shape [batch,class]
             pnorm_list.append(out["pnorm"])
-            progress_bar(batch_idx, len(testloader), "|...")
+
 
     pnorm_list = torch.cat(pnorm_list, dim=0)
     singlebar_hist(pnorm_list, args, "stage1_valtrain_pnorm_result")
-    print(f"The middle value is: {pnorm_list.median().data}")
+    print(f"pnorm static: min {pnorm_list.min()} | mid {pnorm_list.median()} | {pnorm_list.max()}")
     return pnorm_list.median().data
 
 
