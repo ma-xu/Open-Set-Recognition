@@ -218,7 +218,7 @@ def stage1_test(net, testloader, device):
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
             out = net(inputs)  # shape [batch,class]
-            normfea_list.append(out["normfea_list"])
+            normfea_list.append(out["norm_fea"])
             project_list.append(out["pnorm"])
             Target_list.append(targets)
             _, predicted = (out["normweight_fea2cen"]).max(1)
