@@ -213,6 +213,7 @@ def stage1_test(net, testloader, device):
     total = 0
     normfea_list = []
     project_list = []
+    std_list = []
     Target_list = []
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
@@ -220,6 +221,7 @@ def stage1_test(net, testloader, device):
             out = net(inputs)  # shape [batch,class]
             normfea_list.append(out["norm_fea"])
             project_list.append(out["pnorm"])
+            std_list.append(out["normweight_fea2cen"])
             Target_list.append(targets)
             _, predicted = (out["normweight_fea2cen"]).max(1)
             total += targets.size(0)
@@ -230,11 +232,15 @@ def stage1_test(net, testloader, device):
 
     normfea_list = torch.cat(normfea_list, dim=0)
     project_list = torch.cat(project_list, dim=0)
+    std_list = torch.cat(std_list, dim=0)
+    std_list = std_list.std(dim=1, keepdim=False)
     Target_list = torch.cat(Target_list, dim=0)
     stackbar_hist(normfea_list, Target_list, args, "stage1_test_normfea_stackbar")
     stackbar_hist(project_list, Target_list, args, "stage1_test_project_stackbar")
     energy_hist(normfea_list, Target_list, args, "stage1_test_normfea_doublebar")
     energy_hist(project_list, Target_list, args, "stage1_test_project_doublebar")
+    stackbar_hist(std_list, Target_list, args, "stage1_test_std_stackbar")
+    energy_hist(std_list, Target_list, args, "stage1_test_std_doublebar")
 
 
 def stage1_valtrain(net, trainloader, device):
