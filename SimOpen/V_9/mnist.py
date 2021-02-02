@@ -211,15 +211,15 @@ def stage1_train(net, trainloader, optimizer, criterion, device):
 def stage1_test(net, testloader, device):
     correct = 0
     total = 0
-    pnorm_list = []
+    normfea_list = []
     project_list = []
     Target_list = []
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
             out = net(inputs)  # shape [batch,class]
-            pnorm_list.append(out["pnorm"])
-            project_list.append(out["normweight_fea2cen"])
+            normfea_list.append(out["normfea_list"])
+            project_list.append(out["pnorm"])
             Target_list.append(targets)
             _, predicted = (out["normweight_fea2cen"]).max(1)
             total += targets.size(0)
@@ -228,34 +228,32 @@ def stage1_test(net, testloader, device):
                          % (100. * correct / total, correct, total))
     print("\nTesting results is {:.2f}%".format(100. * correct / total))
 
-    pnorm_list = torch.cat(pnorm_list, dim=0)
+    normfea_list = torch.cat(normfea_list, dim=0)
     project_list = torch.cat(project_list, dim=0)
-    project_list = project_list.norm(p=2, dim=1, keepdim=False)
     Target_list = torch.cat(Target_list, dim=0)
-    stackbar_hist(pnorm_list, Target_list, args, "stage1_test_pnorm_stackbar")
+    stackbar_hist(normfea_list, Target_list, args, "stage1_test_normfea_stackbar")
     stackbar_hist(project_list, Target_list, args, "stage1_test_project_stackbar")
-    energy_hist(pnorm_list, Target_list, args, "stage1_test_pnorm_doublebar")
+    energy_hist(normfea_list, Target_list, args, "stage1_test_normfea_doublebar")
     energy_hist(project_list, Target_list, args, "stage1_test_project_doublebar")
 
 
 def stage1_valtrain(net, trainloader, device):
-    pnorm_list = []
+    normfea_list = []
     project_list = []
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(trainloader):
             inputs, targets = inputs.to(device), targets.to(device)
             out = net(inputs)  # shape [batch,class]
-            project_list.append(out["normweight_fea2cen"])
-            pnorm_list.append(out["pnorm"])
+            project_list.append(out["pnorm"])
+            normfea_list.append(out["norm_fea"])
 
-    pnorm_list = torch.cat(pnorm_list, dim=0)
+    normfea_list = torch.cat(normfea_list, dim=0)
     project_list = torch.cat(project_list, dim=0)
-    project_list = project_list.norm(p=2, dim=1, keepdim=False)
-    singlebar_hist(pnorm_list, args, "stage1_valtrain_pnorm_result")
+    singlebar_hist(normfea_list, args, "stage1_valtrain_normfea_result")
     singlebar_hist(project_list, args, "stage1_valtrain_project_result")
-    print(f"pnorm   static: min {pnorm_list.min()} | mid {pnorm_list.median()} | {pnorm_list.max()}")
+    print(f"pnorm   static: min {normfea_list.min()} | mid {normfea_list.median()} | {normfea_list.max()}")
     print(f"project static: min {project_list.min()} | mid {project_list.median()} | {project_list.max()}")
-    return pnorm_list.median().data
+    return normfea_list.median().data
 
 
 def middle_validate(net, trainloader, device, name=""):
