@@ -49,7 +49,7 @@ parser.add_argument('--p', default=2, type=int, help='p-norm')
 
 # Parameters for optimizer
 parser.add_argument('--temperature', default=1, type=int, help='scaling cosine distance for exp')
-parser.add_argument('--alpha', default=0.1, type=float, help='balance for classfication and energy loss')
+parser.add_argument('--alpha', default=0.5, type=float, help='balance for classfication and energy loss')
 
 # Parameters for stage 1 training
 parser.add_argument('--stage1_resume', default='', type=str, metavar='PATH', help='path to latest checkpoint')
@@ -83,7 +83,7 @@ parser.add_argument('--vae_resume', default='/home/UNT/jg0737/Open-Set-Recogniti
 # Parameters for stage 2 training
 parser.add_argument('--stage2_resume', default='', type=str, metavar='PATH', help='path to latest checkpoint')
 parser.add_argument('--stage2_es', default=25, type=int, help='epoch size')
-parser.add_argument('--stage2_lr', default=0.0001, type=float, help='learning rate')
+parser.add_argument('--stage2_lr', default=0.001, type=float, help='learning rate')
 parser.add_argument('--stage2_lr_factor', default=0.1, type=float, help='learning rate Decay factor')  # works for MNIST
 parser.add_argument('--stage2_lr_step', default=10, type=float, help='learning rate Decay step')  # works for MNIST
 parser.add_argument('--stage2_bs', default=128, type=int, help='batch size')
@@ -124,7 +124,7 @@ mixuploader = torch.utils.data.DataLoader(trainset, batch_size=args.stage1_bs, s
 def main():
     print(device)
     stage1_dict = main_stage1()  # {"net": net, "mid_known","mid_unknown"}
-    # main_stage2(stage1_dict["net"],stage1_dict["vae"], mid_energy)
+    main_stage2(stage1_dict["net"],stage1_dict["vae"], stage1_dict["mid_known"], stage1_dict["mid_unknown"])
 
 
 def main_stage1():
@@ -172,7 +172,7 @@ def main_stage1():
         print(f"\nFinish Stage-1 training...\n")
 
     print("===> Evaluating stage-1 ...")
-    stage1_test(net, testloader, device)
+    stage_test(net, testloader, device)
     mid_dict = stage_valvae(net, trainloader, device)
     return {
         "net": net,
@@ -210,11 +210,10 @@ def stage1_train(net, trainloader, optimizer, criterion, device):
     }
 
 
-def stage1_test(net, testloader, device):
+def stage_test(net, testloader, device, name="stage1_test_normfea_doublebar"):
     correct = 0
     total = 0
     normfea_list = []
-    std_list = []
     Target_list = []
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
@@ -231,7 +230,7 @@ def stage1_test(net, testloader, device):
 
     normfea_list = torch.cat(normfea_list, dim=0)
     Target_list = torch.cat(Target_list, dim=0)
-    energy_hist(normfea_list, Target_list, args, "stage1_test_normfea_doublebar")
+    energy_hist(normfea_list, Target_list, args, name)
 
 
 def stage_valvae(net, dataloader, device, name="stage1_valtrain&sample_normfea_result"):
@@ -280,7 +279,7 @@ def stage_valvae(net, dataloader, device, name="stage1_valtrain&sample_normfea_r
 def main_stage2(net, vae, mid_known, mid_unknown):
     print("Starting stage-2 fine-tuning ...")
     start_epoch = 0
-    criterion = DFPNormLoss(mid_known=mid_energy["mid_known"], mid_unknown=mid_energy["mid_unknown"],
+    criterion = DFPNormLoss(mid_known=mid_known, mid_unknown=mid_unknown,
                             alpha=args.alpha, temperature=args.temperature)
     optimizer = torch.optim.SGD(net.parameters(), lr=args.stage2_lr, momentum=0.9, weight_decay=5e-4)
     if args.stage2_resume:
@@ -317,8 +316,8 @@ def main_stage2(net, vae, mid_known, mid_unknown):
         print(f"\nFinish Stage-2 training...\n")
 
         print("===> Evaluating stage-2 ...")
-        stage2_test(net, testloader, trainloader, device)
-
+        stage_test(net, testloader, device, name="stage2_test_normfea_doublebar")
+        stage_valvae(net, trainloader, device, name="stage2_valtrain&sample_normfea_result")
 
 # Training
 def stage2_train(net, trainloader,vae, optimizer, criterion, device):
@@ -362,32 +361,6 @@ def stage2_train(net, trainloader,vae, optimizer, criterion, device):
         "accuracy": correct / total
     }
 
-
-def stage2_test(net, testloader, trainloader, device ):
-    correct = 0
-    total = 0
-    pnorm_list = []
-    Target_list = []
-    with torch.no_grad():
-        for batch_idx, (inputs, targets) in enumerate(testloader):
-            inputs, targets = inputs.to(device), targets.to(device)
-            out = net(inputs)  # shape [batch,class]
-            pnorm_list.append(out["pnorm"])
-            Target_list.append(targets)
-            _, predicted = (out["normweight_fea2cen"]).max(1)
-            total += targets.size(0)
-            correct += predicted.eq(targets).sum().item()
-            progress_bar(batch_idx, len(testloader), '| Acc: %.3f%% (%d/%d)'
-                         % (100. * correct / total, correct, total))
-    print("\nTesting results is {:.2f}%".format(100. * correct / total))
-
-    pnorm_list = torch.cat(pnorm_list, dim=0)
-    Target_list = torch.cat(Target_list, dim=0)
-
-    energy_hist(pnorm_list, Target_list, args, "stage2_test_pnorm_result")
-    stage2_mid_dict = middle_validate(net, trainloader, device, name="stage2_vae_pnorm_result")
-    print(f"After training, the validation (training set and VAE data) mid norm is:")
-    print(f"mid_known: {stage2_mid_dict['mid_known']}   mid_unknown: {stage2_mid_dict['mid_unknown']}")
 
 def save_model(net, optimizer, epoch, path, **kwargs):
     state = {

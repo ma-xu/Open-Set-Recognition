@@ -77,12 +77,12 @@ class DFPNormLoss(nn.Module):
         sim_classification = net_out["normweight_fea2cen"]  # [n, class_num];
         loss_classification = self.ce(sim_classification/self.temperature, targets)
 
-        pnorm_known = net_out["pnorm"]
-        pnorm_unknown = net_out_unknown["pnorm"]
-        loss_energy_known = 1.0 - pnorm_known/self.mid_known
-        loss_energy_known = (F.relu(loss_energy_known, inplace=True).sum()) / (pnorm_known.shape[0])
-        loss_energy_unknown = pnorm_unknown/self.mid_unknown - 1.0
-        loss_energy_unknown = (F.relu(loss_energy_unknown, inplace=True).sum()) / (pnorm_unknown.shape[0])
+        norm_known = net_out["norm_fea"]
+        norm_unknown = net_out_unknown["norm_fea"]
+        loss_energy_known = 1.0 - norm_known/self.mid_known
+        loss_energy_known = (F.relu(loss_energy_known, inplace=True).sum()) / (norm_known.shape[0])
+        loss_energy_unknown = norm_unknown/self.mid_unknown - 1.0
+        loss_energy_unknown = (F.relu(loss_energy_unknown, inplace=True).sum()) / (norm_unknown.shape[0])
         # print(f"loss_energy_known: {loss_energy_known} | loss_energy_unknown: {loss_energy_unknown}")
         loss_energy = loss_energy_known + loss_energy_unknown
         loss_energy = self.alpha*loss_energy
