@@ -60,6 +60,9 @@ parser.add_argument('--stage1_lr_step', default=10, type=float, help='learning r
 parser.add_argument('--stage1_bs', default=128, type=int, help='batch size')
 parser.add_argument('--evaluate', action='store_true', help='Evaluate without training')
 
+# parameters for mixup
+parser.add_argument('--mixup', default=1., type=float, help='the parameters for mixup')
+
 # Parameters for stage plotting
 parser.add_argument('--plot', action='store_true', help='Plotting the training set.')
 parser.add_argument('--plot_quality', default=200, type=int, help='DPI of plot figure')
@@ -116,7 +119,7 @@ testset = MNIST(root='../../data', train=False, download=True, transform=transfo
 # data loader
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.stage1_bs, shuffle=True, num_workers=4)
 testloader = torch.utils.data.DataLoader(testset, batch_size=args.stage1_bs, shuffle=False, num_workers=4)
-
+mixuploader = torch.utils.data.DataLoader(trainset, batch_size=args.stage1_bs, shuffle=True, num_workers=4)
 
 def main():
     print(device)
@@ -278,28 +281,46 @@ def stage1_valvae(net, testloader, device):
 
     normfea_test_list = []
     normfea_sample_list = []
+    normfea_mix_list = []
     target_list = []
     with torch.no_grad():
-        for batch_idx, (inputs, targets) in enumerate(testloader):
+        batch_idx = -1
+        for (inputs, targets), (inputs_bak, targets_bak) in zip(trainloader, mixuploader):
+            batch_idx += 1
             inputs, targets = inputs.to(device), targets.to(device)
+            inputs_bak, targets_bak = inputs_bak.to(device), targets_bak.to(device)
+            mixed = mixup(inputs, targets, inputs_bak, targets_bak, args)
             sampled = sampler(vae, device, args)
             out_test = net(inputs)
             out_sample = net(sampled)
+            out_mixed = net(mixed)
             normfea_test_list.append(out_test["norm_fea"])
             normfea_sample_list.append(out_sample["norm_fea"])
+            normfea_mix_list.append(out_mixed["norm_fea"])
             target_list.append(targets)
             progress_bar(batch_idx, len(trainloader))
     normfea_test_list = torch.cat(normfea_test_list, dim=0)
     normfea_sample_list = torch.cat(normfea_sample_list, dim=0)
+    normfea_mix_list = torch.cat(normfea_mix_list, dim=0)
     target_list = torch.cat(target_list, dim=0)
 
     unknown_label = target_list.max()
     normfea_test_unknown_list = normfea_test_list[target_list == unknown_label]
     normfea_test_known_list = normfea_test_list[target_list != unknown_label]
 
-    plot_listhist([normfea_test_known_list, normfea_test_unknown_list, normfea_sample_list],
-                  args, labels=["test_known", "test_unknown", "sampled"],
-                  name="stage1_valvae_normfea_result")
+    plot_listhist([normfea_test_known_list, normfea_test_unknown_list, normfea_sample_list, normfea_mix_list],
+                  args, labels=["test_known", "test_unknown", "sampled", "mixed"],
+                  name="stage1_valvaemix_normfea_result")
+
+
+
+
+
+
+
+
+
+
 
 
 
