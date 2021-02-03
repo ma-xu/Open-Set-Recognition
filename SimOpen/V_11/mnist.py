@@ -176,7 +176,7 @@ def main_stage1():
 
     print("===> Evaluating stage-1 ...")
     stage1_test(net, testloader, device)
-    stage1_valvae(net, testloader, device)
+    stage1_valvae(net, trainloader, device)
     return {
         "net": net,
     }
@@ -268,6 +268,9 @@ def stage1_valvae(net, dataloader, device):
     plot_listhist([normfea_loader_list, normfea_sample_list],
                   args, labels=["train data", "sampled data"],
                   name="stage1_valtrain&sample_normfea_result")
+    print(f"train mid:{normfea_loader_list.median()} | sampled mid:{normfea_sample_list.median()}")
+    print(f"min  norm:{min(normfea_loader_list.min(), normfea_sample_list.min())} "
+          f"| max  norm:{max(normfea_loader_list.max(), normfea_sample_list.max())}")
     return{
         "mid_known": normfea_loader_list.median(),
         "mid_unknown": normfea_sample_list.median()
