@@ -289,10 +289,10 @@ def stage1_valvae(net, testloader, device):
             batch_idx += 1
             inputs, targets = inputs.to(device), targets.to(device)
             inputs_bak, targets_bak = inputs_bak.to(device), targets_bak.to(device)
-            mixed = mixup(inputs, targets, inputs_bak, targets_bak, args)
             sampled = sampler(vae, device, args)
             out_test = net(inputs)
             out_sample = net(sampled)
+            mixed = mixup(inputs, targets, inputs_bak, targets_bak, args)
             out_mixed = net(mixed)
             normfea_test_list.append(out_test["norm_fea"])
             normfea_sample_list.append(out_sample["norm_fea"])
