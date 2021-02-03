@@ -116,6 +116,7 @@ def plot_listhist(hists: list, args, labels: list, name: str):
 
     for i in range(0, len(hists)):
         hist = torch.histc(hists[i], bins=args.hist_bins, min=min_value, max=max_value)
+        hist = hist.data.cpu().numpy()
         if args.hist_norm:
             hist = hist / (hist.sum())
         plt.bar(x + width*i, hist, width=width, label=labels[i])
