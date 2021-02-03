@@ -119,7 +119,7 @@ testset = MNIST(root='../../data', train=False, download=True, transform=transfo
 # data loader
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.stage1_bs, shuffle=True, num_workers=4)
 testloader = torch.utils.data.DataLoader(testset, batch_size=args.stage1_bs, shuffle=False, num_workers=4)
-mixuploader = torch.utils.data.DataLoader(trainset, batch_size=args.stage1_bs, shuffle=True, num_workers=4)
+mixuploader = torch.utils.data.DataLoader(testset, batch_size=args.stage1_bs, shuffle=True, num_workers=4)
 
 def main():
     print(device)
@@ -285,31 +285,31 @@ def stage1_valvae(net, testloader, device):
     target_list = []
     with torch.no_grad():
         batch_idx = -1
-        for (inputs, targets), (inputs_bak, targets_bak) in zip(trainloader, mixuploader):
+        for (inputs, targets), (inputs_bak, targets_bak) in zip(testloader, mixuploader):
             batch_idx += 1
             inputs, targets = inputs.to(device), targets.to(device)
             inputs_bak, targets_bak = inputs_bak.to(device), targets_bak.to(device)
             sampled = sampler(vae, device, args)
             out_test = net(inputs)
             out_sample = net(sampled)
-            # mixed = mixup(inputs, targets, inputs_bak, targets_bak, args)
-            # out_mixed = net(mixed)
+            mixed = mixup(inputs, targets, inputs_bak, targets_bak, args)
+            out_mixed = net(mixed)
             normfea_test_list.append(out_test["norm_fea"])
             normfea_sample_list.append(out_sample["norm_fea"])
-            # normfea_mix_list.append(out_mixed["norm_fea"])
+            normfea_mix_list.append(out_mixed["norm_fea"])
             target_list.append(targets)
             progress_bar(batch_idx, len(trainloader))
     normfea_test_list = torch.cat(normfea_test_list, dim=0)
     normfea_sample_list = torch.cat(normfea_sample_list, dim=0)
-    # normfea_mix_list = torch.cat(normfea_mix_list, dim=0)
+    normfea_mix_list = torch.cat(normfea_mix_list, dim=0)
     target_list = torch.cat(target_list, dim=0)
 
     unknown_label = target_list.max()
     normfea_test_unknown_list = normfea_test_list[target_list == unknown_label]
     normfea_test_known_list = normfea_test_list[target_list != unknown_label]
 
-    plot_listhist([normfea_test_known_list, normfea_test_unknown_list, normfea_sample_list],
-                  args, labels=["test_known", "test_unknown", "sampled"],
+    plot_listhist([normfea_test_known_list, normfea_test_unknown_list, normfea_sample_list, normfea_mix_list],
+                  args, labels=["test_known", "test_unknown", "sampled", "mixed"],
                   name="stage1_valvaemix_normfea_result")
 
 
