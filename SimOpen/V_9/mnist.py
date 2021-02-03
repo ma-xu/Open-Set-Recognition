@@ -24,7 +24,7 @@ from Utils import adjust_learning_rate, progress_bar, Logger, mkdir_p, Evaluatio
 from DFPLoss import DFPLoss, DFPEnergyLoss, DFPNormLoss
 from DFPNet import DFPNet
 from MyPlotter import plot_feature
-from energy_hist import energy_hist, energy_hist_sperate, stackbar_hist, singlebar_hist
+from energy_hist import energy_hist, energy_hist_sperate, stackbar_hist, singlebar_hist, plot_listhist
 
 # python3 mnist.py  --hist_save --plot
 
@@ -174,6 +174,7 @@ def main_stage1():
     print("===> Evaluating stage-1 ...")
     stage1_test(net, testloader, device)
     stage1_valtrain(net, trainloader, device)
+    stage1_valvae(net, testloader, device)
     return {
         "net": net,
     }
@@ -260,6 +261,46 @@ def stage1_valtrain(net, trainloader, device):
     print(f"pnorm   static: min {normfea_list.min()} | mid {normfea_list.median()} | {normfea_list.max()}")
     print(f"project static: min {project_list.min()} | mid {project_list.median()} | {project_list.max()}")
     return normfea_list.median().data
+
+
+def stage1_valvae(net, testloader, device):
+    print("validating vae and net ...")
+    # loading vae model
+    vae = VanillaVAE(in_channels=1, latent_dim=args.latent_dim)
+    vae = vae.to(device)
+    if device == 'cuda':
+        vae = torch.nn.DataParallel(vae)
+        cudnn.benchmark = True
+    if os.path.isfile(args.vae_resume):
+        vae_checkpoint = torch.load(args.vae_resume)
+        vae.load_state_dict(vae_checkpoint['net'])
+        print('==> Resuming vae from checkpoint, loaded..')
+
+    normfea_test_list = []
+    normfea_sample_list = []
+    target_list = []
+    with torch.no_grad():
+        for batch_idx, (inputs, targets) in enumerate(testloader):
+            inputs, targets = inputs.to(device), targets.to(device)
+            sampled = sampler(vae, device, args)
+            out_test = net(inputs)
+            out_sample = net(sampled)
+            normfea_test_list.append(out_test["norm_fea"])
+            normfea_sample_list.append(out_sample["norm_fea"])
+            target_list.append(targets)
+            progress_bar(batch_idx, len(trainloader))
+    normfea_test_list = torch.cat(normfea_test_list, dim=0)
+    normfea_sample_list = torch.cat(normfea_sample_list, dim=0)
+    target_list = torch.cat(target_list, dim=0)
+
+    unknown_label = target_list.max()
+    normfea_test_unknown_list = normfea_test_list[target_list == unknown_label]
+    normfea_test_known_list = normfea_test_list[target_list != unknown_label]
+
+    plot_listhist([normfea_test_known_list, normfea_test_unknown_list, normfea_sample_list],
+                  args, labels=["test_known", "test_unknown", "sampled"],
+                  name="stage1_valvae_normfea_result")
+
 
 
 def middle_validate(net, trainloader, device, name=""):
