@@ -292,24 +292,24 @@ def stage1_valvae(net, testloader, device):
             sampled = sampler(vae, device, args)
             out_test = net(inputs)
             out_sample = net(sampled)
-            mixed = mixup(inputs, targets, inputs_bak, targets_bak, args)
-            out_mixed = net(mixed)
+            # mixed = mixup(inputs, targets, inputs_bak, targets_bak, args)
+            # out_mixed = net(mixed)
             normfea_test_list.append(out_test["norm_fea"])
             normfea_sample_list.append(out_sample["norm_fea"])
-            normfea_mix_list.append(out_mixed["norm_fea"])
+            # normfea_mix_list.append(out_mixed["norm_fea"])
             target_list.append(targets)
             progress_bar(batch_idx, len(trainloader))
     normfea_test_list = torch.cat(normfea_test_list, dim=0)
     normfea_sample_list = torch.cat(normfea_sample_list, dim=0)
-    normfea_mix_list = torch.cat(normfea_mix_list, dim=0)
+    # normfea_mix_list = torch.cat(normfea_mix_list, dim=0)
     target_list = torch.cat(target_list, dim=0)
 
     unknown_label = target_list.max()
     normfea_test_unknown_list = normfea_test_list[target_list == unknown_label]
     normfea_test_known_list = normfea_test_list[target_list != unknown_label]
 
-    plot_listhist([normfea_test_known_list, normfea_test_unknown_list, normfea_sample_list, normfea_mix_list],
-                  args, labels=["test_known", "test_unknown", "sampled", "mixed"],
+    plot_listhist([normfea_test_known_list, normfea_test_unknown_list, normfea_sample_list],
+                  args, labels=["test_known", "test_unknown", "sampled"],
                   name="stage1_valvaemix_normfea_result")
 
 
