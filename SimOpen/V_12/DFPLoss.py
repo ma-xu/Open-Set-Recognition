@@ -10,11 +10,11 @@ class DFPLoss(nn.Module):
         self.ce = nn.CrossEntropyLoss()
 
     def forward(self, net_out, targets):
-        sim_classification = net_out["normweight_fea2cen"]  # [n, class_num]; range [-1,1] greater indicates more similar.
-        loss_classification = self.ce(sim_classification/self.temperature, targets)
+        sim_classification = net_out[
+            "normweight_fea2cen"]  # [n, class_num]; range [-1,1] greater indicates more similar.
+        loss_classification = self.ce(sim_classification / self.temperature, targets)
 
         return {"total": loss_classification}
-
 
         # dist_fea2cen = net_out["cosine_fea2cen"]
         # # dist_fea2cen = torch.exp(dist_fea2cen)-1.0
@@ -33,6 +33,7 @@ class DFPLoss(nn.Module):
         #     "distance": loss_distance
         # }
 
+
 class DFPEnergyLoss(nn.Module):
     def __init__(self, mid_known, mid_unknown, temperature=1, alpha=1.0):
         super(DFPEnergyLoss, self).__init__()
@@ -42,17 +43,18 @@ class DFPEnergyLoss(nn.Module):
         self.alpha = alpha
         self.ce = nn.CrossEntropyLoss()
 
-    def forward(self, net_out, targets,net_out_unknown):
+    def forward(self, net_out, targets, net_out_unknown):
         sim_classification = net_out["normweight_fea2cen"]  # [n, class_num];
-        loss_classification = self.ce(sim_classification/self.temperature, targets)
+        loss_classification = self.ce(sim_classification / self.temperature, targets)
 
         energy_known = net_out["energy"]
         energy_unknown = net_out_unknown["energy"]
-        loss_energy_known = (F.relu(self.mid_known-energy_known,inplace=True).pow(2).sum()) / (energy_known.shape[0])
-        loss_energy_unknown = (F.relu(energy_unknown-self.mid_unknown, inplace=True).pow(2).sum()) / (energy_unknown.shape[0])
+        loss_energy_known = (F.relu(self.mid_known - energy_known, inplace=True).pow(2).sum()) / (energy_known.shape[0])
+        loss_energy_unknown = (F.relu(energy_unknown - self.mid_unknown, inplace=True).pow(2).sum()) / (
+        energy_unknown.shape[0])
         # print(f"loss_energy_known: {loss_energy_known} | loss_energy_unknown: {loss_energy_unknown}")
         loss_energy = loss_energy_known + loss_energy_unknown
-        loss_energy = self.alpha*loss_energy
+        loss_energy = self.alpha * loss_energy
         total = loss_classification + loss_energy
 
         return {
@@ -65,27 +67,40 @@ class DFPEnergyLoss(nn.Module):
 
 
 class DFPNormLoss(nn.Module):
-    def __init__(self, mid_known, mid_unknown, temperature=1, alpha=1.0):
+    def __init__(self, mid_known, mid_unknown, temperature=1, alpha=1.0, kappa=2):
+        """
+        following the FCOS loss and Enery-based loss
+        :param mid_known:
+        :param mid_unknown:
+        :param temperature:
+        :param alpha:
+        :param kappa:
+        """
         super(DFPNormLoss, self).__init__()
+        self.kappa = kappa
         self.mid_known = mid_known
         self.mid_unknown = mid_unknown
         self.temperature = temperature
         self.alpha = alpha
         self.ce = nn.CrossEntropyLoss()
 
-    def forward(self, net_out, targets,net_out_unknown):
+    def forward(self, net_out, targets, net_out_unknown):
         sim_classification = net_out["normweight_fea2cen"]  # [n, class_num];
-        loss_classification = self.ce(sim_classification/self.temperature, targets)
+        loss_classification = self.ce(sim_classification / self.temperature, targets)
 
         norm_known = net_out["norm_fea"]
         norm_unknown = net_out_unknown["norm_fea"]
-        loss_energy_known = 1.0 - norm_known/self.mid_known
-        loss_energy_known = (F.relu(loss_energy_known, inplace=True).sum()) / (norm_known.shape[0])
-        loss_energy_unknown = norm_unknown/self.mid_unknown - 1.0
-        loss_energy_unknown = (F.relu(loss_energy_unknown, inplace=True).sum()) / (norm_unknown.shape[0])
+        loss_energy_known = F.relu(1.0 - norm_known / self.mid_known, inplace=True)
+        loss_energy_known = (1.0-loss_energy_known).pow(self.kappa) * loss_energy_known
+        loss_energy_known = loss_energy_known.sum() / (norm_known.shape[0])
+
+        loss_energy_unknown = F.relu(norm_unknown / self.mid_unknown - 1.0, inplace=True)
+        loss_energy_unknown = (1.0 - loss_energy_unknown).pow(self.kappa) * loss_energy_unknown
+        loss_energy_unknown = loss_energy_unknown.sum() / (norm_unknown.shape[0])
+
         # print(f"loss_energy_known: {loss_energy_known} | loss_energy_unknown: {loss_energy_unknown}")
         loss_energy = loss_energy_known + loss_energy_unknown
-        loss_energy = self.alpha*loss_energy
+        loss_energy = self.alpha * loss_energy
         total = loss_classification + loss_energy
 
         return {
@@ -111,6 +126,5 @@ def demo():
     }
     dist_loss = loss(netout, label)
     print(dist_loss)
-
 
 # demo()
