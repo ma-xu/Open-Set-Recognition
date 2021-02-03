@@ -284,7 +284,7 @@ def stage1_valvae(net, testloader, device):
     normfea_mix_list = []
     target_list = []
     with torch.no_grad():
-        for batch_idx, (inputs, targets) in enumerate(trainloader):
+        for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
             sampled = sampler(vae, device, args)
             out_test = net(inputs)
