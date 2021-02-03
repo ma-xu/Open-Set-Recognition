@@ -123,11 +123,8 @@ mixuploader = torch.utils.data.DataLoader(trainset, batch_size=args.stage1_bs, s
 
 def main():
     print(device)
-    stage1_dict = main_stage1()  # {"net": net, "mid_energy": {"mid_known":, "mid_unknown":}}}
-    # middle_dict = middle_validate(stage1_dict["net"], trainloader, device, name="middle_vae_pnorm_result")
-    # mid_energy = {"mid_known": middle_dict["mid_known"], "mid_unknown": middle_dict["mid_unknown"]}
-    # print(f"The middle p-norm is: {mid_energy}")
-    # main_stage2(stage1_dict["net"],middle_dict["vae"], mid_energy)
+    stage1_dict = main_stage1()  # {"net": net, "mid_known","mid_unknown"}
+    # main_stage2(stage1_dict["net"],stage1_dict["vae"], mid_energy)
 
 
 def main_stage1():
@@ -176,13 +173,15 @@ def main_stage1():
 
     print("===> Evaluating stage-1 ...")
     stage1_test(net, testloader, device)
-    stage1_valvae(net, trainloader, device)
+    mid_dict = stage_valvae(net, trainloader, device)
     return {
         "net": net,
+        "vae": mid_dict["vae"],
+        "mid_known": mid_dict["mid_known"],
+        "mid_unknown": mid_dict["mid_unknown"]
     }
 
 
-# Training
 def stage1_train(net, trainloader, optimizer, criterion, device):
     net.train()
     train_loss = 0
@@ -235,7 +234,7 @@ def stage1_test(net, testloader, device):
     energy_hist(normfea_list, Target_list, args, "stage1_test_normfea_doublebar")
 
 
-def stage1_valvae(net, dataloader, device):
+def stage_valvae(net, dataloader, device, name="stage1_valtrain&sample_normfea_result"):
     print("validating vae and net ...")
     # loading vae model
     vae = VanillaVAE(in_channels=1, latent_dim=args.latent_dim)
@@ -267,63 +266,18 @@ def stage1_valvae(net, dataloader, device):
 
     plot_listhist([normfea_loader_list, normfea_sample_list],
                   args, labels=["train data", "sampled data"],
-                  name="stage1_valtrain&sample_normfea_result")
+                  name=name)
     print(f"train mid:{normfea_loader_list.median()} | sampled mid:{normfea_sample_list.median()}")
     print(f"min  norm:{min(normfea_loader_list.min(), normfea_sample_list.min())} "
           f"| max  norm:{max(normfea_loader_list.max(), normfea_sample_list.max())}")
     return{
+        "vae": vae,
         "mid_known": normfea_loader_list.median(),
         "mid_unknown": normfea_sample_list.median()
     }
 
 
-
-
-
-
-
-
-
-
-
-
-def middle_validate(net, trainloader, device, name=""):
-    print("validating vae and net ...")
-    known_energy, unknown_energy = [], []
-
-    # loading vae model
-    vae = VanillaVAE(in_channels=1,latent_dim = args.latent_dim)
-    vae = vae.to(device)
-    if device == 'cuda':
-        vae = torch.nn.DataParallel(vae)
-        cudnn.benchmark = True
-    if os.path.isfile(args.vae_resume):
-        vae_checkpoint = torch.load(args.vae_resume)
-        vae.load_state_dict(vae_checkpoint['net'])
-        print('==> Resuming vae from checkpoint, loaded..')
-
-    with torch.no_grad():
-        for batch_idx, (inputs, targets) in enumerate(trainloader):
-            inputs, targets = inputs.to(device), targets.to(device)
-            sampled = sampler(vae,device,args)
-            out_known = net(inputs)
-            out_unkown = net(sampled)
-            known_energy.append(out_known["pnorm"])
-            unknown_energy.append(out_unkown["pnorm"])
-            progress_bar(batch_idx, len(trainloader))
-
-    known_energy = torch.cat(known_energy, dim=0)
-    unknown_energy = torch.cat(unknown_energy, dim=0)
-    energy_hist_sperate(known_energy, unknown_energy, args, name)
-    return{
-        # unkown is smaller than known
-        "vae": vae,
-        "mid_known": known_energy.median().data,
-        "mid_unknown": unknown_energy.median().data
-    }
-
-
-def main_stage2(net, vae, mid_energy):
+def main_stage2(net, vae, mid_known, mid_unknown):
     print("Starting stage-2 fine-tuning ...")
     start_epoch = 0
     criterion = DFPNormLoss(mid_known=mid_energy["mid_known"], mid_unknown=mid_energy["mid_unknown"],
