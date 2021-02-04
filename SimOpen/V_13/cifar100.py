@@ -211,6 +211,7 @@ def stage_test(net, testloader, device, name="stage1_test_normfea_doublebar"):
     total = 0
     normfea_list = []
     pnorm_list = []
+    energy_list = []
     Target_list = []
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
@@ -218,6 +219,7 @@ def stage_test(net, testloader, device, name="stage1_test_normfea_doublebar"):
             out = net(inputs)  # shape [batch,class]
             normfea_list.append(out["norm_fea"])
             pnorm_list.append(out["pnorm"])
+            energy_list.append(out["energy"])
             Target_list.append(targets)
             _, predicted = (out["normweight_fea2cen"]).max(1)
             total += targets.size(0)
@@ -228,6 +230,7 @@ def stage_test(net, testloader, device, name="stage1_test_normfea_doublebar"):
 
     normfea_list = torch.cat(normfea_list, dim=0)
     pnorm_list = torch.cat(pnorm_list, dim=0)
+    energy_list = torch.cat(energy_list, dim=0)
     Target_list = torch.cat(Target_list, dim=0)
     unknown_label = Target_list.max()
     unknown_normfea_list = normfea_list[Target_list == unknown_label]
@@ -235,6 +238,9 @@ def stage_test(net, testloader, device, name="stage1_test_normfea_doublebar"):
 
     unknown_pnorm_list = pnorm_list[Target_list == unknown_label]
     known_pnorm_list = pnorm_list[Target_list != unknown_label]
+
+    unknown_energy_list = energy_list[Target_list == unknown_label]
+    known_energy_list = energy_list[Target_list != unknown_label]
 
 
     print("_______________Testing statistics:____________")
@@ -247,6 +253,10 @@ def stage_test(net, testloader, device, name="stage1_test_normfea_doublebar"):
     plot_listhist([known_pnorm_list, unknown_pnorm_list],
                   args, labels=["known", "unknown"],
                   name=name+"_pnorm")
+
+    plot_listhist([known_energy_list, unknown_energy_list],
+                  args, labels=["known", "unknown"],
+                  name=name + "_energy")
 
 
 def stage_valmixup(net, dataloader, device, name="stage1_valtrain&sample_normfea_result"):
