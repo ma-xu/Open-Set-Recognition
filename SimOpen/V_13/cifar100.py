@@ -43,7 +43,7 @@ parser.add_argument('--includes_all_train_class', default=True, action='store_tr
 
 # General MODEL parameters
 parser.add_argument('--arch', default='ResNet18', choices=model_names, type=str, help='choosing network')
-parser.add_argument('--embed_dim', default=512, type=int, help='embedding feature dimension')
+parser.add_argument('--embed_dim', default=128, type=int, help='embedding feature dimension')
 parser.add_argument('--p', default=2, type=int, help='p-norm')
 
 # Parameters for optimizer
