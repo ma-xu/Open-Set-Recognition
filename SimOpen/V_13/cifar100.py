@@ -210,12 +210,14 @@ def stage_test(net, testloader, device, name="stage1_test_normfea_doublebar"):
     correct = 0
     total = 0
     normfea_list = []
+    pnorm_list = []
     Target_list = []
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
             out = net(inputs)  # shape [batch,class]
             normfea_list.append(out["norm_fea"])
+            pnorm_list.append(out["pnorm"])
             Target_list.append(targets)
             _, predicted = (out["normweight_fea2cen"]).max(1)
             total += targets.size(0)
@@ -225,10 +227,16 @@ def stage_test(net, testloader, device, name="stage1_test_normfea_doublebar"):
     print("\nTesting results is {:.2f}%".format(100. * correct / total))
 
     normfea_list = torch.cat(normfea_list, dim=0)
+    pnorm_list = torch.cat(pnorm_list, dim=0)
     Target_list = torch.cat(Target_list, dim=0)
     unknown_label = Target_list.max()
     unknown_normfea_list = normfea_list[Target_list == unknown_label]
     known_normfea_list = normfea_list[Target_list != unknown_label]
+
+    unknown_pnorm_list = pnorm_list[Target_list == unknown_label]
+    known_pnorm_list = pnorm_list[Target_list == unknown_label]
+
+
     print("_______________Testing statistics:____________")
     print(f"test known mid:{known_normfea_list.median()} | unknown mid:{unknown_normfea_list.median()}")
     print(f"min  norm:{min(known_normfea_list.min(), unknown_normfea_list.min())} "
@@ -236,6 +244,9 @@ def stage_test(net, testloader, device, name="stage1_test_normfea_doublebar"):
     plot_listhist([known_normfea_list, unknown_normfea_list],
                   args, labels=["known", "unknown"],
                   name=name)
+    plot_listhist([known_pnorm_list, unknown_pnorm_list],
+                  args, labels=["known", "unknown"],
+                  name=name+"_pnorm")
 
 
 def stage_valmixup(net, dataloader, device, name="stage1_valtrain&sample_normfea_result"):
