@@ -234,7 +234,7 @@ def stage_test(net, testloader, device, name="stage1_test_normfea_doublebar"):
     known_normfea_list = normfea_list[Target_list != unknown_label]
 
     unknown_pnorm_list = pnorm_list[Target_list == unknown_label]
-    known_pnorm_list = pnorm_list[Target_list == unknown_label]
+    known_pnorm_list = pnorm_list[Target_list != unknown_label]
 
 
     print("_______________Testing statistics:____________")
