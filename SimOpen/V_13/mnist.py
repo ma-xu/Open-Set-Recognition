@@ -382,7 +382,9 @@ def mixup(inputs, targets, args):
     lam = max(0.3, min(lam, 0.7))
     mixed = lam * mix1 + (1. - lam) * mix2
     # add Gaussian white Noise for adversarial training
-    return mixed
+    noise = torch.randn_like(mixed).to(mixed.device)
+
+    return 0.8*mixed + 0.2*noise
 
 
 def sampler(vae, device, args):
