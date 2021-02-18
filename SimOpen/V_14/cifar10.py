@@ -378,8 +378,8 @@ def main_stage2(net, mid_known, mid_unknown):
         print(f"\nFinish Stage-2 training...\n")
 
         print("===> Evaluating stage-2 ...")
-        stage_test(net, testloader, device, name="stage2_test_normfea_doublebar")
-        stage_valmixup(net, trainloader, device, name="stage2_valtrain&sample_normfea_result")
+        stage_test(net, testloader, device, name="stage2_test_doublebar")
+        stage_valmixup(net, trainloader, device, name="stage2_mixup_result")
 
 
 # Training
