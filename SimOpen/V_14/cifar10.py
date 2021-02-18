@@ -259,10 +259,14 @@ def stage_test(net, testloader, device, name="stage1_test_doublebar"):
                   name=name + "_energy")
 
 
-def stage_valmixup(net, dataloader, device, name="stage1_valtrain&sample_normfea_result"):
+def stage_valmixup(net, dataloader, device, name="stage1_mixup_doublebar"):
     print("validating mixup and trainloader ...")
     normfea_loader_list = []
     normfea_mixup_list = []
+    pnorm_loader_list = []
+    pnorm_mixup_list = []
+    energy_loader_list = []
+    energy_mixup_list = []
     target_list = []
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(dataloader):
@@ -272,15 +276,33 @@ def stage_valmixup(net, dataloader, device, name="stage1_valtrain&sample_normfea
             out_mixed = net(mixed)
             normfea_loader_list.append(out_loader["norm_fea"])
             normfea_mixup_list.append(out_mixed["norm_fea"])
+            pnorm_loader_list.append(out_loader["pnorm"])
+            pnorm_mixup_list.append(out_mixed["pnorm"])
+            energy_loader_list.append(out_loader["energy"])
+            energy_mixup_list.append(out_mixed["energy"])
+
             target_list.append(targets)
             progress_bar(batch_idx, len(trainloader))
 
     normfea_loader_list = torch.cat(normfea_loader_list, dim=0)
     normfea_mixup_list = torch.cat(normfea_mixup_list, dim=0)
+    pnorm_loader_list = torch.cat(pnorm_loader_list,dim=0)
+    pnorm_mixup_list = torch.cat(pnorm_mixup_list,dim=0)
+    energy_loader_list = torch.cat(energy_loader_list, dim=0)
+    energy_mixup_list = torch.cat(energy_mixup_list, dim=0)
+
+    plot_listhist([pnorm_loader_list, pnorm_mixup_list],
+                  args, labels=["loader", "mixup"],
+                  name=name + "_pnorm")
 
     plot_listhist([normfea_loader_list, normfea_mixup_list],
-                  args, labels=["train data", "sampled data"],
-                  name=name)
+                  args, labels=["loader", "mixup"],
+                  name=name + "_normfea")
+
+    plot_listhist([energy_loader_list, energy_mixup_list],
+                  args, labels=["loader", "mixup"],
+                  name=name + "_energy")
+
     print("_______________Validate statistics:____________")
     print(f"train mid:{normfea_loader_list.median()} | mixup mid:{normfea_mixup_list.median()}")
     print(f"min  norm:{min(normfea_loader_list.min(), normfea_mixup_list.min())} "
