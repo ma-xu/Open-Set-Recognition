@@ -212,6 +212,7 @@ def stage_test(net, testloader, device, name="stage1_test_doublebar"):
     normfea_list = []
     pnorm_list = []
     energy_list = []
+    normweight_fea2cen_list = []
     Target_list = []
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
@@ -220,6 +221,7 @@ def stage_test(net, testloader, device, name="stage1_test_doublebar"):
             normfea_list.append(out["norm_fea"])
             pnorm_list.append(out["pnorm"])
             energy_list.append(out["energy"])
+            normweight_fea2cen_list.append(out["normweight_fea2cen"])
             Target_list.append(targets)
             _, predicted = (out["normweight_fea2cen"]).max(1)
             total += targets.size(0)
@@ -231,6 +233,8 @@ def stage_test(net, testloader, device, name="stage1_test_doublebar"):
     normfea_list = torch.cat(normfea_list, dim=0)
     pnorm_list = torch.cat(pnorm_list, dim=0)
     energy_list = torch.cat(energy_list, dim=0)
+    normweight_fea2cen_list = torch.cat(normweight_fea2cen_list, dim=0)
+    softmax_list = torch.softmax(normweight_fea2cen_list, dim=1).max(dim=1, keepdim=False)[0]
     Target_list = torch.cat(Target_list, dim=0)
     unknown_label = Target_list.max()
     unknown_normfea_list = normfea_list[Target_list == unknown_label]
@@ -241,6 +245,9 @@ def stage_test(net, testloader, device, name="stage1_test_doublebar"):
 
     unknown_energy_list = energy_list[Target_list == unknown_label]
     known_energy_list = energy_list[Target_list != unknown_label]
+
+    unknown_softmax_list = softmax_list[Target_list == unknown_label]
+    known_softmax_list = softmax_list[Target_list != unknown_label]
 
 
     print("_______________Testing statistics:____________")
@@ -258,6 +265,10 @@ def stage_test(net, testloader, device, name="stage1_test_doublebar"):
                   args, labels=["known", "unknown"],
                   name=name + "_energy")
 
+    plot_listhist([known_softmax_list, unknown_softmax_list],
+                  args, labels=["known", "unknown"],
+                  name=name + "_softmax")
+
 
 def stage_valmixup(net, dataloader, device, name="stage1_mixup_doublebar"):
     print("validating mixup and trainloader ...")
@@ -267,6 +278,8 @@ def stage_valmixup(net, dataloader, device, name="stage1_mixup_doublebar"):
     pnorm_mixup_list = []
     energy_loader_list = []
     energy_mixup_list = []
+    normweight_loader_list = []
+    normweight_mixup_list = []
     target_list = []
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(dataloader):
@@ -280,6 +293,9 @@ def stage_valmixup(net, dataloader, device, name="stage1_mixup_doublebar"):
             pnorm_mixup_list.append(out_mixed["pnorm"])
             energy_loader_list.append(out_loader["energy"])
             energy_mixup_list.append(out_mixed["energy"])
+            normweight_loader_list.append(out_loader["normweight_fea2cen"])
+            normweight_mixup_list.append(out_mixed["normweight_fea2cen"])
+
 
             target_list.append(targets)
             progress_bar(batch_idx, len(trainloader))
@@ -290,6 +306,11 @@ def stage_valmixup(net, dataloader, device, name="stage1_mixup_doublebar"):
     pnorm_mixup_list = torch.cat(pnorm_mixup_list,dim=0)
     energy_loader_list = torch.cat(energy_loader_list, dim=0)
     energy_mixup_list = torch.cat(energy_mixup_list, dim=0)
+    normweight_loader_list = torch.cat(normweight_loader_list,dim=0)
+    softmax_loader_list = torch.softmax(normweight_loader_list, dim=1).max(dim=1, keepdim=False)[0]
+    normweight_mixup_list = torch.cat(normweight_mixup_list, dim=0)
+    softmax_mixup_list = torch.softmax(normweight_mixup_list, dim=1).max(dim=1, keepdim=False)[0]
+
 
     plot_listhist([pnorm_loader_list, pnorm_mixup_list],
                   args, labels=["loader", "mixup"],
@@ -302,6 +323,10 @@ def stage_valmixup(net, dataloader, device, name="stage1_mixup_doublebar"):
     plot_listhist([energy_loader_list, energy_mixup_list],
                   args, labels=["loader", "mixup"],
                   name=name + "_energy")
+
+    plot_listhist([softmax_loader_list, softmax_mixup_list],
+                  args, labels=["loader", "mixup"],
+                  name=name + "_softmax")
 
     print("_______________Validate statistics:____________")
     print(f"train mid:{normfea_loader_list.median()} | mixup mid:{normfea_mixup_list.median()}")
