@@ -67,7 +67,7 @@ class DFPEnergyLoss(nn.Module):
 
 
 class DFPNormLoss(nn.Module):
-    def __init__(self, mid_known, mid_unknown, temperature=1, alpha=1.0, kappa=2):
+    def __init__(self, mid_known, mid_unknown, temperature=1, alpha=1.0, kappa=2, feature='energy'):
         """
         following the FCOS loss and Enery-based loss
         :param mid_known:
@@ -77,6 +77,7 @@ class DFPNormLoss(nn.Module):
         :param kappa:
         """
         super(DFPNormLoss, self).__init__()
+        self.feature = feature
         self.kappa = kappa
         self.mid_known = mid_known
         self.mid_unknown = mid_unknown
@@ -88,8 +89,8 @@ class DFPNormLoss(nn.Module):
         sim_classification = net_out["normweight_fea2cen"]  # [n, class_num];
         loss_classification = self.ce(sim_classification / self.temperature, targets)
 
-        norm_known = net_out["norm_fea"]
-        norm_unknown = net_out_unknown["norm_fea"]
+        norm_known = net_out[self.feature]
+        norm_unknown = net_out_unknown[self.feature]
         loss_energy_known = F.relu(1.0 - norm_known / self.mid_known, inplace=True)
         loss_energy_known = (1.0-loss_energy_known).pow(self.kappa) * loss_energy_known
         loss_energy_known = loss_energy_known.sum() / (norm_known.shape[0])

@@ -251,10 +251,10 @@ def stage_test(net, testloader, device, name="stage1_test_doublebar"):
 
 
     print("_______________Testing statistics:____________")
-    print(f"test known mid:{known_normfea_list.median()} | unknown mid:{unknown_normfea_list.median()}")
-    print(f"min  norm:{min(known_normfea_list.min(), unknown_normfea_list.min())} "
-          f"| max  norm:{max(known_normfea_list.max(), unknown_normfea_list.max())}")
-    plot_listhist([known_normfea_list, unknown_normfea_list],
+    print(f"test known mid:{known_energy_list.median()} | unknown mid:{unknown_energy_list.median()}")
+    print(f"min  energy:{min(known_energy_list.min(), unknown_energy_list.min())} "
+          f"| max  energy:{max(known_energy_list.max(), unknown_energy_list.max())}")
+    plot_listhist([known_normfea_list, unknown_energy_list],
                   args, labels=["known", "unknown"],
                   name=name+"_normfea")
     plot_listhist([known_pnorm_list, unknown_pnorm_list],
@@ -329,12 +329,12 @@ def stage_valmixup(net, dataloader, device, name="stage1_mixup_doublebar"):
                   name=name + "_softmax")
 
     print("_______________Validate statistics:____________")
-    print(f"train mid:{normfea_loader_list.median()} | mixup mid:{normfea_mixup_list.median()}")
-    print(f"min  norm:{min(normfea_loader_list.min(), normfea_mixup_list.min())} "
-          f"| max  norm:{max(normfea_loader_list.max(), normfea_mixup_list.max())}")
+    print(f"train mid:{energy_loader_list.median()} | mixup mid:{energy_mixup_list.median()}")
+    print(f"min  energy:{min(energy_loader_list.min(), energy_mixup_list.min())} "
+          f"| max  energy:{max(energy_loader_list.max(), energy_mixup_list.max())}")
     return{
-        "mid_known": normfea_loader_list.median(),
-        "mid_unknown": normfea_mixup_list.median()
+        "mid_known": energy_loader_list.median(),
+        "mid_unknown": energy_mixup_list.median()
     }
 
 
@@ -342,7 +342,7 @@ def main_stage2(net, mid_known, mid_unknown):
     print("Starting stage-2 fine-tuning ...")
     start_epoch = 0
     criterion = DFPNormLoss(mid_known=1.3*mid_known, mid_unknown=0.7*mid_unknown,
-                            alpha=args.alpha, temperature=args.temperature)
+                            alpha=args.alpha, temperature=args.temperature, feature='energy')
     optimizer = torch.optim.SGD(net.parameters(), lr=args.stage2_lr, momentum=0.9, weight_decay=5e-4)
     if args.stage2_resume:
         # Load checkpoint.
