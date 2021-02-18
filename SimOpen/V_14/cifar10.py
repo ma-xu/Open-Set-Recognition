@@ -121,7 +121,7 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=args.stage1_bs, shu
 def main():
     print(device)
     stage1_dict = main_stage1()  # {"net": net, "mid_known","mid_unknown"}
-    # main_stage2(stage1_dict["net"], stage1_dict["mid_known"], stage1_dict["mid_unknown"])
+    main_stage2(stage1_dict["net"], stage1_dict["mid_known"], stage1_dict["mid_unknown"])
 
 
 def main_stage1():
@@ -341,7 +341,7 @@ def stage_valmixup(net, dataloader, device, name="stage1_mixup_doublebar"):
 def main_stage2(net, mid_known, mid_unknown):
     print("Starting stage-2 fine-tuning ...")
     start_epoch = 0
-    criterion = DFPNormLoss(mid_known=mid_known, mid_unknown=mid_unknown,
+    criterion = DFPNormLoss(mid_known=1.3*mid_known, mid_unknown=0.7*mid_unknown,
                             alpha=args.alpha, temperature=args.temperature)
     optimizer = torch.optim.SGD(net.parameters(), lr=args.stage2_lr, momentum=0.9, weight_decay=5e-4)
     if args.stage2_resume:
