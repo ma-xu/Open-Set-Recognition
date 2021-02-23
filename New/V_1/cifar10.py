@@ -127,7 +127,7 @@ def main():
     }
     if not args.stage2_resume:
         stage1_dict = main_stage1()  # {"net": net, "mid_known","mid_unknown"}
-    main_stage2(stage1_dict)
+    # main_stage2(stage1_dict)
 
 
 def main_stage1():
@@ -177,6 +177,10 @@ def main_stage1():
     print("===> Evaluating stage-1 ...")
     stage_test(net, testloader, device)
     mid_dict = stage_valmixup(net, trainloader, device)
+    print("===> stage1 energy based classification")
+    stage_evaluate(net, testloader, mid_dict["mid_unknown"].item(), mid_dict["mid_known"].item(), feature="energy")
+    print("===> stage1 softmax based classification")
+    stage_evaluate(net, testloader, 0., 1., feature="normweight_fea2cen")
     return {
         "net": net.state_dict(),
         "mid_known": mid_dict["mid_known"],
@@ -468,6 +472,9 @@ def stage_evaluate(net,testloader,t_min, t_max, feature='energy'):
             progress_bar(batch_idx, len(testloader), '| ')
 
     Feature_list = torch.cat(Feature_list, dim=0)
+    if feature == "normweight_fea2cen":
+        # return the max propobility.
+        Feature_list = torch.softmax(Feature_list, dim=1).max(dim=1, keepdim=False)[0]
     Target_list = torch.cat(Target_list, dim=0)
     Predict_list = torch.cat(Predict_list, dim=0)
 
