@@ -127,7 +127,7 @@ def main():
     }
     if not args.stage2_resume:
         stage1_dict = main_stage1()  # {"net": net, "mid_known","mid_unknown"}
-    main_stage2(stage1_dict)
+    # main_stage2(stage1_dict)
 
 
 def main_stage1():
