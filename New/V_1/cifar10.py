@@ -476,7 +476,7 @@ def stage_evaluate(net,testloader,t_min, t_max, feature='energy'):
     best_f1_measure = 0.
     for thres in np.linspace(t_min,t_max,20):
         Predict_list[Feature_list<thres] = args.train_class_num
-        eval = Evaluation(Predict_list.cpu().numpy(),Target_list.cpu().numpy(),Feature_list.cpu().numpy())
+        eval = Evaluation(Predict_list.cpu().numpy(),Target_list.cpu().numpy())
         if eval.f1_measure >best_f1_measure:
             best_thres = thres
             best_eval = eval
