@@ -79,6 +79,7 @@ parser.add_argument('--stage2_lr_factor', default=0.1, type=float, help='learnin
 parser.add_argument('--stage2_lr_step', default=20, type=float, help='learning rate Decay step')  # works for MNIST
 parser.add_argument('--stage2_bs', default=128, type=int, help='batch size')
 
+parser.add_argument('--stage1_only', action='store_true', help='Only test stage 1.')
 
 args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -127,7 +128,8 @@ def main():
     }
     if not args.stage2_resume:
         stage1_dict = main_stage1()  # {"net": net, "mid_known","mid_unknown"}
-    main_stage2(stage1_dict)
+    if not args.stage1_only:
+        main_stage2(stage1_dict)
 
 
 def main_stage1():
