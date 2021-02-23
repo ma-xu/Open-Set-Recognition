@@ -269,10 +269,10 @@ def main_stage2(stage1_dict):
         logger.close()
         print(f"\nFinish Stage-2 training...\n")
 
-        print("===> Evaluating stage-2 ...")
-        stage_test(net, testloader, device, name="stage2_test_doublebar")
-        stage_valmixup(net, trainloader, device, name="stage2_mixup_result")
-        stage_evaluate(net, testloader, mid_unknown.item(), mid_known.item(), feature="energy")
+    print("===> Evaluating stage-2 ...")
+    stage_test(net, testloader, device, name="stage2_test_doublebar")
+    stage_valmixup(net, trainloader, device, name="stage2_mixup_result")
+    stage_evaluate(net, testloader, mid_unknown.item(), mid_known.item(), feature="energy")
 
 
 # Training
