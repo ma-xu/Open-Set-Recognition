@@ -475,8 +475,6 @@ def stage_evaluate(net,testloader,t_min, t_max, feature='energy'):
     if feature == "normweight_fea2cen":
         # return the max propobility.
         Feature_list = torch.softmax(Feature_list, dim=1).max(dim=1, keepdim=False)[0]
-        print(Feature_list)
-        print(f"min: {Feature_list.min()}")
     Target_list = torch.cat(Target_list, dim=0)
     Predict_list = torch.cat(Predict_list, dim=0)
 
@@ -486,7 +484,8 @@ def stage_evaluate(net,testloader,t_min, t_max, feature='energy'):
     for thres in np.linspace(t_min,t_max,20):
         Predict_list[Feature_list<thres] = args.train_class_num
         eval = Evaluation(Predict_list.cpu().numpy(),Target_list.cpu().numpy())
-        if eval.f1_measure >best_f1_measure:
+        if eval.f1_measure > best_f1_measure:
+            best_f1_measure = eval.f1_measure
             best_thres = thres
             best_eval = eval
     print("===> Finial Evaluation...")
