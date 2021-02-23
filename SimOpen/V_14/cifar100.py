@@ -254,7 +254,7 @@ def stage_test(net, testloader, device, name="stage1_test_doublebar"):
     print(f"test known mid:{known_energy_list.median()} | unknown mid:{unknown_energy_list.median()}")
     print(f"min  energy:{min(known_energy_list.min(), unknown_energy_list.min())} "
           f"| max  energy:{max(known_energy_list.max(), unknown_energy_list.max())}")
-    plot_listhist([known_normfea_list, unknown_energy_list],
+    plot_listhist([known_normfea_list, unknown_normfea_list],
                   args, labels=["known", "unknown"],
                   name=name+"_normfea")
     plot_listhist([known_pnorm_list, unknown_pnorm_list],
@@ -446,10 +446,11 @@ def mixup(inputs, targets, args):
     lam = np.random.beta(args.mixup, args.mixup)
     lam = max(0.3, min(lam, 0.7))
     mixed = lam * mix1 + (1. - lam) * mix2
+    return mixed
     # add Gaussian white Noise for adversarial training
-    noise = torch.randn_like(mixed).to(mixed.device)
+    # noise = torch.randn_like(mixed).to(mixed.device)
 
-    return 0.8*mixed + 0.2*noise
+    # return 0.8*mixed + 0.2*noise
 
 
 if __name__ == '__main__':
