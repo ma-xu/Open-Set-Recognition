@@ -476,7 +476,7 @@ def stage_evaluate(net,testloader,t_min, t_max, feature='energy'):
         # return the max propobility.
         Feature_list = torch.softmax(Feature_list, dim=1).max(dim=1, keepdim=False)[0]
         print(Feature_list)
-        print(f"min: {Feature_list.min}")
+        print(f"min: {Feature_list.min()}")
     Target_list = torch.cat(Target_list, dim=0)
     Predict_list = torch.cat(Predict_list, dim=0)
 
