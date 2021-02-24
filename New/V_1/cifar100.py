@@ -19,7 +19,7 @@ import sys
 sys.path.append("../..")
 import backbones.cifar as models
 from datasets import CIFAR100
-from Utils import adjust_learning_rate, progress_bar, Logger, mkdir_p, Evaluation
+from Utils import adjust_learning_rate, progress_bar, Logger, mkdir_p, Evaluation, save_model
 from DFPLoss import DFPLoss, DFPNormLoss
 from DFPNet import DFPNet
 from MyPlotter import plot_feature
@@ -73,12 +73,13 @@ parser.add_argument('--hist_save', action='store_true', help='if save the histog
 
 # Parameters for stage 2 training
 parser.add_argument('--stage2_resume', default='', type=str, metavar='PATH', help='path to latest checkpoint')
-parser.add_argument('--stage2_es', default=80, type=int, help='epoch size')
+parser.add_argument('--stage2_es', default=50, type=int, help='epoch size')
 parser.add_argument('--stage2_lr', default=0.01, type=float, help='learning rate')
 parser.add_argument('--stage2_lr_factor', default=0.1, type=float, help='learning rate Decay factor')  # works for MNIST
-parser.add_argument('--stage2_lr_step', default=30, type=float, help='learning rate Decay step')  # works for MNIST
+parser.add_argument('--stage2_lr_step', default=20, type=float, help='learning rate Decay step')  # works for MNIST
 parser.add_argument('--stage2_bs', default=128, type=int, help='batch size')
 
+parser.add_argument('--stage1_only', action='store_true', help='Only test stage 1.')
 
 args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -120,8 +121,15 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=args.stage1_bs, shu
 
 def main():
     print(device)
-    stage1_dict = main_stage1()  # {"net": net, "mid_known","mid_unknown"}
-    # main_stage2(stage1_dict["net"], stage1_dict["mid_known"], stage1_dict["mid_unknown"])
+    stage1_dict={
+        "net":None,
+        "mid_known": None,
+        "mid_unknown": None
+    }
+    if not args.stage2_resume:
+        stage1_dict = main_stage1()  # {"net": net, "mid_known","mid_unknown"}
+    if not args.stage1_only:
+        main_stage2(stage1_dict)
 
 
 def main_stage1():
@@ -171,8 +179,12 @@ def main_stage1():
     print("===> Evaluating stage-1 ...")
     stage_test(net, testloader, device)
     mid_dict = stage_valmixup(net, trainloader, device)
+    print("===> stage1 energy based classification")
+    stage_evaluate(net, testloader, mid_dict["mid_unknown"].item(), mid_dict["mid_known"].item(), feature="energy")
+    print("===> stage1 softmax based classification")
+    stage_evaluate(net, testloader, 0., 1., feature="normweight_fea2cen")
     return {
-        "net": net,
+        "net": net.state_dict(),
         "mid_known": mid_dict["mid_known"],
         "mid_unknown": mid_dict["mid_unknown"]
     }
@@ -204,6 +216,115 @@ def stage1_train(net, trainloader, optimizer, criterion, device):
         "train_loss": train_loss / (batch_idx + 1),
         "accuracy": correct / total
     }
+
+
+def main_stage2(stage1_dict):
+    print("Starting stage-2 fine-tuning ...")
+    start_epoch = 0
+
+    # get key values from stage1_dict
+    mid_known = stage1_dict["mid_known"]
+    mid_unknown = stage1_dict["mid_unknown"]
+    net_state_dict = stage1_dict["net"]
+
+    net = DFPNet(backbone=args.arch, num_classes=args.train_class_num, embed_dim=args.embed_dim, p=args.p)
+    net = net.to(device)
+    if device == 'cuda':
+        net = torch.nn.DataParallel(net)
+        cudnn.benchmark = True
+
+    optimizer = torch.optim.SGD(net.parameters(), lr=args.stage2_lr, momentum=0.9, weight_decay=5e-4)
+    if args.stage2_resume:
+        # Load checkpoint.
+        if os.path.isfile(args.stage2_resume):
+            print('==> Resuming from checkpoint..')
+            checkpoint = torch.load(args.stage2_resume)
+            net.load_state_dict(checkpoint['net'])
+            optimizer.load_state_dict(checkpoint['optimizer'])
+            start_epoch = checkpoint['epoch']
+            mid_known =checkpoint["mid_known"]
+            mid_unknown =checkpoint["mid_unknown"]
+            logger = Logger(os.path.join(args.checkpoint, 'log_stage2.txt'), resume=True)
+        else:
+            print("=> no checkpoint found at '{}'".format(args.resume))
+    else:
+        net.load_state_dict(net_state_dict)
+        logger = Logger(os.path.join(args.checkpoint, 'log_stage2.txt'))
+        logger.set_names(['Epoch', 'Train Loss', 'Class Loss', 'Energy Loss','Energy Known', 'Energy Unknown', 'Train Acc.'])
+
+    criterion = DFPNormLoss(mid_known=1.3*mid_known, mid_unknown=0.7*mid_unknown,
+                            alpha=args.alpha, temperature=args.temperature, feature='energy')
+
+    if not args.evaluate:
+        for epoch in range(start_epoch, args.stage2_es):
+            adjust_learning_rate(optimizer, epoch, args.stage2_lr,
+                                 factor=args.stage2_lr_factor, step=args.stage2_lr_step)
+            print('\nStage_2 Epoch: %d | Learning rate: %f ' % (epoch + 1, optimizer.param_groups[0]['lr']))
+            train_out = stage2_train(net, trainloader, optimizer, criterion, device)
+            save_model(net, optimizer, epoch,
+                       os.path.join(args.checkpoint, 'stage_2_last_model.pth'),
+                       mid_known=mid_known, mid_unknown=mid_unknown)
+            logger.append([epoch + 1, train_out["train_loss"], train_out["loss_classification"],
+                           train_out["loss_energy"], train_out["loss_energy_known"],
+                           train_out["loss_energy_unknown"], train_out["accuracy"]])
+            if args.plot:
+                plot_feature(net, args, trainloader, device, args.plotfolder, epoch="stage2_"+str(epoch),
+                             plot_class_num=args.train_class_num, plot_quality=args.plot_quality)
+                plot_feature(net, args, testloader, device, args.plotfolder, epoch="stage2_test" + str(epoch),
+                             plot_class_num=args.train_class_num + 1, plot_quality=args.plot_quality, testmode=True)
+        logger.close()
+        print(f"\nFinish Stage-2 training...\n")
+
+    print("===> Evaluating stage-2 ...")
+    stage_test(net, testloader, device, name="stage2_test_doublebar")
+    stage_valmixup(net, trainloader, device, name="stage2_mixup_result")
+    stage_evaluate(net, testloader, mid_unknown.item(), mid_known.item(), feature="energy")
+
+
+# Training
+def stage2_train(net, trainloader, optimizer, criterion, device):
+    net.train()
+    train_loss = 0
+    loss_classification = 0
+    loss_energy = 0
+    loss_energy_known = 0
+    loss_energy_unknown = 0
+    correct = 0
+    total = 0
+    for batch_idx, (inputs, targets) in enumerate(trainloader):
+        inputs, targets = inputs.to(device), targets.to(device)
+        mixed = mixup(inputs, targets, args)
+        optimizer.zero_grad()
+        out = net(inputs)
+        out_unkown = net(mixed)
+        loss_dict = criterion(out, targets, out_unkown)
+        loss = loss_dict['total']
+        loss.backward()
+        optimizer.step()
+
+        train_loss += loss.item()
+        loss_classification += (loss_dict['loss_classification']).item()
+        loss_energy += (loss_dict['loss_energy']).item()
+        loss_energy_known += (loss_dict['loss_energy_known']).item()
+        loss_energy_unknown += (loss_dict['loss_energy_unknown']).item()
+
+        _, predicted = (out['normweight_fea2cen']).max(1)
+        total += targets.size(0)
+        correct += predicted.eq(targets).sum().item()
+
+        progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
+                     % (train_loss / (batch_idx + 1), 100. * correct / total, correct, total))
+    return {
+        "train_loss": train_loss / (batch_idx + 1),
+        "loss_classification": loss_classification / (batch_idx + 1),
+        "loss_energy": loss_energy / (batch_idx + 1),
+        "loss_energy_known": loss_energy_known / (batch_idx + 1),
+        "loss_energy_unknown": loss_energy_unknown / (batch_idx + 1),
+        "accuracy": correct / total
+    }
+
+
+
 
 
 def stage_test(net, testloader, device, name="stage1_test_doublebar"):
@@ -338,102 +459,41 @@ def stage_valmixup(net, dataloader, device, name="stage1_mixup_doublebar"):
     }
 
 
-def main_stage2(net, mid_known, mid_unknown):
-    print("Starting stage-2 fine-tuning ...")
-    start_epoch = 0
-    criterion = DFPNormLoss(mid_known=mid_known, mid_unknown=mid_unknown,
-                            alpha=args.alpha, temperature=args.temperature, feature='energy')
-    optimizer = torch.optim.SGD(net.parameters(), lr=args.stage2_lr, momentum=0.9, weight_decay=5e-4)
-    if args.stage2_resume:
-        # Load checkpoint.
-        if os.path.isfile(args.stage2_resume):
-            print('==> Resuming from checkpoint..')
-            checkpoint = torch.load(args.stage2_resume)
-            net.load_state_dict(checkpoint['net'])
-            optimizer.load_state_dict(checkpoint['optimizer'])
-            start_epoch = checkpoint['epoch']
-            logger = Logger(os.path.join(args.checkpoint, 'log_stage2.txt'), resume=True)
-        else:
-            print("=> no checkpoint found at '{}'".format(args.resume))
-    else:
-        logger = Logger(os.path.join(args.checkpoint, 'log_stage2.txt'))
-        logger.set_names(['Epoch', 'Train Loss', 'Class Loss', 'Energy Loss','Energy Known', 'Energy Unknown', 'Train Acc.'])
+def stage_evaluate(net,testloader,t_min, t_max, feature='energy'):
+    Feature_list = []
+    Predict_list = []
+    Target_list = []
+    with torch.no_grad():
+        for batch_idx, (inputs, targets) in enumerate(testloader):
+            inputs, targets = inputs.to(device), targets.to(device)
+            out = net(inputs)  # shape [batch,class]
+            Feature_list.append(out[feature])
+            Target_list.append(targets)
+            _, predicted = (out["normweight_fea2cen"]).max(1)
+            Predict_list.append(predicted)
+            progress_bar(batch_idx, len(testloader), '| ')
 
-    if not args.evaluate:
-        for epoch in range(start_epoch, args.stage2_es):
-            adjust_learning_rate(optimizer, epoch, args.stage2_lr,
-                                 factor=args.stage2_lr_factor, step=args.stage2_lr_step)
-            print('\nStage_2 Epoch: %d | Learning rate: %f ' % (epoch + 1, optimizer.param_groups[0]['lr']))
-            train_out = stage2_train(net, trainloader, optimizer, criterion, device)
-            save_model(net, optimizer, epoch, os.path.join(args.checkpoint, 'stage_2_last_model.pth'))
-            logger.append([epoch + 1, train_out["train_loss"], train_out["loss_classification"],
-                           train_out["loss_energy"], train_out["loss_energy_known"],
-                           train_out["loss_energy_unknown"], train_out["accuracy"]])
-            if args.plot:
-                plot_feature(net, args, trainloader, device, args.plotfolder, epoch="stage2_"+str(epoch),
-                             plot_class_num=args.train_class_num, plot_quality=args.plot_quality)
-                plot_feature(net, args, testloader, device, args.plotfolder, epoch="stage2_test" + str(epoch),
-                             plot_class_num=args.train_class_num + 1, plot_quality=args.plot_quality, testmode=True)
-        logger.close()
-        print(f"\nFinish Stage-2 training...\n")
+    Feature_list = torch.cat(Feature_list, dim=0)
+    if feature == "normweight_fea2cen":
+        # return the max propobility.
+        Feature_list = torch.softmax(Feature_list, dim=1).max(dim=1, keepdim=False)[0]
+    Target_list = torch.cat(Target_list, dim=0)
+    Predict_list = torch.cat(Predict_list, dim=0)
 
-        print("===> Evaluating stage-2 ...")
-        stage_test(net, testloader, device, name="stage2_test_doublebar")
-        stage_valmixup(net, trainloader, device, name="stage2_mixup_result")
+    best_thres = 0.
+    best_eval = None
+    best_f1_measure = 0.
+    for thres in np.linspace(t_min,t_max,20):
+        Predict_list[Feature_list<thres] = args.train_class_num
+        eval = Evaluation(Predict_list.cpu().numpy(),Target_list.cpu().numpy())
+        if eval.f1_measure > best_f1_measure:
+            best_f1_measure = eval.f1_measure
+            best_thres = thres
+            best_eval = eval
+    print("===> Finial Evaluation...")
+    print(f"threshold is: {best_thres}")
+    print(f"F1: {best_eval.f1_measure}\nmacro-F1: {best_eval.f1_macro}")
 
-
-# Training
-def stage2_train(net, trainloader, optimizer, criterion, device):
-    net.train()
-    train_loss = 0
-    loss_classification = 0
-    loss_energy = 0
-    loss_energy_known = 0
-    loss_energy_unknown = 0
-    correct = 0
-    total = 0
-    for batch_idx, (inputs, targets) in enumerate(trainloader):
-        inputs, targets = inputs.to(device), targets.to(device)
-        mixed = mixup(inputs, targets, args)
-        optimizer.zero_grad()
-        out = net(inputs)
-        out_unkown = net(mixed)
-        loss_dict = criterion(out, targets, out_unkown)
-        loss = loss_dict['total']
-        loss.backward()
-        optimizer.step()
-
-        train_loss += loss.item()
-        loss_classification += (loss_dict['loss_classification']).item()
-        loss_energy += (loss_dict['loss_energy']).item()
-        loss_energy_known += (loss_dict['loss_energy_known']).item()
-        loss_energy_unknown += (loss_dict['loss_energy_unknown']).item()
-
-        _, predicted = (out['normweight_fea2cen']).max(1)
-        total += targets.size(0)
-        correct += predicted.eq(targets).sum().item()
-
-        progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
-                     % (train_loss / (batch_idx + 1), 100. * correct / total, correct, total))
-    return {
-        "train_loss": train_loss / (batch_idx + 1),
-        "loss_classification": loss_classification / (batch_idx + 1),
-        "loss_energy": loss_energy / (batch_idx + 1),
-        "loss_energy_known": loss_energy_known / (batch_idx + 1),
-        "loss_energy_unknown": loss_energy_unknown / (batch_idx + 1),
-        "accuracy": correct / total
-    }
-
-
-def save_model(net, optimizer, epoch, path, **kwargs):
-    state = {
-        'net': net.state_dict(),
-        'optimizer': optimizer.state_dict(),
-        'epoch': epoch
-    }
-    for key, value in kwargs.items():
-        state[key] = value
-    torch.save(state, path)
 
 
 def mixup(inputs, targets, args):
@@ -446,8 +506,8 @@ def mixup(inputs, targets, args):
     lam = np.random.beta(args.mixup, args.mixup)
     lam = max(0.3, min(lam, 0.7))
     mixed = lam * mix1 + (1. - lam) * mix2
-    return mixed
     # add Gaussian white Noise for adversarial training
+    return mixed
     # noise = torch.randn_like(mixed).to(mixed.device)
 
     # return 0.8*mixed + 0.2*noise
