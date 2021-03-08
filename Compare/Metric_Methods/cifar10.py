@@ -290,8 +290,8 @@ def test(net, testloader, criterion, device, intervals=20):
     if args.openmetric == "distance" and args.loss in ["CenterLoss"]:
         openmetric_list = Distance.l2(embed_fea_list,out["centroids"])
         openmetric_list,_ = openmetric_list.min(dim=1)
-        threshold_min = openmetric_list.min()
-        threshold_max = openmetric_list.max()
+        threshold_min = openmetric_list.min().item()
+        threshold_max = openmetric_list.max().item()
         for thres in np.linspace(threshold_min, threshold_max, intervals):
             Predict_list[openmetric_list > thres] = args.train_class_num
             eval = Evaluation(Predict_list.cpu().numpy(), Target_list.cpu().numpy())
@@ -315,8 +315,8 @@ def test(net, testloader, criterion, device, intervals=20):
     if args.openmetric == "norm" and args.loss in ["PSoftmaxLoss"]:
 
         openmetric_list = normfea_list
-        threshold_min = openmetric_list.min()
-        threshold_max = openmetric_list.max()
+        threshold_min = openmetric_list.min().item()
+        threshold_max = openmetric_list.max().item()
         for thres in np.linspace(threshold_min, threshold_max, intervals):
             Predict_list[openmetric_list < thres] = args.train_class_num
             eval = Evaluation(Predict_list.cpu().numpy(), Target_list.cpu().numpy())
@@ -328,8 +328,8 @@ def test(net, testloader, criterion, device, intervals=20):
     if args.openmetric == "energy" and args.loss in ["PSoftmaxLoss"]:
 
         openmetric_list = energy_list
-        threshold_min = openmetric_list.min()
-        threshold_max = openmetric_list.max()
+        threshold_min = openmetric_list.min().item()
+        threshold_max = openmetric_list.max().item()
         for thres in np.linspace(threshold_min, threshold_max, intervals):
             Predict_list[openmetric_list < thres] = args.train_class_num
             eval = Evaluation(Predict_list.cpu().numpy(), Target_list.cpu().numpy())
