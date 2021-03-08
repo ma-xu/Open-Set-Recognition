@@ -269,6 +269,8 @@ def test(net, testloader, criterion, device, intervals=20):
         fake_Target_list[fake_Target_list == args.train_class_num] = args.train_class_num - 1
         openmetric_list = criterion({"cosine_fea2cen": cosine_list}, fake_Target_list)["output"]
         openmetric_list, _ = torch.softmax(openmetric_list, dim=1).max(dim=1)
+        print(f"openmetric_list shape is  {openmetric_list.shape}")
+        print(f"Threshold range is {openmetric_list.min()} - {openmetric_list.max()}")
         for thres in np.linspace(threshold_min, threshold_max, intervals):
             Predict_list[openmetric_list < thres] = args.train_class_num
             eval = Evaluation(Predict_list.cpu().numpy(), Target_list.cpu().numpy())
