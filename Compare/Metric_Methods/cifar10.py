@@ -310,6 +310,7 @@ def test(net, testloader, criterion, device, intervals=20):
         threshold_min = 0.0
         threshold_max = 1.0
         openmetric_list, _ = cosine_list.max(dim=1)
+        print(f"openmetric_list range cosine is {openmetric_list.min()} | {openmetric_list.max()} ")
         for thres in np.linspace(threshold_min, threshold_max, intervals):
             Predict_list[openmetric_list < thres] = args.train_class_num
             eval = Evaluation(Predict_list.cpu().numpy(), Target_list.cpu().numpy())
