@@ -111,7 +111,7 @@ loss_Dict = {"CenterLoss": CenterLoss(centerloss_weight=args.centerloss_weight, 
              "NormFaceLoss": NormFaceLoss(scaling=args.scaling),
              "PSoftmaxLoss": PSoftmaxLoss()}
 criterion = loss_Dict[args.loss]
-
+criterion = criterion.to(device)
 
 def main():
     print(f"\nStart  training ...\n")
