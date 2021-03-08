@@ -290,7 +290,8 @@ def test(net, testloader, criterion, device, intervals=20):
                 best_eval = eval
 
     if args.openmetric == "distance" and args.loss in ["CenterLoss"]:
-        openmetric_list = Distance.l2(embed_fea_list, out["centroids"])
+        distance = Distance()
+        openmetric_list = distance.l2(embed_fea_list, out["centroids"])
         openmetric_list, _ = openmetric_list.min(dim=1)
         threshold_min = openmetric_list.min().item()
         threshold_max = openmetric_list.max().item()
