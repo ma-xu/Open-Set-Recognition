@@ -14,9 +14,10 @@ class CenterLoss(nn.Module):
         feat_dim (int): feature dimension.
     """
 
-    def __init__(self,centerloss_weight = 0.003):
+    def __init__(self,centerloss_weight = 0.003, num_classes=10):
         super(CenterLoss, self).__init__()
         self.centerloss_weight = centerloss_weight
+        self.register_buffer("classes", torch.arange(num_classes).long())
 
     def forward(self, inputs, labels):
         centroids = inputs["centroids"]
@@ -24,11 +25,11 @@ class CenterLoss(nn.Module):
         batch_size = x.size(0)
         num_classes = centroids.size(0)
         distmat = torch.pow(x, 2).sum(dim=1, keepdim=True).expand(batch_size, num_classes) + \
-                  torch.pow(self.centers, 2).sum(dim=1, keepdim=True).expand(num_classes, batch_size).t()
+                  torch.pow(centroids, 2).sum(dim=1, keepdim=True).expand(num_classes, batch_size).t()
         distmat.addmm_(1, -2, x, centroids.t())
 
-        labels = labels.unsqueeze(1).expand(batch_size, self.num_classes)
-        mask = labels.eq(self.classes.expand(batch_size, self.num_classes))
+        labels = labels.unsqueeze(1).expand(batch_size, num_classes)
+        mask = labels.eq(self.classes.expand(batch_size, num_classes))
 
         dist = distmat * mask.float()
         center_loss = dist.clamp(min=1e-12, max=1e+12).sum() / batch_size

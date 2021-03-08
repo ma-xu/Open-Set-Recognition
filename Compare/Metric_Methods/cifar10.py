@@ -105,7 +105,7 @@ testset = CIFAR10(root='../../data', train=False, download=True, transform=trans
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.bs, shuffle=True, num_workers=4)
 testloader = torch.utils.data.DataLoader(testset, batch_size=args.bs, shuffle=False, num_workers=4)
 
-loss_Dict = {"CenterLoss": CenterLoss(centerloss_weight=args.centerloss_weight),
+loss_Dict = {"CenterLoss": CenterLoss(centerloss_weight=args.centerloss_weight, num_classes=args.train_class_num),
              "SoftmaxLoss": SoftmaxLoss(),
              "ArcFaceLoss": ArcFaceLoss(scaling=args.scaling, m=args.m),
              "NormFaceLoss": NormFaceLoss(scaling=args.scaling),
