@@ -1,0 +1,10 @@
+ python3 mnist.py --loss SoftmaxLoss --openmetric possibility
+ python3 mnist.py --loss CenterLoss --openmetric possibility
+ python3 mnist.py --loss CenterLoss --openmetric distance
+ python3 mnist.py --loss ArcFaceLoss --openmetric possibility
+ python3 mnist.py --loss ArcFaceLoss --openmetric cosine
+ python3 mnist.py --loss NormFaceLoss --openmetric possibility
+ python3 mnist.py --loss NormFaceLoss --openmetric cosine
+ python3 mnist.py --loss PSoftmaxLoss --openmetric possibility
+ python3 mnist.py --loss PSoftmaxLoss --openmetric norm
+ python3 mnist.py --loss PSoftmaxLoss --openmetric energy
