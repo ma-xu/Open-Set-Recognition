@@ -106,10 +106,10 @@ trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.bs, shuffle=
 testloader = torch.utils.data.DataLoader(testset, batch_size=args.bs, shuffle=False, num_workers=4)
 
 loss_Dict = {"CenterLoss": CenterLoss(centerloss_weight=args.centerloss_weight),
-             "SoftmaxLoss": SoftmaxLoss,
+             "SoftmaxLoss": SoftmaxLoss(),
              "ArcFaceLoss": ArcFaceLoss(scaling=args.scaling, m=args.m),
              "NormFaceLoss": NormFaceLoss(scaling=args.scaling),
-             "PSoftmaxLoss": PSoftmaxLoss}
+             "PSoftmaxLoss": PSoftmaxLoss()}
 criterion = loss_Dict[args.loss]
 
 
