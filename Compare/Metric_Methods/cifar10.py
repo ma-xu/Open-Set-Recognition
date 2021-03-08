@@ -177,7 +177,7 @@ def train(net, trainloader, optimizer, criterion, device):
         if args.loss in ["CenterLoss", "SoftmaxLoss", ]:
             _, predicted = (out['dotproduct_fea2cen']).max(1)
         elif args.loss in ["ArcFaceLoss", "NormFaceLoss", ]:
-            _, predicted = (out['cosine_fea2cen']).min(1)
+            _, predicted = (out['cosine_fea2cen']).max(1)
         else:  # PSoftmaxLoss
             _, predicted = (out['normweight_fea2cen']).max(1)
 
