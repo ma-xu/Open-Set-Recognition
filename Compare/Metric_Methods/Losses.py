@@ -22,6 +22,7 @@ class CenterLoss(nn.Module):
     def forward(self, inputs, labels):
         centroids = inputs["centroids"]
         x = inputs["embed_fea"]
+        dotproduct_fea2cen = inputs["dotproduct_fea2cen"]
         batch_size = x.size(0)
         num_classes = centroids.size(0)
         distmat = torch.pow(x, 2).sum(dim=1, keepdim=True).expand(batch_size, num_classes) + \
@@ -34,7 +35,7 @@ class CenterLoss(nn.Module):
         dist = distmat * mask.float()
         center_loss = dist.clamp(min=1e-12, max=1e+12).sum() / batch_size
         center_loss = self.centerloss_weight * center_loss
-        softmax_loss = F.cross_entropy(inputs["dotproduct_fea2cen"], labels)
+        softmax_loss = F.cross_entropy(dotproduct_fea2cen, labels)
 
         return {
             "loss":softmax_loss + center_loss,
