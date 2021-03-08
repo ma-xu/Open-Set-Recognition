@@ -58,9 +58,8 @@ parser.add_argument('--loss', default='SoftmaxLoss',
                     choices=["CenterLoss", "SoftmaxLoss", "ArcFaceLoss", "NormFaceLoss", "PSoftmaxLoss"],
                     type=str, help='choosing network')
 parser.add_argument('--openmetric', default='possibility',
-                    choices=["possibility", "distance",'norm','energy','cosine'],
+                    choices=["possibility", "distance", 'norm', 'energy', 'cosine'],
                     type=str, help='choosing network')
-
 
 # Parameters for losses
 parser.add_argument('--centerloss_weight', default=0.03, type=float, help='center loss')
@@ -79,7 +78,7 @@ parser.add_argument('--evaluate', action='store_true', help='Evaluate without tr
 args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 args.checkpoint = './checkpoints/cifar10/%s_%s_%s_%s_%s_dim%s-c%s-s%s-m%s' % (
-    args.loss,args.openmetric, args.train_class_num, args.test_class_num, args.arch, args.embed_dim,
+    args.loss, args.openmetric, args.train_class_num, args.test_class_num, args.arch, args.embed_dim,
     args.centerloss_weight, args.scaling, args.m)
 if not os.path.isdir(args.checkpoint):
     mkdir_p(args.checkpoint)
@@ -112,6 +111,7 @@ loss_Dict = {"CenterLoss": CenterLoss(centerloss_weight=args.centerloss_weight, 
              "PSoftmaxLoss": PSoftmaxLoss()}
 criterion = loss_Dict[args.loss]
 criterion = criterion.to(device)
+
 
 def main():
     print(f"\nStart  training ...\n")
@@ -174,13 +174,12 @@ def train(net, trainloader, optimizer, criterion, device):
 
         train_loss += loss.item()
         # "CenterLoss", "SoftmaxLoss", "ArcFaceLoss", "NormFaceLoss", "PSoftmaxLoss"
-        if args.loss in ["CenterLoss","SoftmaxLoss",]:
+        if args.loss in ["CenterLoss", "SoftmaxLoss", ]:
             _, predicted = (out['dotproduct_fea2cen']).max(1)
-        elif args.loss in ["ArcFaceLoss","NormFaceLoss",]:
+        elif args.loss in ["ArcFaceLoss", "NormFaceLoss", ]:
             _, predicted = (out['cosine_fea2cen']).min(1)
-        else: # PSoftmaxLoss
+        else:  # PSoftmaxLoss
             _, predicted = (out['normweight_fea2cen']).max(1)
-
 
         total += targets.size(0)
         correct += predicted.eq(targets).sum().item()
@@ -193,11 +192,10 @@ def train(net, trainloader, optimizer, criterion, device):
     }
 
 
-
 def test(net, testloader, criterion, device, intervals=20):
     normfea_list = []  # extracted feature norm
-    cosine_list = [] # extracted cosine similarity
-    energy_list = [] # energy value
+    cosine_list = []  # extracted cosine similarity
+    energy_list = []  # energy value
     embed_fea_list = []
     dotproduct_fea2cen_list = []
     normweight_fea2cen_list = []
@@ -233,7 +231,6 @@ def test(net, testloader, criterion, device, intervals=20):
 
             progress_bar(batch_idx, len(testloader), "|||")
 
-
     normfea_list = torch.cat(normfea_list, dim=0)
     cosine_list = torch.cat(cosine_list, dim=0)
     energy_list = torch.cat(energy_list, dim=0)
@@ -245,10 +242,15 @@ def test(net, testloader, criterion, device, intervals=20):
 
     # "CenterLoss", "SoftmaxLoss", "ArcFaceLoss", "NormFaceLoss", "PSoftmaxLoss"
     # "possibility", "distance",'norm','energy','cosine'
-    best_F1=0
+    best_F1 = 0
     best_thres = 0
     best_eval = None
-    if args.openmetric == "possibility" and args.loss in ["CenterLoss","SoftmaxLoss"]:
+
+    # for these unbounded metric, we explore more intervals by *5 to achieve a relatively fair comparison.
+
+    expand_factor = 5
+
+    if args.openmetric == "possibility" and args.loss in ["CenterLoss", "SoftmaxLoss"]:
         threshold_min = 0.0
         threshold_max = 1.0
         openmetric_list, _ = torch.softmax(dotproduct_fea2cen_list, dim=1).max(dim=1)
@@ -264,7 +266,7 @@ def test(net, testloader, criterion, device, intervals=20):
         threshold_min = 0.0
         threshold_max = 1.0
         fake_Target_list = Target_list
-        fake_Target_list[fake_Target_list == args.train_class_num] = args.train_class_num-1
+        fake_Target_list[fake_Target_list == args.train_class_num] = args.train_class_num - 1
         openmetric_list = criterion({"cosine_fea2cen": cosine_list}, fake_Target_list)["output"]
         openmetric_list, _ = torch.softmax(openmetric_list, dim=1).max(dim=1)
         for thres in np.linspace(threshold_min, threshold_max, intervals):
@@ -288,11 +290,11 @@ def test(net, testloader, criterion, device, intervals=20):
                 best_eval = eval
 
     if args.openmetric == "distance" and args.loss in ["CenterLoss"]:
-        openmetric_list = Distance.l2(embed_fea_list,out["centroids"])
-        openmetric_list,_ = openmetric_list.min(dim=1)
+        openmetric_list = Distance.l2(embed_fea_list, out["centroids"])
+        openmetric_list, _ = openmetric_list.min(dim=1)
         threshold_min = openmetric_list.min().item()
         threshold_max = openmetric_list.max().item()
-        for thres in np.linspace(threshold_min, threshold_max, intervals):
+        for thres in np.linspace(threshold_min, threshold_max, expand_factor * intervals):
             Predict_list[openmetric_list > thres] = args.train_class_num
             eval = Evaluation(Predict_list.cpu().numpy(), Target_list.cpu().numpy())
             if eval.f1_measure > best_F1:
@@ -317,7 +319,7 @@ def test(net, testloader, criterion, device, intervals=20):
         openmetric_list = normfea_list
         threshold_min = openmetric_list.min().item()
         threshold_max = openmetric_list.max().item()
-        for thres in np.linspace(threshold_min, threshold_max, intervals):
+        for thres in np.linspace(threshold_min, threshold_max, expand_factor * intervals):
             Predict_list[openmetric_list < thres] = args.train_class_num
             eval = Evaluation(Predict_list.cpu().numpy(), Target_list.cpu().numpy())
             if eval.f1_measure > best_F1:
@@ -330,7 +332,7 @@ def test(net, testloader, criterion, device, intervals=20):
         openmetric_list = energy_list
         threshold_min = openmetric_list.min().item()
         threshold_max = openmetric_list.max().item()
-        for thres in np.linspace(threshold_min, threshold_max, intervals):
+        for thres in np.linspace(threshold_min, threshold_max, expand_factor * intervals):
             Predict_list[openmetric_list < thres] = args.train_class_num
             eval = Evaluation(Predict_list.cpu().numpy(), Target_list.cpu().numpy())
             if eval.f1_measure > best_F1:
