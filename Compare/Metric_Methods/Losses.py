@@ -17,15 +17,13 @@ class CenterLoss(nn.Module):
     def __init__(self,centerloss_weight = 0.003, num_classes=10):
         super(CenterLoss, self).__init__()
         self.centerloss_weight = centerloss_weight
-
+        self.register_buffer("classes", torch.arange(num_classes).long())
 
     def forward(self, inputs, labels):
         centroids = inputs["centroids"]
         x = inputs["embed_fea"]
         batch_size = x.size(0)
         num_classes = centroids.size(0)
-        classes = torch.arange(num_classes).long()
-        classes.to(labels.device)
         distmat = torch.pow(x, 2).sum(dim=1, keepdim=True).expand(batch_size, num_classes) + \
                   torch.pow(centroids, 2).sum(dim=1, keepdim=True).expand(num_classes, batch_size).t()
         distmat.addmm_(1, -2, x, centroids.t())
