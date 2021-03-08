@@ -250,7 +250,7 @@ def test(net, testloader, criterion, device, intervals=20):
     best_F1=0
     best_thres = 0
     best_eval = None
-    if args.openmetric is "possibility" and args.loss in ["CenterLoss","SoftmaxLoss"]:
+    if args.openmetric == "possibility" and args.loss in ["CenterLoss","SoftmaxLoss"]:
         threshold_min = 0.0
         threshold_max = 1.0
         openmetric_list, _ = torch.softmax(dotproduct_fea2cen_list, dim=1).max(dim=1)
@@ -262,7 +262,7 @@ def test(net, testloader, criterion, device, intervals=20):
                 best_thres = thres
                 best_eval = eval
 
-    if args.openmetric is "possibility" and args.loss in ["ArcFaceLoss", "NormFaceLoss"]:
+    if args.openmetric == "possibility" and args.loss in ["ArcFaceLoss", "NormFaceLoss"]:
         threshold_min = 0.0
         threshold_max = 1.0
         fake_Target_list = Target_list
@@ -277,7 +277,7 @@ def test(net, testloader, criterion, device, intervals=20):
                 best_thres = thres
                 best_eval = eval
 
-    if args.openmetric is "possibility" and args.loss in ["PSoftmaxLoss"]:
+    if args.openmetric == "possibility" and args.loss in ["PSoftmaxLoss"]:
         threshold_min = 0.0
         threshold_max = 1.0
         openmetric_list, _ = torch.softmax(normweight_fea2cen_list, dim=1).max(dim=1)
@@ -289,7 +289,7 @@ def test(net, testloader, criterion, device, intervals=20):
                 best_thres = thres
                 best_eval = eval
 
-    if args.openmetric is "distance" and args.loss in ["CenterLoss"]:
+    if args.openmetric == "distance" and args.loss in ["CenterLoss"]:
         openmetric_list = Distance.l2(embed_fea_list,out["centroids"])
         openmetric_list,_ = openmetric_list.min(dim=1)
         threshold_min = openmetric_list.min()
@@ -302,7 +302,7 @@ def test(net, testloader, criterion, device, intervals=20):
                 best_thres = thres
                 best_eval = eval
 
-    if args.openmetric is "cosine" and args.loss in ["ArcFaceLoss", "NormFaceLoss"]:
+    if args.openmetric == "cosine" and args.loss in ["ArcFaceLoss", "NormFaceLoss"]:
         threshold_min = 0.0
         threshold_max = 1.0
         openmetric_list, _ = cosine_list.max(dim=1)
@@ -314,7 +314,7 @@ def test(net, testloader, criterion, device, intervals=20):
                 best_thres = thres
                 best_eval = eval
 
-    if args.openmetric is "norm" and args.loss in ["PSoftmaxLoss"]:
+    if args.openmetric == "norm" and args.loss in ["PSoftmaxLoss"]:
 
         openmetric_list = normfea_list
         threshold_min = openmetric_list.min()
@@ -327,7 +327,7 @@ def test(net, testloader, criterion, device, intervals=20):
                 best_thres = thres
                 best_eval = eval
 
-    if args.openmetric is "energy" and args.loss in ["PSoftmaxLoss"]:
+    if args.openmetric == "energy" and args.loss in ["PSoftmaxLoss"]:
 
         openmetric_list = energy_list
         threshold_min = openmetric_list.min()
