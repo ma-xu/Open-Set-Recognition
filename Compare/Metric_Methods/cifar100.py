@@ -18,7 +18,7 @@ import sys
 # from models import *
 sys.path.append("../..")
 import backbones.cifar as models
-from datasets import CIFAR10
+from datasets import CIFAR100
 from Utils import adjust_learning_rate, progress_bar, Logger, mkdir_p, Evaluation, save_model
 from Losses import CenterLoss, SoftmaxLoss, ArcFaceLoss, NormFaceLoss, PSoftmaxLoss
 from BuildNet import BuildNet
@@ -26,16 +26,16 @@ from Distance import Distance
 
 # loss: -> "CenterLoss", "SoftmaxLoss", "ArcFaceLoss", "NormFaceLoss", "PSoftmaxLoss"
 # openmetric: -> "possibility", "distance",'norm','energy','cosine'
-# python3 cifar10.py --loss SoftmaxLoss --openmetric possibility
-# python3 cifar10.py --loss CenterLoss --openmetric possibility
-# python3 cifar10.py --loss CenterLoss --openmetric distance
-# python3 cifar10.py --loss ArcFaceLoss --openmetric possibility
-# python3 cifar10.py --loss ArcFaceLoss --openmetric cosine
-# python3 cifar10.py --loss NormFaceLoss --openmetric possibility
-# python3 cifar10.py --loss NormFaceLoss --openmetric cosine
-# python3 cifar10.py --loss PSoftmaxLoss --openmetric possibility
-# python3 cifar10.py --loss PSoftmaxLoss --openmetric norm
-# python3 cifar10.py --loss PSoftmaxLoss --openmetric energy
+# python3 cifar100.py --loss SoftmaxLoss --openmetric possibility
+# python3 cifar100.py --loss CenterLoss --openmetric possibility
+# python3 cifar100.py --loss CenterLoss --openmetric distance
+# python3 cifar100.py --loss ArcFaceLoss --openmetric possibility
+# python3 cifar100.py --loss ArcFaceLoss --openmetric cosine
+# python3 cifar100.py --loss NormFaceLoss --openmetric possibility
+# python3 cifar100.py --loss NormFaceLoss --openmetric cosine
+# python3 cifar100.py --loss PSoftmaxLoss --openmetric possibility
+# python3 cifar100.py --loss PSoftmaxLoss --openmetric norm
+# python3 cifar100.py --loss PSoftmaxLoss --openmetric energy
 
 model_names = sorted(name for name in models.__dict__
                      if not name.startswith("__")
@@ -46,13 +46,13 @@ os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
 
 # Dataset preperation
-parser.add_argument('--train_class_num', default=7, type=int, help='Classes used in training')
-parser.add_argument('--test_class_num', default=10, type=int, help='Classes used in testing')
+parser.add_argument('--train_class_num', default=70, type=int, help='Classes used in training')
+parser.add_argument('--test_class_num', default=100, type=int, help='Classes used in testing')
 parser.add_argument('--includes_all_train_class', default=True, action='store_true',
                     help='If required all known classes included in testing')
 
 # General MODEL parameters
-parser.add_argument('--arch', default='ResNet18', choices=model_names, type=str, help='choosing network')
+parser.add_argument('--arch', default='ResNet50', choices=model_names, type=str, help='choosing network')
 parser.add_argument('--embed_dim', default=128, type=int, help='embedding feature dimension')
 parser.add_argument('--loss', default='SoftmaxLoss',
                     choices=["CenterLoss", "SoftmaxLoss", "ArcFaceLoss", "NormFaceLoss", "PSoftmaxLoss"],
@@ -77,7 +77,7 @@ parser.add_argument('--evaluate', action='store_true', help='Evaluate without tr
 
 args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-args.checkpoint = './checkpoints/cifar10/%s_%s_%s_%s_%s_dim%s-c%s-s%s-m%s' % (
+args.checkpoint = './checkpoints/cifar100/%s_%s_%s_%s_%s_dim%s-c%s-s%s-m%s' % (
     args.loss, args.openmetric, args.train_class_num, args.test_class_num, args.arch, args.embed_dim,
     args.centerloss_weight, args.scaling, args.m)
 if not os.path.isdir(args.checkpoint):
@@ -94,10 +94,10 @@ transform_test = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
 ])
-trainset = CIFAR10(root='../../data', train=True, download=True, transform=transform_train,
+trainset = CIFAR100(root='../../data', train=True, download=True, transform=transform_train,
                    train_class_num=args.train_class_num, test_class_num=args.test_class_num,
                    includes_all_train_class=args.includes_all_train_class)
-testset = CIFAR10(root='../../data', train=False, download=True, transform=transform_test,
+testset = CIFAR100(root='../../data', train=False, download=True, transform=transform_test,
                   train_class_num=args.train_class_num, test_class_num=args.test_class_num,
                   includes_all_train_class=args.includes_all_train_class)
 # data loader
