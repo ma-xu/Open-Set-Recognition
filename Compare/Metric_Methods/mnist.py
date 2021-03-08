@@ -53,7 +53,7 @@ parser.add_argument('--includes_all_train_class', default=True, action='store_tr
 
 # General MODEL parameters
 parser.add_argument('--arch', default='LeNetPlus', choices=model_names, type=str, help='choosing network')
-parser.add_argument('--embed_dim', default=2, type=int, help='embedding feature dimension')
+parser.add_argument('--embed_dim', default=10, type=int, help='embedding feature dimension')
 parser.add_argument('--loss', default='SoftmaxLoss',
                     choices=["CenterLoss", "SoftmaxLoss", "ArcFaceLoss", "NormFaceLoss", "PSoftmaxLoss"],
                     type=str, help='choosing network')
