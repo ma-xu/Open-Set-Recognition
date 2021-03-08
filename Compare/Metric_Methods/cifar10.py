@@ -138,7 +138,7 @@ def main():
             print("=> no checkpoint found at '{}'".format(args.resume))
     else:
         logger = Logger(os.path.join(args.checkpoint, 'log.txt'))
-        logger.set_names(['Epoch', 'Train Loss', 'Train Acc.', 'Test Loss', "Test F1"])
+        logger.set_names(['Epoch', 'Train Loss', 'Train Acc.', "Test F1", 'threshold'])
 
     if not args.evaluate:
         for epoch in range(start_epoch, args.es):
@@ -149,7 +149,7 @@ def main():
             save_model(net, optimizer, epoch, os.path.join(args.checkpoint, 'last_model.pth'))
             test_out = test(net, testloader, criterion, device)
             logger.append([epoch + 1, train_out["train_loss"], train_out["accuracy"],
-                           test_out["test_loss"], test_out["best_F1"]])
+                           test_out["best_F1"], test_out["best_thres"]])
         logger.close()
         print(f"\nFinish training...\n")
 
@@ -204,16 +204,15 @@ def test(net, testloader, criterion, device, intervals=20):
     Target_list = []
     Predict_list = []
 
-    test_loss = 0
-
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
             out = net(inputs)  # shape [batch,class]
 
-            loss_dict = criterion(out, targets)
-            loss = loss_dict['loss']
-            test_loss += loss.item()
+            # Test cannot calculate loss beacuse of class number dismatch.
+            # loss_dict = criterion(out, targets)
+            # loss = loss_dict['loss']
+            # test_loss += loss.item()
 
             normfea_list.append(out["norm_fea"])
             cosine_list.append(out["cosine_fea2cen"])
@@ -232,8 +231,7 @@ def test(net, testloader, criterion, device, intervals=20):
                 _, predicted = (out['normweight_fea2cen']).max(1)
             Predict_list.append(predicted)
 
-            progress_bar(batch_idx, len(testloader), 'Loss: %.3f |'
-                         % (test_loss / (batch_idx + 1)))
+            progress_bar(batch_idx, len(testloader), "|||")
 
 
     normfea_list = torch.cat(normfea_list, dim=0)
@@ -342,7 +340,6 @@ def test(net, testloader, criterion, device, intervals=20):
 
     print(f"Best F1 is: {best_F1}  [in best threshold: {best_thres} ]")
     return {
-        "test_loss": test_loss / (batch_idx + 1),
         "best_F1": best_F1,
         "best_thres": best_thres,
         "best_eval": best_eval
