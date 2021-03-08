@@ -307,9 +307,9 @@ def test(net, testloader, criterion, device, intervals=20):
                 best_eval = eval
 
     if args.openmetric == "cosine" and args.loss in ["ArcFaceLoss", "NormFaceLoss"]:
-        threshold_min = 0.0
-        threshold_max = 1.0
         openmetric_list, _ = cosine_list.max(dim=1)
+        threshold_min = openmetric_list.min().item()
+        threshold_max = openmetric_list.max().item()
         print(f"openmetric_list range cosine is {openmetric_list.min()} | {openmetric_list.max()} ")
         for thres in np.linspace(threshold_min, threshold_max, intervals):
             Predict_list[openmetric_list < thres] = args.train_class_num
