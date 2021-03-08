@@ -294,6 +294,7 @@ def test(net, testloader, criterion, device, intervals=20):
         openmetric_list, _ = openmetric_list.min(dim=1)
         threshold_min = openmetric_list.min().item()
         threshold_max = openmetric_list.max().item()
+        print(f"Threshold range is {threshold_min} - {threshold_max}")
         for thres in np.linspace(threshold_min, threshold_max, expand_factor * intervals):
             Predict_list[openmetric_list > thres] = args.train_class_num
             eval = Evaluation(Predict_list.cpu().numpy(), Target_list.cpu().numpy())
