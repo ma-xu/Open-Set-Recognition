@@ -247,9 +247,9 @@ def test(net, testloader, criterion, device, intervals=20):
 
     # for these unbounded metric, we explore more intervals by *5 to achieve a relatively fair comparison.
     expand_factor = 5
-    Predict_list_possibility = Predict_list
-    Predict_list_norm = Predict_list
-    Predict_list_energy = Predict_list
+    Predict_list_possibility = Predict_list.copy_()
+    Predict_list_norm = Predict_list.copy_()
+    Predict_list_energy = Predict_list.copy_()
 
     # possibility
     if args.loss in ["SoftmaxLoss"]:
