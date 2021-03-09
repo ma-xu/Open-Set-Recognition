@@ -27,7 +27,7 @@ from Distance import Distance
 # loss: ->  "SoftmaxLoss",  "PSoftmaxLoss"
 # -> "possibility",'norm','energy'
 # python3 cifar10.py --loss SoftmaxLoss --train_class_num 5
-# python3 cifar10.py --loss PSoftmaxLoss --test_class_num 5
+# python3 cifar10.py --loss PSoftmaxLoss --train_class_num 5
 
 model_names = sorted(name for name in models.__dict__
                      if not name.startswith("__")
