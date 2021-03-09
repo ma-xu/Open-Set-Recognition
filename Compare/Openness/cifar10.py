@@ -124,13 +124,13 @@ def main():
             optimizer.load_state_dict(checkpoint['optimizer'])
             start_epoch = checkpoint['epoch']
             loggerList = []
-            for i in range(args.train_class_num, args.test_class_num):
+            for i in range(args.train_class_num, args.test_class_num+1):
                 loggerList.append( Logger(os.path.join(args.checkpoint, f'log{i}.txt'), resume=True))
         else:
             print("=> no checkpoint found at '{}'".format(args.resume))
     else:
         loggerList = []
-        for i in range(args.train_class_num, args.test_class_num):
+        for i in range(args.train_class_num, args.test_class_num+1):
             logger = Logger(os.path.join(args.checkpoint, f'log{i}.txt'))
             logger.set_names(['Epoch', 'Train Loss', 'Train Acc.', "Pos-F1", 'Norm-F1', 'Energy-F1'])
             loggerList.append(logger)
@@ -143,7 +143,7 @@ def main():
             train_out = train(net, trainloader, optimizer, criterion, device)
             save_model(net, optimizer, epoch, os.path.join(args.checkpoint, 'last_model.pth'))
 
-            for test_class_num in range(args.train_class_num, args.test_class_num):
+            for test_class_num in range(args.train_class_num, args.test_class_num+1):
                 testset = CIFAR10(root='../../data', train=False, download=True, transform=transform_test,
                                   train_class_num=args.train_class_num, test_class_num=test_class_num,
                                   includes_all_train_class=args.includes_all_train_class)
