@@ -107,7 +107,7 @@ class CIFAR10(VisionDataset):
         """
         assert train_class_num > 0 and train_class_num < len(self.classes)
         if includes_all_train_class:
-            assert test_class_num > train_class_num  # not include equal to ensure openness.
+            assert test_class_num >= train_class_num  # not include equal to ensure openness.
         rnd = np.random.RandomState(42)  # Ensure identical results.
         class_list = list(range(len(self.classes)))
         train_classes = rnd.choice(class_list, train_class_num, replace=False).tolist()

@@ -92,7 +92,7 @@ class MNIST(VisionDataset):
         """
         assert train_class_num > 0 and train_class_num < 10  # not include 10 to ensure openness.
         if includes_all_train_class:
-            assert test_class_num > train_class_num  # not include equal to ensure openness.
+            assert test_class_num >= train_class_num  # not include equal to ensure openness.
         class_list = list(range(len(self.classes)))
         train_classes = list(range(train_class_num))
         if includes_all_train_class:
