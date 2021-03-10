@@ -11,7 +11,7 @@ unnknown_class_100 = 100
 unnknown_class_200 = 200 #  300
 unnknown_class_300 = 300 #  300
 unnknown_class_400 = 400 #  300
-unnknown_class_500 = 400 #  300
+unnknown_class_500 = 500 #  300
 
 # random select known and unknown classes
 random.seed(10)
