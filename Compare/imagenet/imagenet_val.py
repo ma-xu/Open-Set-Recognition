@@ -328,6 +328,8 @@ def validate(val_loader, model,intervals=20):
     openmetric_possibility = normweight_fea2cen_list
     openmetric_possibility, _ = torch.softmax(openmetric_possibility, dim=1).max(dim=1)
     for thres in np.linspace(0.0, 1.0, intervals):
+        if args.local_rank == 0:
+            print(f"Testing possibility threshold: {thres}")
         Predict_list_possibility[openmetric_possibility < thres] = args.train_class_num
         eval = Evaluation(Predict_list_possibility.cpu().numpy(), Target_list.cpu().numpy())
         if eval.f1_measure > best_F1_possibility:
@@ -339,6 +341,8 @@ def validate(val_loader, model,intervals=20):
     threshold_min_norm = openmetric_norm.min().item()
     threshold_max_norm = openmetric_norm.max().item()
     for thres in np.linspace(threshold_min_norm, threshold_max_norm, expand_factor * intervals):
+        if args.local_rank == 0:
+            print(f"Testing norm threshold: {thres}")
         Predict_list_norm[openmetric_norm < thres] = args.train_class_num
         eval = Evaluation(Predict_list_norm.cpu().numpy(), Target_list.cpu().numpy())
         if eval.f1_measure > best_F1_norm:
@@ -350,6 +354,8 @@ def validate(val_loader, model,intervals=20):
     threshold_min_energy = openmetric_energy.min().item()
     threshold_max_energy = openmetric_energy.max().item()
     for thres in np.linspace(threshold_min_energy, threshold_max_energy, expand_factor * intervals):
+        if args.local_rank == 0:
+            print(f"Testing energy threshold: {thres}")
         Predict_list_energy[openmetric_energy < thres] = args.train_class_num
         eval = Evaluation(Predict_list_energy.cpu().numpy(), Target_list.cpu().numpy())
         if eval.f1_measure > best_F1_energy:
