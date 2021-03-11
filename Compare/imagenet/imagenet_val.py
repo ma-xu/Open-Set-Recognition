@@ -312,8 +312,11 @@ def validate(val_loader, model,intervals=20):
     Predict_list = torch.cat(Predict_list, dim=0)
 
     best_F1_possibility = 0
+    best_possibility_thr = 0
     best_F1_norm = 0
+    best_norm_thr = 0
     best_F1_energy = 0
+    best_energy_thr = 0
 
     # for these unbounded metric, we explore more intervals by *5 to achieve a relatively fair comparison.
     expand_factor = 5
@@ -329,6 +332,7 @@ def validate(val_loader, model,intervals=20):
         eval = Evaluation(Predict_list_possibility.cpu().numpy(), Target_list.cpu().numpy())
         if eval.f1_measure > best_F1_possibility:
             best_F1_possibility = eval.f1_measure
+            best_possibility_thr = thres
 
         # norm
     openmetric_norm = normfea_list.squeeze(dim=1)
@@ -339,6 +343,7 @@ def validate(val_loader, model,intervals=20):
         eval = Evaluation(Predict_list_norm.cpu().numpy(), Target_list.cpu().numpy())
         if eval.f1_measure > best_F1_norm:
             best_F1_norm = eval.f1_measure
+            best_norm_thr = thres
 
     # energy
     openmetric_energy = energy_list
@@ -349,9 +354,14 @@ def validate(val_loader, model,intervals=20):
         eval = Evaluation(Predict_list_energy.cpu().numpy(), Target_list.cpu().numpy())
         if eval.f1_measure > best_F1_energy:
             best_F1_energy = eval.f1_measure
+            best_energy_thr = thres
 
     if args.local_rank == 0:
+        print(f"Energy range is {threshold_min_energy} to {threshold_max_energy}")
+        print(f"Norm   range is {threshold_min_norm} to {threshold_max_norm}")
         print(f"Best Possibility F1 is: {best_F1_possibility} | Norm F1 is :{best_F1_norm} | Energy F1 is: {best_F1_energy}")
+        print(
+            f"Best Possibility thre is: {best_possibility_thr} | Norm thr is :{best_norm_thr} | Energy thr is: {best_energy_thr}")
     return {
         "best_F1_possibility": best_F1_possibility,
         "best_F1_norm": best_F1_norm,
