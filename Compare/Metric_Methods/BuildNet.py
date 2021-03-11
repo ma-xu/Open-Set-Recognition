@@ -14,7 +14,8 @@ class BuildNet(nn.Module):
         self.backbone = models.__dict__[backbone](num_classes=num_classes, backbone_fc=False)
         self.feat_dim = self.get_backbone_last_layer_out_channel()  # get the channel number of backbone output
         self.embed_dim = embed_dim
-        self.embeddingLayer = nn.Linear(self.feat_dim, self.embed_dim, bias=False)
+        if self.embed_dim!=0:
+            self.embeddingLayer = nn.Linear(self.feat_dim, self.embed_dim, bias=False)
         self.centroids = nn.Parameter(torch.randn(num_classes, embed_dim))
         nn.init.xavier_uniform_(self.centroids)
 
@@ -38,7 +39,10 @@ class BuildNet(nn.Module):
     def forward(self, x):
         x = self.backbone(x)
         gap = (F.adaptive_avg_pool2d(x, 1)).view(x.size(0), -1)  # [n, backbone_c]
-        embed_fea = self.embeddingLayer(gap)  # [n, embed_dim]
+        if self.embed_dim!=0:
+            embed_fea = self.embeddingLayer(gap)  # [n, embed_dim]
+        else:
+            embed_fea = gap
         norm_fea = torch.norm(embed_fea, dim=1, p=2, keepdim=True)  # norm length for each image [n,1]
         embed_fea_normed = F.normalize(embed_fea, dim=1, p=2)  # [n, embed_dim]
         centroids = self.centroids  # [class, embed_dim]
