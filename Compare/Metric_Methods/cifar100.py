@@ -321,7 +321,7 @@ def test(net, testloader, criterion, device, intervals=20):
 
     if args.openmetric == "norm" and args.loss in ["PSoftmaxLoss"]:
 
-        openmetric_list = normfea_list
+        openmetric_list = normfea_list.squeeze(dim=1)
         threshold_min = openmetric_list.min().item()
         threshold_max = openmetric_list.max().item()
         for thres in np.linspace(threshold_min, threshold_max, expand_factor * intervals):
