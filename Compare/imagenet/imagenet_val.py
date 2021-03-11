@@ -302,7 +302,7 @@ def validate(val_loader, model,intervals=20):
             energy_list.append(out["energy"])
             normweight_fea2cen_list.append(out["normweight_fea2cen"])
             Target_list.append(target)
-            predicted = (out['normweight_fea2cen']).max(1)
+            _, predicted = (out['normweight_fea2cen']).max(1)
             Predict_list.append(predicted)
 
     normfea_list = torch.cat(normfea_list, dim=0)
