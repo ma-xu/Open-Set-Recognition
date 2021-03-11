@@ -252,7 +252,7 @@ def main():
             logger.set_names(['Learning Rate', 'Train Loss', 'Valid Loss', 'Train Acc.', 'Valid Acc.', 'Valid Top5.'])
 
     traindir = os.path.join(args.data, 'train')
-    # valdir = os.path.join(args.data, args.val)
+    valdir = os.path.join(args.data, args.val)
 
 
     crop_size = 224
@@ -262,19 +262,26 @@ def main():
     pipe.build()
     train_loader = DALIClassificationIterator(pipe, size=int(pipe.epoch_size("Reader") / args.world_size))
 
-    # pipe = HybridValPipe(batch_size=args.batch_size, num_threads=args.workers, device_id=args.local_rank, data_dir=valdir, crop=crop_size, size=val_size)
-    # pipe.build()
-    # val_loader = DALIClassificationIterator(pipe, size=int(pipe.epoch_size("Reader") / args.world_size))
-    validate(val_loader,train_loader, model)
+    pipe = HybridValPipe(batch_size=args.batch_size, num_threads=args.workers, device_id=args.local_rank, data_dir=valdir, crop=crop_size, size=val_size)
+    pipe.build()
+    val_loader = DALIClassificationIterator(pipe, size=int(pipe.epoch_size("Reader") / args.world_size))
+    validate(val_loader, model)
 
 
 
-def validate(val_loader, train_loader, model):
+def validate(val_loader, model,intervals=20):
     # switch to evaluate mode
     model.eval()
     if args.local_rank == 0:
         print("start evaluating...")
-    scores, labels = [], []
+
+    normfea_list = []  # extracted feature norm
+    energy_list = []  # energy value
+    normweight_fea2cen_list = []
+    Target_list = []
+    Predict_list = []
+
+
     for i, data in enumerate(val_loader):
         input = data[0]["data"]
         target = data[0]["label"].squeeze().cuda().long()
@@ -289,61 +296,65 @@ def validate(val_loader, train_loader, model):
 
         # compute output
         with torch.no_grad():
-            _, output = model(input_var)
+            out = model(input_var)
 
-        # print(f"output shape is : {output.shape}, max target is {max(target_var)}, min target is {min(target_var)}")
-        scores.append(output)
-        labels.append(target)
+            normfea_list.append(out["norm_fea"])
+            energy_list.append(out["energy"])
+            normweight_fea2cen_list.append(out["normweight_fea2cen"])
+            Target_list.append(target)
 
-    # Get the prdict results.
-    scores = torch.cat(scores, dim=0).cpu().numpy()
-    labels = torch.cat(labels, dim=0).cpu().numpy()
-    scores = np.array(scores)[:, np.newaxis, :]
-    labels = np.array(labels)
+    normfea_list = torch.cat(normfea_list, dim=0)
+    energy_list = torch.cat(energy_list, dim=0)
+    normweight_fea2cen_list = torch.cat(normweight_fea2cen_list, dim=0)
+    Target_list = torch.cat(Target_list, dim=0)
+    Predict_list = torch.cat(Predict_list, dim=0)
 
-    # Fit the weibull distribution from training data.
-    print("Fittting Weibull distribution...")
-    _, mavs, dists = compute_train_score_and_mavs_and_dists(args.train_class_num, train_loader, model)
-    print("Finish fittting Weibull distribution...")
-    categories = list(range(0, args.train_class_num))
-    weibull_model = fit_weibull(mavs, dists, categories, args.weibull_tail, "euclidean")
+    best_F1_possibility = 0
+    best_F1_norm = 0
+    best_F1_energy = 0
 
-    pred_softmax, pred_softmax_threshold, pred_openmax = [], [], []
-    score_softmax, score_openmax = [], []
-    for score in scores:
-        so, ss = openmax(weibull_model, categories, score,
-                         0.5, args.weibull_alpha, "euclidean")
-        # print(f"so  {so} \n ss  {ss}")# openmax_prob, softmax_prob
-        pred_softmax.append(np.argmax(ss))
-        pred_softmax_threshold.append(np.argmax(ss) if np.max(ss) >= args.weibull_threshold else args.train_class_num)
-        pred_openmax.append(np.argmax(so) if np.max(so) >= args.weibull_threshold else args.train_class_num)
-        score_softmax.append(ss)
-        score_openmax.append(so)
+    # for these unbounded metric, we explore more intervals by *5 to achieve a relatively fair comparison.
+    expand_factor = 5
+    Predict_list_possibility = Predict_list.clone().detach()
+    Predict_list_norm = Predict_list.clone().detach()
+    Predict_list_energy = Predict_list.clone().detach()
 
+    # possibility
+    openmetric_possibility = normweight_fea2cen_list
+    openmetric_possibility, _ = torch.softmax(openmetric_possibility, dim=1).max(dim=1)
+    for thres in np.linspace(0.0, 1.0, intervals):
+        Predict_list_possibility[openmetric_possibility < thres] = args.train_class_num
+        eval = Evaluation(Predict_list_possibility.cpu().numpy(), Target_list.cpu().numpy())
+        if eval.f1_measure > best_F1_possibility:
+            best_F1_possibility = eval.f1_measure
 
-    print("Evaluation...")
-    eval_softmax = Evaluation(pred_softmax, labels)
-    eval_softmax_threshold = Evaluation(pred_softmax_threshold, labels)
-    eval_openmax = Evaluation(pred_openmax, labels)
-    # torch.save(eval_softmax, os.path.join(args.checkpoint, 'eval_softmax.pkl'))
-    # torch.save(eval_softmax_threshold, os.path.join(args.checkpoint, 'eval_softmax_threshold.pkl'))
-    # torch.save(eval_openmax, os.path.join(args.checkpoint, 'eval_openmax.pkl'))
+        # norm
+    openmetric_norm = normfea_list.squeeze(dim=1)
+    threshold_min_norm = openmetric_norm.min().item()
+    threshold_max_norm = openmetric_norm.max().item()
+    for thres in np.linspace(threshold_min_norm, threshold_max_norm, expand_factor * intervals):
+        Predict_list_norm[openmetric_norm < thres] = args.train_class_num
+        eval = Evaluation(Predict_list_norm.cpu().numpy(), Target_list.cpu().numpy())
+        if eval.f1_measure > best_F1_norm:
+            best_F1_norm = eval.f1_measure
 
-    softmax_results = torch.Tensor([eval_softmax.accuracy,eval_softmax.f1_measure,
-                                         eval_softmax.f1_macro,eval_softmax.f1_macro_weighted])
-    threshold_results = torch.Tensor([eval_softmax_threshold.accuracy, eval_softmax_threshold.f1_measure,
-                                         eval_softmax_threshold.f1_macro, eval_softmax_threshold.f1_macro_weighted])
-    openmax_results = torch.Tensor([eval_openmax.accuracy, eval_openmax.f1_measure,
-                                    eval_openmax.f1_macro, eval_openmax.f1_macro_weighted])
+    # energy
+    openmetric_energy = energy_list
+    threshold_min_energy = openmetric_energy.min().item()
+    threshold_max_energy = openmetric_energy.max().item()
+    for thres in np.linspace(threshold_min_energy, threshold_max_energy, expand_factor * intervals):
+        Predict_list_energy[openmetric_energy < thres] = args.train_class_num
+        eval = Evaluation(Predict_list_energy.cpu().numpy(), Target_list.cpu().numpy())
+        if eval.f1_measure > best_F1_energy:
+            best_F1_energy = eval.f1_measure
 
-    softmax_results = reduce_tensor(softmax_results.to(input_var.device))
-    threshold_results = reduce_tensor(threshold_results.to(input_var.device))
-    openmax_results = reduce_tensor(openmax_results.to(input_var.device))
     if args.local_rank == 0:
-        print(f"the result for three     :  Acc, F1, macro, w-marco")
-        print(f"the result for softmax   :  {softmax_results}")
-        print(f"the result for threshold :  {threshold_results}")
-        print(f"the result for openmax   :  {openmax_results}")
+        print(f"Best Possibility F1 is: {best_F1_possibility} | Norm F1 is :{best_F1_norm} | Energy F1 is: {best_F1_energy}")
+    return {
+        "best_F1_possibility": best_F1_possibility,
+        "best_F1_norm": best_F1_norm,
+        "best_F1_energy": best_F1_energy
+    }
 
 
 
@@ -352,30 +363,6 @@ def reduce_tensor(tensor):
     dist.all_reduce(rt, op=dist.ReduceOp.SUM)
     rt /= args.world_size
     return rt
-
-
-def compute_train_score_and_mavs_and_dists(train_class_num,trainloader,net):
-    scores = [[] for _ in range(train_class_num)]
-    with torch.no_grad():
-        for batch_idx, data in enumerate(trainloader):
-            input = data[0]["data"]
-            target = data[0]["label"].squeeze().cuda().long()
-            train_loader_len = int(trainloader._size / args.batch_size)
-
-            if args.local_rank == 0 and batch_idx % 200 == 0:
-                print(f"computing train score {batch_idx}\t/{train_loader_len}...")
-
-            # this must cause error for cifar
-            _, outputs = net(input)
-            for score, t in zip(outputs, target):
-                # print(f"torch.argmax(score) is {torch.argmax(score)}, t is {t}")
-                if torch.argmax(score) == t:
-                    scores[t].append(score.unsqueeze(dim=0).unsqueeze(dim=0))
-    scores = [torch.cat(x).cpu().numpy() for x in scores]  # (N_c, 1, C) * C
-    mavs = np.array([np.mean(x, axis=0) for x in scores])  # (C, 1, C)
-    dists = [compute_channel_distances(mcv, score) for mcv, score in zip(mavs, scores)]
-    return scores, mavs, dists
-
 
 def accuracy(output, target, topk=(1,)):
     """Computes the precision@k for the specified values of k"""
