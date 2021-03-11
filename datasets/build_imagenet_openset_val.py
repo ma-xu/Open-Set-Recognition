@@ -76,28 +76,16 @@ for class_folder in selected_unknown_folders_200:
 print("done!!!")
 
 
-# for test set
-print("Processing validation set 000....")
-counter = 0
-for class_folder in selected_known_folders:
-    counter += 1
-    shutil.copytree(
-        os.path.join(old_path,old_folder,'val',class_folder),
-        os.path.join(old_path,new_folder,'val000',class_folder))
-    print(f"copying Val classes (known) \t \t {counter} / {known_class_num}")
-print("done!!!")
-
-
-
-
-
-
-
-
-
-
-
-
+# # for test set
+# print("Processing validation set 000....")
+# counter = 0
+# for class_folder in selected_known_folders:
+#     counter += 1
+#     shutil.copytree(
+#         os.path.join(old_path,old_folder,'val',class_folder),
+#         os.path.join(old_path,new_folder,'val000',class_folder))
+#     print(f"copying Val classes (known) \t \t {counter} / {known_class_num}")
+# print("done!!!")
 
 
 # # for train set
@@ -111,7 +99,7 @@ print("done!!!")
 #     print(f"copying Train classes \t \t {counter} / {known_class_num}")
 #
 
-"""
+
 # for test set
 print("Processing validation set 300....")
 counter = 0
@@ -185,4 +173,4 @@ for class_folder in selected_unknown_folders_500:
     print(f"copying Val classes (unknown) \t \t {counter} / {unnknown_class_500}")
 
 print("done!!!")
-"""
+
