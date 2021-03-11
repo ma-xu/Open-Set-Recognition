@@ -258,9 +258,9 @@ def main():
     crop_size = 224
     val_size = 256
 
-    pipe = HybridTrainPipe(batch_size=args.batch_size, num_threads=args.workers, device_id=args.local_rank, data_dir=traindir, crop=crop_size, dali_cpu=args.dali_cpu)
-    pipe.build()
-    train_loader = DALIClassificationIterator(pipe, size=int(pipe.epoch_size("Reader") / args.world_size))
+    # pipe = HybridTrainPipe(batch_size=args.batch_size, num_threads=args.workers, device_id=args.local_rank, data_dir=traindir, crop=crop_size, dali_cpu=args.dali_cpu)
+    # pipe.build()
+    # train_loader = DALIClassificationIterator(pipe, size=int(pipe.epoch_size("Reader") / args.world_size))
 
     pipe = HybridValPipe(batch_size=args.batch_size, num_threads=args.workers, device_id=args.local_rank, data_dir=valdir, crop=crop_size, size=val_size)
     pipe.build()
@@ -302,6 +302,8 @@ def validate(val_loader, model,intervals=20):
             energy_list.append(out["energy"])
             normweight_fea2cen_list.append(out["normweight_fea2cen"])
             Target_list.append(target)
+            predicted = (out['normweight_fea2cen']).max(1)
+            Predict_list.append(predicted)
 
     normfea_list = torch.cat(normfea_list, dim=0)
     energy_list = torch.cat(energy_list, dim=0)
