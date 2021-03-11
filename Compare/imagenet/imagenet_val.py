@@ -368,6 +368,7 @@ def validate(val_loader, model,intervals=20):
         print(f"Best Possibility F1 is: {best_F1_possibility} | Norm F1 is :{best_F1_norm} | Energy F1 is: {best_F1_energy}")
         print(
             f"Best Possibility thre is: {best_possibility_thr} | Norm thr is :{best_norm_thr} | Energy thr is: {best_energy_thr}")
+        print(f"Max predict is {Predict_list.max()}")
     return {
         "best_F1_possibility": best_F1_possibility,
         "best_F1_norm": best_F1_norm,
