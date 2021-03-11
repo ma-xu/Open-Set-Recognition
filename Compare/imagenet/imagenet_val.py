@@ -301,7 +301,7 @@ def validate(val_loader, model,intervals=20):
             normfea_list.append(out["norm_fea"])
             energy_list.append(out["energy"])
             normweight_fea2cen_list.append(out["normweight_fea2cen"])
-            Target_list.append(target)
+            Target_list.append(target_var)
             _, predicted = (out['normweight_fea2cen']).max(1)
             Predict_list.append(predicted)
 
