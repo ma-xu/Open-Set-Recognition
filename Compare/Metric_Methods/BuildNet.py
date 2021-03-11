@@ -16,7 +16,9 @@ class BuildNet(nn.Module):
         self.embed_dim = embed_dim
         if self.embed_dim!=0:
             self.embeddingLayer = nn.Linear(self.feat_dim, self.embed_dim, bias=False)
-        self.centroids = nn.Parameter(torch.randn(num_classes, embed_dim))
+            self.centroids = nn.Parameter(torch.randn(num_classes, embed_dim))
+        else:
+            self.centroids = nn.Parameter(torch.randn(num_classes, self.feat_dim))
         nn.init.xavier_uniform_(self.centroids)
 
     def get_backbone_last_layer_out_channel(self):
