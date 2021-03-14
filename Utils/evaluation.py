@@ -126,6 +126,7 @@ class Evaluation(object):
             plt.show()
         else:
             plt.savefig(savepath, bbox_inches='tight', dpi=200)
+        plt.close()
 
 
 if __name__ == '__main__':
