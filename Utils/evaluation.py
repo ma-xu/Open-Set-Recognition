@@ -102,7 +102,7 @@ class Evaluation(object):
         assert len(self.predict) == len(self.label)
         return confusion_matrix(self.label, self.predict, normalize=normalize)
 
-    def plot_confusion_matrix(self, labels: [str] = None, normalize=None, ax=None) -> None:
+    def plot_confusion_matrix(self, labels: [str] = None, normalize=None, ax=None, savepath=None) -> None:
         """
 
         :param labels: [str]: label names
@@ -122,7 +122,10 @@ class Evaluation(object):
             xticks_rotation = 'horizontal'
 
         display.plot(include_values=True, cmap=plt.cm.get_cmap('Blues'), xticks_rotation=xticks_rotation, ax=ax)
-        plt.show()
+        if savepath is None:
+            plt.show()
+        else:
+            plt.savefig(savepath, bbox_inches='tight', dpi=200)
 
 
 if __name__ == '__main__':
