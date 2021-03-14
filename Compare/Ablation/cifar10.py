@@ -347,9 +347,9 @@ def test(net, testloader, criterion, device, intervals=20):
                 best_F1 = eval.f1_measure
                 best_thres = thres
                 best_eval = eval
-                eval.plot_confusion_matrix(labels=testset_class_names, normalize=True,
+                eval.plot_confusion_matrix(labels=testset_class_names, normalize="true",
                                            savepath=os.path.join(args.checkpoint, 'confusion_matrix.pdf'))
-                
+
 
     print(f"Best F1 is: {best_F1}  [in best threshold: {best_thres} ]")
     return {
