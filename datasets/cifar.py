@@ -231,3 +231,4 @@ class CIFAR100(CIFAR10):
 
 if __name__ == '__main__':
     trainset = CIFAR100(root='./data', train=False, download=True)
+    print(trainset.classes)

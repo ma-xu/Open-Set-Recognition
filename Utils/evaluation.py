@@ -151,6 +151,7 @@ if __name__ == '__main__':
     # print('Area under ROC curve (variable probability across classes):',
     #       f'{eval.area_under_roc(prediction_scores=rand_prediction_scores):.3f}')
     # print(eval.confusion_matrix)
-    eval.plot_confusion_matrix(normalize="true")
+    label_names = ["bird","bog","perople","horse","cat", "unknown"]
+    eval.plot_confusion_matrix(normalize="true",labels=label_names)
 
     print(classification_report(label, predict, digits=3))
