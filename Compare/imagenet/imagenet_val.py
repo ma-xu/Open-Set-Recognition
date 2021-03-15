@@ -240,8 +240,16 @@ def main():
             checkpoint = torch.load(args.resume, map_location=lambda storage, loc: storage.cuda(args.gpu))
             args.start_epoch = checkpoint['epoch']
             best_prec1 = checkpoint['best_prec1']
-            model.load_state_dict(checkpoint['state_dict'])
-            optimizer.load_state_dict(checkpoint['optimizer'])
+            try:
+                model.load_state_dict(checkpoint['state_dict'])
+            except:
+                from collections import OrderedDict
+                new_check_point = OrderedDict()
+                for k, v in checkpoint['state_dict'].items():
+                    name = k[7:]  # remove `module.`
+                    new_check_point[name] = v
+                model.load_state_dict(new_check_point)
+            # optimizer.load_state_dict(checkpoint['optimizer'])
             print("=> loaded checkpoint '{}' (epoch {})"
                   .format(args.resume, checkpoint['epoch']))
         else:
