@@ -192,7 +192,7 @@ def train(net, trainloader, optimizer, criterion, device):
     }
 
 
-def test(net, testloader, criterion, device, intervals=20):
+def test(net, testloader, criterion, device, intervals=40):
     normfea_list = []  # extracted feature norm
     cosine_list = []  # extracted cosine similarity
     energy_list = []  # energy value
