@@ -79,6 +79,7 @@ parser.add_argument('--stage2_lr_step', default=20, type=float, help='learning r
 parser.add_argument('--stage2_bs', default=128, type=int, help='batch size')
 
 parser.add_argument('--hist_bins', default=100, type=int, help='divided into n bins')
+parser.add_argument('--hist_norm', default=True, action='store_true', help='if norm the frequency to [0,1]')
 
 args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
