@@ -159,9 +159,9 @@ def main_stage1():
         logger.close()
         print(f"\nFinish training...\n")
 
-    else:
-        print("===> Evaluating ...")
-        test(net, testloader, device)
+
+    print("===> Evaluating ...")
+    test_with_hist(net, testloader, device, name="stage1_test")
     mid_dict = stage_valmixup(net, trainloader, device)
     return {
         "net": net,
