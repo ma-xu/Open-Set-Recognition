@@ -22,7 +22,6 @@ from datasets import CIFAR10
 from Utils import adjust_learning_rate, progress_bar, Logger, mkdir_p, Evaluation, save_model
 from Losses import  PSoftmaxLoss, FinetuneLoss
 from BuildNet import BuildNet
-from Distance import Distance
 from energy_hist import plot_listhist
 
 # loss: -> "CenterLoss", "SoftmaxLoss", "ArcFaceLoss", "NormFaceLoss", "PSoftmaxLoss"
@@ -70,6 +69,7 @@ parser.add_argument('--evaluate', action='store_true', help='Evaluate without tr
 parser.add_argument('--mixup', default=1., type=float, help='the parameters for mixup')
 
 # Parameters for stage 2 training
+parser.add_argument('--temperature', default=1, type=float, help='gamma for fine-tuning loss')
 parser.add_argument('--gamma', default=1, type=float, help='gamma for fine-tuning loss')
 parser.add_argument('--stage2_resume', default='', type=str, metavar='PATH', help='path to latest checkpoint')
 parser.add_argument('--stage2_es', default=50, type=int, help='epoch size')
@@ -104,8 +104,8 @@ testset = CIFAR10(root='../../data', train=False, download=True, transform=trans
                   includes_all_train_class=args.includes_all_train_class)
 testset_class_names = testset.classes
 # data loader
-trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.bs, shuffle=True, num_workers=4)
-testloader = torch.utils.data.DataLoader(testset, batch_size=args.bs, shuffle=False, num_workers=4)
+trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.stage1_bs, shuffle=True, num_workers=4)
+testloader = torch.utils.data.DataLoader(testset, batch_size=args.stage1_bs, shuffle=False, num_workers=4)
 
 
 
@@ -126,27 +126,27 @@ def main_stage1():
 
     criterion = PSoftmaxLoss()
     criterion = criterion.to(device)
-    optimizer = torch.optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
+    optimizer = torch.optim.SGD(net.parameters(), lr=args.stage1_lr, momentum=0.9, weight_decay=5e-4)
 
-    if args.resume:
+    if args.stage1_resume:
         # Load checkpoint.
-        if os.path.isfile(args.resume):
+        if os.path.isfile(args.stage1_resume):
             print('==> Resuming from checkpoint..')
-            checkpoint = torch.load(args.resume)
+            checkpoint = torch.load(args.stage1_resume)
             net.load_state_dict(checkpoint['net'])
             optimizer.load_state_dict(checkpoint['optimizer'])
             start_epoch = checkpoint['epoch']
             logger = Logger(os.path.join(args.checkpoint, 'log_stage1.txt'), resume=True)
         else:
-            print("=> no checkpoint found at '{}'".format(args.resume))
+            print("=> no checkpoint found at '{}'".format(args.stage1_resume))
     else:
         logger = Logger(os.path.join(args.checkpoint, 'log.txt'))
         logger.set_names(['Epoch', 'Train Loss', 'Train Acc.', "Test F1", 'threshold'])
 
     if not args.evaluate:
-        for epoch in range(start_epoch, args.es):
-            adjust_learning_rate(optimizer, epoch, args.lr,
-                                 factor=args.lr_factor, step=args.lr_step)
+        for epoch in range(start_epoch, args.stage1_es):
+            adjust_learning_rate(optimizer, epoch, args.stage1_lr,
+                                 factor=args.stage1_lr_factor, step=args.stage1_lr_step)
             print('\nEpoch: %d | Learning rate: %f ' % (epoch + 1, optimizer.param_groups[0]['lr']))
             train_out = train(net, trainloader, optimizer, criterion, device)
             save_model(net, optimizer, epoch, os.path.join(args.checkpoint, 'stage_1_last_model.pth'))
@@ -286,7 +286,7 @@ def main_stage2(net, mid_known, mid_unknown):
             start_epoch = checkpoint['epoch']
             logger = Logger(os.path.join(args.checkpoint, 'log_stage2.txt'), resume=True)
         else:
-            print("=> no checkpoint found at '{}'".format(args.resume))
+            print("=> no checkpoint found at '{}'".format(args.stage2_resume))
     else:
         logger = Logger(os.path.join(args.checkpoint, 'log_stage2.txt'))
         logger.set_names(['Epoch', 'Train Loss', 'Class Loss', 'Energy Loss',
