@@ -344,7 +344,7 @@ def validate(val_loader, model,intervals=20):
     openmetric_norm = normfea_list.squeeze(dim=1)
     threshold_min_norm = openmetric_norm.min().item()
     threshold_max_norm = openmetric_norm.max().item()
-    default_thr_norm = ((threshold_min_norm+threshold_max_norm)*0.5+threshold_min_norm)*0.5
+    default_thr_norm = threshold_min_norm*1.6
     Predict_list_norm[openmetric_norm < default_thr_norm] = args.train_class_num
     eval_norm = Evaluation(Predict_list_norm.cpu().numpy(), Target_list.cpu().numpy())
 
@@ -352,7 +352,7 @@ def validate(val_loader, model,intervals=20):
     openmetric_energy = energy_list
     threshold_min_energy = openmetric_energy.min().item()
     threshold_max_energy = openmetric_energy.max().item()
-    default_thr_energy = ((threshold_min_energy + threshold_max_energy) * 0.5 + threshold_min_energy) * 0.5
+    default_thr_energy = threshold_min_energy*1.6
     Predict_list_energy[openmetric_energy < default_thr_energy] = args.train_class_num
     eval_energy = Evaluation(Predict_list_energy.cpu().numpy(), Target_list.cpu().numpy())
 
