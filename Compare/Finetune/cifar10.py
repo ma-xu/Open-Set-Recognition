@@ -142,7 +142,7 @@ def main_stage1():
         else:
             print("=> no checkpoint found at '{}'".format(args.stage1_resume))
     else:
-        logger = Logger(os.path.join(args.checkpoint, 'log.txt'))
+        logger = Logger(os.path.join(args.checkpoint, 'log_stage1.txt'))
         logger.set_names(['Epoch', 'Train Loss', 'Train Acc.', "Test F1", 'threshold'])
 
     if not args.evaluate:
