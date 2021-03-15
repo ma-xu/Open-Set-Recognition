@@ -72,10 +72,10 @@ parser.add_argument('--mixup', default=1., type=float, help='the parameters for 
 parser.add_argument('--temperature', default=1, type=float, help='gamma for fine-tuning loss')
 parser.add_argument('--gamma', default=1, type=float, help='gamma for fine-tuning loss')
 parser.add_argument('--stage2_resume', default='', type=str, metavar='PATH', help='path to latest checkpoint')
-parser.add_argument('--stage2_es', default=50, type=int, help='epoch size')
+parser.add_argument('--stage2_es', default=20, type=int, help='epoch size')
 parser.add_argument('--stage2_lr', default=0.01, type=float, help='learning rate')
 parser.add_argument('--stage2_lr_factor', default=0.1, type=float, help='learning rate Decay factor')  # works for MNIST
-parser.add_argument('--stage2_lr_step', default=20, type=float, help='learning rate Decay step')  # works for MNIST
+parser.add_argument('--stage2_lr_step', default=8, type=float, help='learning rate Decay step')  # works for MNIST
 parser.add_argument('--stage2_bs', default=128, type=int, help='batch size')
 
 parser.add_argument('--hist_bins', default=100, type=int, help='divided into n bins')
@@ -303,7 +303,7 @@ def main_stage2(net, mid_known, mid_unknown):
             train_out = stage2_train(net, trainloader, optimizer, criterion, device)
 
             save_model(net, optimizer, epoch, os.path.join(args.checkpoint, 'stage_2_last_model.pth'))
-            test_out = test(net, testloader, device)
+            test_out = test_with_hist(net, testloader, device, name=f"stage2_test{epoch}")
             logger.append([epoch + 1, train_out["train_loss"], train_out["loss_classification"],
                            train_out["loss_energy"], train_out["loss_energy_known"],
                            train_out["loss_energy_unknown"], train_out["accuracy"],
