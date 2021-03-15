@@ -304,6 +304,7 @@ def main_stage2(net, mid_known, mid_unknown):
 
             save_model(net, optimizer, epoch, os.path.join(args.checkpoint, 'stage_2_last_model.pth'))
             test_out = test_with_hist(net, testloader, device, name=f"stage2_test{epoch}")
+            stage_valmixup(net, trainloader, device, name=f"stage2_mixup{epoch}")
             logger.append([epoch + 1, train_out["train_loss"], train_out["loss_classification"],
                            train_out["loss_energy"], train_out["loss_energy_known"],
                            train_out["loss_energy_unknown"], train_out["accuracy"],
