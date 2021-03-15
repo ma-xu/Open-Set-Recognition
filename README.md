@@ -2,7 +2,7 @@
 
 Ongoing Open Set Recognition project using PyTorch.
 
-For any issue and question, please email [xuma@my.unt.edu](mailto:xuma@my.unt.edu)
+For any issue and question, please email [ma.xu1@northeastern.edu](mailto:ma.xu1@northeastern.edu)
 
 Attention: need to be re-constrcuted due to my experimental implementations (especially my methods).
 
