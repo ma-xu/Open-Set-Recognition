@@ -78,6 +78,8 @@ parser.add_argument('--stage2_lr_factor', default=0.1, type=float, help='learnin
 parser.add_argument('--stage2_lr_step', default=20, type=float, help='learning rate Decay step')  # works for MNIST
 parser.add_argument('--stage2_bs', default=128, type=int, help='batch size')
 
+parser.add_argument('--hist_bins', default=100, type=int, help='divided into n bins')
+
 args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 args.checkpoint = './checkpoints/cifar10/%s_%s_%s_dim%s_gamma%s' % (
