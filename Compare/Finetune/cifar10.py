@@ -274,6 +274,7 @@ def main_stage2(net, mid_known, mid_unknown):
     start_epoch = 0
     criterion = FinetuneLoss(mid_known=mid_known, mid_unknown=mid_unknown,
                             gamma=args.gamma, temperature=args.temperature, feature='energy')
+    criterion = criterion.to(device)
     optimizer = torch.optim.SGD(net.parameters(), lr=args.stage2_lr, momentum=0.9, weight_decay=5e-4)
     if args.stage2_resume:
         # Load checkpoint.
