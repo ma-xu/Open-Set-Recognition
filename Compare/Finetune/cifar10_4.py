@@ -267,7 +267,7 @@ def stage_valmixup(net, dataloader, device, name="stage1_mixup"):
     print(f"min  energy:{min(energy_loader_list.min(), energy_mixup_list.min())} "
           f"| max  energy:{max(energy_loader_list.max(), energy_mixup_list.max())}")
     return{
-        "mid_known": (energy_loader_list.median()+energy_loader_list.max())/2.0,
+        "mid_known": energy_loader_list.median(),
         "mid_unknown": (energy_mixup_list.median()+energy_mixup_list.min())/2.0
     }
 
