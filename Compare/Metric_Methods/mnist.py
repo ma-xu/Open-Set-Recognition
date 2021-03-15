@@ -338,7 +338,7 @@ def test(net, testloader, criterion, device, intervals=20):
                 best_F1 = eval.f1_measure
                 best_thres = thres
                 best_eval = eval
-
+    print(f"Threshold range is [{threshold_min},  {threshold_max}]")
     print(f"Best F1 is: {best_F1}  [in best threshold: {best_thres} ]")
     return {
         "best_F1": best_F1,
