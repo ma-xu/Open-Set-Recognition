@@ -235,7 +235,7 @@ def main_stage2(net, mid_known, mid_unknown):
                                   includes_all_train_class=args.includes_all_train_class)
                 testloader = torch.utils.data.DataLoader(testset, batch_size=args.stage2_bs,
                                                          shuffle=False, num_workers=4)
-                test_out = test(net, testloader, criterion, device)
+                test_out = test(net, testloader, device)
                 logger = loggerList[test_class_num-args.train_class_num]
                 logger.append([epoch + 1, train_out["train_loss"], train_out["accuracy"],
                             test_out["best_F1_energy"]])
