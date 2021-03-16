@@ -246,8 +246,7 @@ def main_stage2(net, mid_known, mid_unknown):
             best_F1_list.append(test_out["best_F1"])
         logger.close()
         print(f"\nFinish Stage-2 training...\n")
-        best_F1_list = torch.cat(best_F1_list,dim=0)
-        last_five = best_F1_list[-5:]
+        last_five = best_F1_list[-2:]
         print(f"\n Gamma:{args.gamma} | F1_mean: {last_five.mean()} | F1_std: {last_five.std()}")
 
     # print("===> Evaluating stage-2 ...")
