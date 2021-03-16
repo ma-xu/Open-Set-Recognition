@@ -238,7 +238,7 @@ def main_stage2(net, mid_known, mid_unknown):
                 test_out = test(net, testloader, device)
                 logger = loggerList[test_class_num-args.train_class_num]
                 logger.append([epoch + 1, train_out["train_loss"], train_out["accuracy"],
-                            test_out["best_F1_energy"]])
+                            test_out["best_F1"]])
         logger.close()
         print(f"\nFinish Stage-2 training...\n")
 
