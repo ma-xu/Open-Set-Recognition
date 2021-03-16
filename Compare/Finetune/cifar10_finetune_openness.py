@@ -14,7 +14,6 @@ import torchvision.transforms as transforms
 import os
 import argparse
 import sys
-
 # from models import *
 sys.path.append("../..")
 import backbones.cifar as models
@@ -23,6 +22,7 @@ from Utils import adjust_learning_rate, progress_bar, Logger, mkdir_p, Evaluatio
 from Losses import  PSoftmaxLoss, FinetuneLoss
 from BuildNet import BuildNet
 
+# CUDA_VISIBLE_DEVICES=0 python3 cifar10_finetune_openness.py --stage1_resume path
 
 model_names = sorted(name for name in models.__dict__
                      if not name.startswith("__")
@@ -70,7 +70,7 @@ parser.add_argument('--hist_norm', default=True, action='store_true', help='if n
 
 args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-args.checkpoint = './checkpoints/cifar10/%s_%s_%s_dim%s_gamma%s' % (
+args.checkpoint = './checkpoints/cifar10/%s_%s_%s_dim%s_gamma%s_openness_Stage2' % (
 args.train_class_num, args.test_class_num, args.arch, args.embed_dim, args.gamma)
 if not os.path.isdir(args.checkpoint):
     mkdir_p(args.checkpoint)
