@@ -303,8 +303,7 @@ def main_stage2(net, mid_known, mid_unknown):
             train_out = stage2_train(net, trainloader, optimizer, criterion, device)
 
             save_model(net, optimizer, epoch, os.path.join(args.checkpoint, 'stage_2_last_model.pth'))
-            test_out = test_with_hist(net, testloader, device, name=f"stage2_test{epoch}")
-            stage_valmixup(net, trainloader, device, name=f"stage2_mixup{epoch}")
+            test_out = test(net, testloader, device)
             logger.append([epoch + 1, train_out["train_loss"], train_out["loss_classification"],
                            train_out["loss_energy"], train_out["loss_energy_known"],
                            train_out["loss_energy_unknown"], train_out["accuracy"],
@@ -420,14 +419,7 @@ def mixup(inputs, targets, args):
     mix1 = inputs[dis_matchers]
     mix2 = inputs_bak[dis_matchers]
     lam = np.random.beta(args.mixup, args.mixup)
-    # lam = max(0.3, min(lam, 0.7))
-    # if lam >0.3:
-    #     lam = max(0.7,lam)
-    #
-    # if lam < 0.7:
-    #     lam = min(0.7, lam)
-
-
+    lam = max(0.3, min(lam, 0.7))
     mixed = lam * mix1 + (1. - lam) * mix2
     # add Gaussian white Noise for adversarial training
 
