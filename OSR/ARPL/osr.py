@@ -50,7 +50,7 @@ parser.add_argument('--gpu', type=str, default='0')
 parser.add_argument('--seed', type=int, default=0)
 parser.add_argument('--use-cpu', action='store_true')
 parser.add_argument('--save-dir', type=str, default='../log')
-parser.add_argument('--loss', type=str, default='ARPLoss')
+parser.add_argument('--loss', type=str, default='RPLoss')
 parser.add_argument('--eval', action='store_true', help="Eval", default=False)
 parser.add_argument('--cs', action='store_true', help="Confusing Sample", default=False)
 
