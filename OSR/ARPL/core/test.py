@@ -59,9 +59,9 @@ def test(net, criterion, testloader, outloader, epoch=None, **options):
     print(f"len x2: {len(x2)}")
     print(f"predict_k: {_pred_k}")
     print(f"max predict_k: {np.max(_pred_k)}")
-    print(f"min predict_k: {np.max(_pred_k)}")
+    print(f"min predict_k: {np.min(_pred_k)}")
     print(f"max _pred_u: {np.max(_pred_u)}")
-    print(f"min _pred_u: {np.max(_pred_u)}")
+    print(f"min _pred_u: {np.min(_pred_u)}")
     results = evaluation.metric_ood(x1, x2)['Bas']
 
 
