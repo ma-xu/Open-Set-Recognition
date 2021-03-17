@@ -41,6 +41,7 @@ def test(net, criterion, testloader, outloader, epoch=None, **options):
                 # x, y = net(data, return_feature=True)
                 logits, _ = criterion(x, y)
                 _pred_u.append(logits.data.cpu().numpy())
+                print(f"outloader _pred_u: {_pred_u}")
 
     # Accuracy
     acc = float(correct) * 100. / float(total)
