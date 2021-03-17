@@ -53,6 +53,8 @@ def test(net, criterion, testloader, outloader, epoch=None, **options):
     
     # Out-of-Distribution detction evaluation
     x1, x2 = np.max(_pred_k, axis=1), np.max(_pred_u, axis=1)
+    print(f"x1: {x1}")
+    print(f"x2: {x2}")
     results = evaluation.metric_ood(x1, x2)['Bas']
     
     # OSCR
