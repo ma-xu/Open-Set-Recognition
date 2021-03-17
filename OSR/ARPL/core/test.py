@@ -23,7 +23,7 @@ def test(net, criterion, testloader, outloader, epoch=None, **options):
             
             with torch.set_grad_enabled(False):
                 x, y = net(data, True)
-                print(f"labels is: {labels}")
+                # print(f"labels is: {labels}")
                 logits, _ = criterion(x, y)
                 predictions = logits.data.max(1)[1]
                 total += labels.size(0)
@@ -35,7 +35,7 @@ def test(net, criterion, testloader, outloader, epoch=None, **options):
         for batch_idx, (data, labels) in enumerate(outloader):
             if options['use_gpu']:
                 data, labels = data.cuda(), labels.cuda()
-            
+                print(f"outloader labels: {labels}")
             with torch.set_grad_enabled(False):
                 x, y = net(data, True)
                 # x, y = net(data, return_feature=True)
