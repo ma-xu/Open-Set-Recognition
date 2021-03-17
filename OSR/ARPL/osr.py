@@ -14,7 +14,7 @@ import torch.multiprocessing as mp
 import torch.backends.cudnn as cudnn
 
 from models import gan
-from models.models import classifier32, classifier32ABN, ConvNet
+from models.models import classifier32, classifier32ABN
 from datasets.osr_dataloader import MNIST_OSR, CIFAR10_OSR, CIFAR100_OSR, SVHN_OSR, Tiny_ImageNet_OSR
 from utils import Logger, save_networks, load_networks
 from core import train, train_cs, test
@@ -94,7 +94,7 @@ def main_worker(options):
     if options['cs']:
         net = classifier32ABN(num_classes=options['num_classes'])
     else:
-        net = ConvNet(num_classes=options['num_classes'])
+        net = classifier32(num_classes=options['num_classes'])
     feat_dim = 128
 
     if options['cs']:
