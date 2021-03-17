@@ -196,7 +196,9 @@ if __name__ == '__main__':
     from split import splits_2020 as splits
     
     for i in range(len(splits[options['dataset']])):
+        print(f"debug: len(splits[options['dataset']]){ len(splits[options['dataset']])}")
         known = splits[options['dataset']][len(splits[options['dataset']])-i-1]
+        print(f"debug: known {known}")
         if options['dataset'] == 'cifar100':
             unknown = splits[options['dataset']+'-'+str(options['out_num'])][len(splits[options['dataset']])-i-1]
         elif options['dataset'] == 'tiny_imagenet':
@@ -205,7 +207,7 @@ if __name__ == '__main__':
             unknown = list(set(list(range(0, 200))) - set(known))
         else:
             unknown = list(set(list(range(0, 10))) - set(known))
-
+        print(f"debug: unknown {unknown}")
         options.update(
             {
                 'item':     i,
