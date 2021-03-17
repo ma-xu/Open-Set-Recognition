@@ -23,6 +23,7 @@ def test(net, criterion, testloader, outloader, epoch=None, **options):
             
             with torch.set_grad_enabled(False):
                 x, y = net(data, True)
+                print(f"y is: {y}")
                 logits, _ = criterion(x, y)
                 predictions = logits.data.max(1)[1]
                 total += labels.size(0)
