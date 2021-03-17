@@ -35,13 +35,13 @@ def test(net, criterion, testloader, outloader, epoch=None, **options):
         for batch_idx, (data, labels) in enumerate(outloader):
             if options['use_gpu']:
                 data, labels = data.cuda(), labels.cuda()
-                print(f"outloader labels: {labels}")
+               
             with torch.set_grad_enabled(False):
                 x, y = net(data, True)
                 # x, y = net(data, return_feature=True)
                 logits, _ = criterion(x, y)
                 _pred_u.append(logits.data.cpu().numpy())
-                print(f"outloader _pred_u: {_pred_u}")
+
 
     # Accuracy
     acc = float(correct) * 100. / float(total)
@@ -57,7 +57,10 @@ def test(net, criterion, testloader, outloader, epoch=None, **options):
     print(f"x2: {x2}")
     print(f"len x1: {len(x1)}")
     print(f"len x2: {len(x2)}")
+    print(f"predict_k: {_pred_k}")
     results = evaluation.metric_ood(x1, x2)['Bas']
+
+
     
     # OSCR
     _oscr_socre = evaluation.compute_oscr(_pred_k, _pred_u, _labels)
