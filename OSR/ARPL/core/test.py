@@ -81,7 +81,8 @@ def test(net, criterion, testloader, outloader, epoch=None, **options):
     # print(f"tensor_predicts: {tensor_predicts}")
     # print(f"tensor_predicts shape: {tensor_predicts.shape}")
     # print(f"trensor_labels shape: {trensor_labels.shape}")
-    eval = Evaluation(Predict_list.numpy(),trensor_labels.numpy(),prediction_scores=openmetric_list.numpy())
+    prediction_scores = openmetric_list.numpy().reshape(-1, 1)
+    eval = Evaluation(Predict_list.numpy(),trensor_labels.numpy(),prediction_scores=prediction_scores)
     # print(f"my f1_measure is{eval.f1_measure}")
 
 
