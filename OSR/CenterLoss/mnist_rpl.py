@@ -281,6 +281,7 @@ class Dist(nn.Module):
                 print(f_2.shape)
                 print(torch.transpose(self.centers, 1, 0).shape)
                 print(features.shape)
+                print(torch.matmul(features, torch.transpose(self.centers, 1, 0)).shape)
 
 
                 dist = f_2 - 2*torch.matmul(features, torch.transpose(self.centers, 1, 0)) + torch.transpose(c_2, 1, 0)
