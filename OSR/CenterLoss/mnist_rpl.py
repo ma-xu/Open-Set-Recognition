@@ -182,7 +182,7 @@ def train(net, trainloader, optimizer_model, optimizer_rpl, criterion_rpl, devic
 
         totoal_loss += loss.item()
 
-        logits = torch.matmul(features, torch.transpose(criterion_rpl.centers, 1, 0))
+        logits = torch.matmul(features, torch.transpose(criterion_rpl.Dist.centers, 1, 0))
 
 
         _, predicted = logits.max(1)
@@ -203,7 +203,7 @@ def test(net, testloader, device):
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
-            _, outputs = net(inputs)
+            features, outputs = net(inputs)
             scores.append(outputs)
             labels.append(targets)
             progress_bar(batch_idx, len(testloader))
