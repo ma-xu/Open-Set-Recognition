@@ -272,16 +272,16 @@ class Dist(nn.Module):
             self.centers.data.fill_(0)
 
     def forward(self, features, center=None, metric='l2'):
-    
+
         if metric == 'l2':
             f_2 = torch.sum(torch.pow(features, 2), dim=1, keepdim=True)
             if center is None:
                 c_2 = torch.sum(torch.pow(self.centers, 2), dim=1, keepdim=True)
-                print(c_2.shape)
-                print(f_2.shape)
-                print(torch.transpose(self.centers, 1, 0).shape)
-                print(features.shape)
-                print(torch.matmul(features, torch.transpose(self.centers, 1, 0)).shape)
+                # print(c_2.shape)
+                # print(f_2.shape)
+                # print(torch.transpose(self.centers, 1, 0).shape)
+                # print(features.shape)
+                # print(torch.matmul(features, torch.transpose(self.centers, 1, 0)).shape)
 
 
                 dist = f_2 - 2*torch.matmul(features, torch.transpose(self.centers, 1, 0)) + torch.transpose(c_2, 1, 0)
