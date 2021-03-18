@@ -78,6 +78,8 @@ def test(net, criterion, testloader, outloader, epoch=None, **options):
     openmetric_list, _ = tensor_predicts.max(dim=1)
     thres = options['thres']
     tensor_predicts[openmetric_list < thres] = tensor_predict_u.shape[-1]
+    print(f"tensor_predicts: {tensor_predicts}")
+    print(f"trensor_labels: {trensor_labels}")
     eval = Evaluation(tensor_predicts.numpy(),trensor_labels.numpy())
     print(f"my f1_measure is{eval.f1_measure}")
 
