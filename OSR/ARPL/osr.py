@@ -180,7 +180,7 @@ def main_worker(options):
 
             save_networks(net, model_path, file_name, criterion=criterion)
 
-        statis_path = 'Log_' + options['dataset']+'-' + options['loss']+'-' +str(options['thres']) +'.txt'
+        statis_path = 'Log_'+options['dataset']+'-'+options['loss']+'-'+str(options['thres'])+'_'+str(options['trys'])+'.txt'
         if not os.path.exists(statis_path):
             os.system(r"touch {}".format(statis_path))
         f = open(statis_path, 'w')
