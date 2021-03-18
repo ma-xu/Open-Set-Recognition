@@ -5,6 +5,10 @@ import numpy as np
 import torch
 from torch.autograd import Variable
 import torch.nn.functional as F
+import sys
+sys.path.append("../..")
+from Utils import  Evaluation
+
 
 from core import evaluation
 
@@ -64,17 +68,18 @@ def test(net, criterion, testloader, outloader, epoch=None, **options):
     print(f"min _pred_u: {np.min(_pred_u)}")
 
     tensor_predict_k = torch.Tensor(_pred_k)
-    print(tensor_predict_k.shape)
     tensor_predict_u = torch.Tensor(_pred_u)
-    print(tensor_predict_u.shape)
     tensor_lables = torch.Tensor(_labels)
-    print(tensor_lables.shape)
     tensor_lables_unknown = tensor_predict_u.shape[-1] * torch.ones(tensor_predict_u.shape[0])
-    print(tensor_lables_unknown.shape)
-    print(tensor_lables_unknown)
 
+    tensor_predicts = torch.cat([tensor_predict_k,tensor_predict_u],dim=0)
+    trensor_labels = torch.cat([tensor_lables,tensor_lables_unknown],dim=0)
 
-
+    openmetric_list, _ = tensor_predicts.max(dim=1)
+    thres = options['thres']
+    tensor_predicts[openmetric_list < thres] = tensor_predict_u.shape[-1]
+    eval = Evaluation(tensor_predicts.numpy(),trensor_labels.numpy())
+    print(f"my f1_measure is{eval.f1_measure}")
 
 
 
