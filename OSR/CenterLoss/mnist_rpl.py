@@ -106,6 +106,7 @@ def main():
         cudnn.benchmark = True
 
     criterion_softamx = nn.CrossEntropyLoss()
+    print(fea_dim)
     criterion_rpl=RPLoss(number_class=args.train_class_num, feat_dim=fea_dim).to(device)
 
     optimizer_rpl = torch.optim.SGD(criterion_rpl.parameters(), lr=args.center_lr, momentum=0.9,
