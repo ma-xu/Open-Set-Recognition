@@ -69,6 +69,14 @@ def test(net, criterion, testloader, outloader, epoch=None, **options):
     print(tensor_predict_u.shape)
     tensor_lables = torch.Tensor(_labels)
     print(tensor_lables.shape)
+    tensor_lables_unknown = tensor_predict_u.shape[-1] * torch.ones(tensor_predict_u.shape[0])
+    print(tensor_lables.shape)
+    print(tensor_lables)
+
+
+
+
+
 
     results = evaluation.metric_ood(x1, x2)['Bas']
 
