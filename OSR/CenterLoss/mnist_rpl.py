@@ -148,7 +148,7 @@ def main():
 
             logger.append([epoch + 1, train_loss,  train_acc])
             scheduler.step()
-            test(net, testloader, device)
+            test(net, testloader,criterion_rpl, device)
 
 
 
@@ -196,22 +196,26 @@ def train(net, trainloader, optimizer_model, optimizer_rpl, criterion_rpl, devic
     return totoal_loss / (batch_idx + 1), correct / total
 
 
-def test(net, testloader, device):
+def test(net, testloader,criterion_rpl, device):
     net.eval()
 
-    scores, labels = [], []
+    scores, labels ,logits = [], [], []
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
             features, outputs = net(inputs)
+            _logits, _ = criterion_rpl(features)
             scores.append(outputs)
             labels.append(targets)
+            logits.append(_logits)
             progress_bar(batch_idx, len(testloader))
 
     # Get the prdict results.
     scores = torch.cat(scores, dim=0)
     scores = scores.softmax(dim=1)
     scores = scores.cpu().numpy()
+    logits = torch.cat(logits, dim=0)
+    scores = logits
     labels = torch.cat(labels, dim=0).cpu().numpy()
 
     pred = []
