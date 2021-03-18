@@ -183,7 +183,7 @@ def main_worker(options):
         statis_path = 'Log_'+options['dataset']+'-'+options['loss']+'-'+str(options['thres'])+'_'+str(options['trys'])+'.txt'
         if not os.path.exists(statis_path):
             os.system(r"touch {}".format(statis_path))
-        f = open(statis_path, 'w')
+        f = open(statis_path, 'a')
         statis_str = "Epoch: "+str(epoch+1) + " | "
         statis_str += "F-1: " + str(results['eval'].f1_measure) + " | "
         statis_str += "Macro-F1: " + str(results['eval'].f1_macro) + " | "
