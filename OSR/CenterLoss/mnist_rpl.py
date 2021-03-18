@@ -218,7 +218,7 @@ def test(net, testloader,criterion_rpl, device):
     logits = torch.cat(logits, dim=0)
 
     print(f"logits.shape: {logits.shape}")
-    logits = logits.cpu.numpy()
+    logits = logits.cpu().numpy()
     scores = logits
     labels = torch.cat(labels, dim=0).cpu().numpy()
 
