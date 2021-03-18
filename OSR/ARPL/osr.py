@@ -176,7 +176,8 @@ def main_worker(options):
             print("==> Test", options['loss'])
             results = test(net, criterion, testloader, outloader, epoch=epoch, **options)
             # print("Acc (%): {:.3f}\t AUROC (%): {:.3f}\t OSCR (%): {:.3f}\t".format(results['ACC'], results['AUROC'], results['OSCR']))
-            print(f"My Evaluation: F-1: {results['eval'].f1_measure}")
+            print(f"Unified Evaluation: F-1: {results['eval'].f1_measure} "
+                  f"| Macro-F1: {results['eval'].f1_macro} | AUROC: {results['eval'].area_under_roc}")
             save_networks(net, model_path, file_name, criterion=criterion)
         
         if options['stepsize'] > 0: scheduler.step()
