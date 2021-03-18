@@ -238,7 +238,7 @@ class RPLoss(nn.CrossEntropyLoss):
         super(RPLoss, self).__init__()
         self.weight_pl = 0.1
         self.temp = 1
-        self.Dist = Dist(num_classes=number_class, feat_dim=feat_dim, num_centers=number_class)
+        self.Dist = Dist(num_classes=number_class, feat_dim=feat_dim, num_centers=1)
         self.radius = 1
 
         self.radius = nn.Parameter(torch.Tensor(self.radius))
