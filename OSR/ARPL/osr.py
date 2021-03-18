@@ -53,6 +53,7 @@ parser.add_argument('--save-dir', type=str, default='../log')
 parser.add_argument('--loss', type=str, default='RPLoss')
 parser.add_argument('--eval', action='store_true', help="Eval", default=False)
 parser.add_argument('--cs', action='store_true', help="Confusing Sample", default=False)
+parser.add_argument('--thres', type=float, default=0.1)
 
 def main_worker(options):
     torch.manual_seed(options['seed'])
