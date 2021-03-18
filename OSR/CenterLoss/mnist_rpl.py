@@ -212,9 +212,11 @@ def test(net, testloader,criterion_rpl, device):
 
     # Get the prdict results.
     scores = torch.cat(scores, dim=0)
+    print(f"scores.shape: {scores.shape}")
     scores = scores.softmax(dim=1)
     scores = scores.cpu().numpy()
     logits = torch.cat(logits, dim=0)
+    print(f"logits.shape: {logits.shape}")
     scores = logits
     labels = torch.cat(labels, dim=0).cpu().numpy()
 
