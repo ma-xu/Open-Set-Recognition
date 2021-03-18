@@ -75,13 +75,13 @@ def test(net, criterion, testloader, outloader, epoch=None, **options):
     tensor_predicts = torch.cat([tensor_predict_k,tensor_predict_u],dim=0)
     trensor_labels = torch.cat([tensor_lables,tensor_lables_unknown],dim=0)
 
-    openmetric_list, _ = tensor_predicts.max(dim=1)
+    openmetric_list, Predict_list = tensor_predicts.max(dim=1)
     thres = options['thres']
-    tensor_predicts[openmetric_list < thres] = tensor_predict_u.shape[-1]
+    Predict_list[openmetric_list < thres] = tensor_predict_u.shape[-1]
     print(f"tensor_predicts: {tensor_predicts}")
     print(f"tensor_predicts shape: {tensor_predicts.shape}")
     print(f"trensor_labels shape: {trensor_labels.shape}")
-    eval = Evaluation(tensor_predicts.numpy(),trensor_labels.numpy())
+    eval = Evaluation(Predict_list.numpy(),trensor_labels.numpy())
     print(f"my f1_measure is{eval.f1_measure}")
 
 
