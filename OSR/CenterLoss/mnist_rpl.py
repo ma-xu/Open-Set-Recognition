@@ -276,13 +276,10 @@ class Dist(nn.Module):
             f_2 = torch.sum(torch.pow(features, 2), dim=1, keepdim=True)
             if center is None:
                 c_2 = torch.sum(torch.pow(self.centers, 2), dim=1, keepdim=True)
-                print(features.shape)
-                print(torch.transpose(self.centers, 1, 0).shape)
-             
-                dist = f_2 - 2*torch.matmul(features, torch.transpose(self.centers, 1, 0)) + torch.transpose(c_2, 1, 0)
+                dist = f_2 - 2*torch.matmul(features, self.centers) + torch.transpose(c_2, 1, 0)
             else:
                 c_2 = torch.sum(torch.pow(center, 2), dim=1, keepdim=True)
-                dist = f_2 - 2*torch.matmul(features, torch.transpose(center, 1, 0)) + torch.transpose(c_2, 1, 0)
+                dist = f_2 - 2*torch.matmul(features, self.center) + torch.transpose(c_2, 1, 0)
             dist = dist / float(features.shape[1])
         else:
             if center is None:
