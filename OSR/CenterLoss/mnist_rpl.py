@@ -216,8 +216,9 @@ def test(net, testloader,criterion_rpl, device):
     scores = scores.softmax(dim=1)
     scores = scores.cpu().numpy()
     logits = torch.cat(logits, dim=0)
-    logits = logits.cpu.numpy()
+
     print(f"logits.shape: {logits.shape}")
+    logits = logits.cpu.numpy()
     scores = logits
     labels = torch.cat(labels, dim=0).cpu().numpy()
 
