@@ -50,7 +50,7 @@ parser.add_argument('--arch', default='LeNetPlus', choices=model_names, type=str
 parser.add_argument('--embed_dim', default=2, type=int, help='embedding feature dimension')
 parser.add_argument('--centerloss_weight', default=1, type=float, help='center loss weight')
 parser.add_argument('--center_lr', default=0.5, type=float, help='learning rate for center loss')
-parser.add_argument('--threshold', default=0.9, type=float, help='threshold for center-loss probability')
+parser.add_argument('--threshold', default=0.8, type=float, help='threshold for center-loss probability')
 
 
 
