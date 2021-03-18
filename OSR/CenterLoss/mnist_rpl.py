@@ -181,6 +181,10 @@ def train(net, trainloader, optimizer_model, optimizer_rpl, criterion_rpl, devic
         optimizer_rpl.step()
 
         totoal_loss += loss.item()
+
+        logits = torch.matmul(features, torch.transpose(criterion_rpl.centers, 1, 0))
+
+
         _, predicted = logits.max(1)
         total += targets.size(0)
         correct += predicted.eq(targets).sum().item()
