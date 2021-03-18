@@ -169,7 +169,7 @@ def train(net, trainloader, optimizer_model, optimizer_rpl, criterion_rpl, devic
     for batch_idx, (inputs, targets) in enumerate(trainloader):
         inputs, targets = inputs.to(device), targets.to(device)
         features, logits = net(inputs)
-        _, loss = criterion_rpl(logits, targets)
+        _, loss = criterion_rpl(features, targets)
         optimizer_model.zero_grad()
         optimizer_rpl.zero_grad()
         loss.backward()
@@ -272,7 +272,7 @@ class Dist(nn.Module):
             self.centers.data.fill_(0)
 
     def forward(self, features, center=None, metric='l2'):
-        features = torch.transpose(features, 1, 0)
+    
         if metric == 'l2':
             f_2 = torch.sum(torch.pow(features, 2), dim=1, keepdim=True)
             if center is None:
