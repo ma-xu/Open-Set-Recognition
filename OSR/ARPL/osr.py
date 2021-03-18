@@ -142,7 +142,7 @@ def main_worker(options):
     if options['eval']:
         net, criterion = load_networks(net, model_path, file_name, criterion=criterion)
         results = test(net, criterion, testloader, outloader, epoch=0, **options)
-        print("Acc (%): {:.3f}\t AUROC (%): {:.3f}\t OSCR (%): {:.3f}\t".format(results['ACC'], results['AUROC'], results['OSCR']))
+        # print("Acc (%): {:.3f}\t AUROC (%): {:.3f}\t OSCR (%): {:.3f}\t".format(results['ACC'], results['AUROC'], results['OSCR']))
 
         return results
 
@@ -175,8 +175,8 @@ def main_worker(options):
         if options['eval_freq'] > 0 and (epoch+1) % options['eval_freq'] == 0 or (epoch+1) == options['max_epoch']:
             print("==> Test", options['loss'])
             results = test(net, criterion, testloader, outloader, epoch=epoch, **options)
-            print("Acc (%): {:.3f}\t AUROC (%): {:.3f}\t OSCR (%): {:.3f}\t".format(results['ACC'], results['AUROC'], results['OSCR']))
-
+            # print("Acc (%): {:.3f}\t AUROC (%): {:.3f}\t OSCR (%): {:.3f}\t".format(results['ACC'], results['AUROC'], results['OSCR']))
+            print(f"My Evaluation: F-1: {results['eval'].f1_measure}")
             save_networks(net, model_path, file_name, criterion=criterion)
         
         if options['stepsize'] > 0: scheduler.step()

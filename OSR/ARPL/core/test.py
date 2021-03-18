@@ -49,7 +49,7 @@ def test(net, criterion, testloader, outloader, epoch=None, **options):
 
     # Accuracy
     acc = float(correct) * 100. / float(total)
-    print('Acc: {:.5f}'.format(acc))
+    # print('Acc: {:.5f}'.format(acc))
 
     _pred_k = np.concatenate(_pred_k, 0)
     _pred_u = np.concatenate(_pred_u, 0)
@@ -57,15 +57,15 @@ def test(net, criterion, testloader, outloader, epoch=None, **options):
     
     # Out-of-Distribution detction evaluation
     x1, x2 = np.max(_pred_k, axis=1), np.max(_pred_u, axis=1)
-    print(f"x1: {x1}")
-    print(f"x2: {x2}")
-    print(f"len x1: {len(x1)}")
-    print(f"len x2: {len(x2)}")
-    print(f"predict_k: {_pred_k}")
-    print(f"max predict_k: {np.max(_pred_k)}")
-    print(f"min predict_k: {np.min(_pred_k)}")
-    print(f"max _pred_u: {np.max(_pred_u)}")
-    print(f"min _pred_u: {np.min(_pred_u)}")
+    # print(f"x1: {x1}")
+    # print(f"x2: {x2}")
+    # print(f"len x1: {len(x1)}")
+    # print(f"len x2: {len(x2)}")
+    # print(f"predict_k: {_pred_k}")
+    # print(f"max predict_k: {np.max(_pred_k)}")
+    # print(f"min predict_k: {np.min(_pred_k)}")
+    # print(f"max _pred_u: {np.max(_pred_u)}")
+    # print(f"min _pred_u: {np.min(_pred_u)}")
 
     tensor_predict_k = torch.Tensor(_pred_k)
     tensor_predict_u = torch.Tensor(_pred_u)
@@ -78,11 +78,11 @@ def test(net, criterion, testloader, outloader, epoch=None, **options):
     openmetric_list, Predict_list = tensor_predicts.max(dim=1)
     thres = options['thres']
     Predict_list[openmetric_list < thres] = tensor_predict_u.shape[-1]
-    print(f"tensor_predicts: {tensor_predicts}")
-    print(f"tensor_predicts shape: {tensor_predicts.shape}")
-    print(f"trensor_labels shape: {trensor_labels.shape}")
+    # print(f"tensor_predicts: {tensor_predicts}")
+    # print(f"tensor_predicts shape: {tensor_predicts.shape}")
+    # print(f"trensor_labels shape: {trensor_labels.shape}")
     eval = Evaluation(Predict_list.numpy(),trensor_labels.numpy())
-    print(f"my f1_measure is{eval.f1_measure}")
+    # print(f"my f1_measure is{eval.f1_measure}")
 
 
 
@@ -95,5 +95,6 @@ def test(net, criterion, testloader, outloader, epoch=None, **options):
 
     results['ACC'] = acc
     results['OSCR'] = _oscr_socre * 100.
+    results["eval"] = eval
 
     return results
