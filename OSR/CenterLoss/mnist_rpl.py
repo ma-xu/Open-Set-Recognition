@@ -138,7 +138,7 @@ def main():
         for epoch in range(start_epoch, start_epoch + args.es):
             print('\nEpoch: %d   Learning rate: %f' % (epoch + 1, optimizer_softmax.param_groups[0]['lr']))
             train_loss, train_acc = train(net, trainloader, optimizer_softmax,
-                                                                     optimizer_rpl, optimizer_rpl, device)
+                                                                     optimizer_rpl, criterion_rpl, device)
             save_model(net, criterion_centerloss, epoch, os.path.join(args.checkpoint, 'last_model.pth'))
             # plot the training data
             # if args.plot:
