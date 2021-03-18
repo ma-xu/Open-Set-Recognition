@@ -54,6 +54,7 @@ parser.add_argument('--loss', type=str, default='RPLoss')
 parser.add_argument('--eval', action='store_true', help="Eval", default=False)
 parser.add_argument('--cs', action='store_true', help="Confusing Sample", default=False)
 parser.add_argument('--thres', type=float, default=0.1)
+parser.add_argument('--trys', type=int, default=1)
 
 def main_worker(options):
     torch.manual_seed(options['seed'])
@@ -176,10 +177,22 @@ def main_worker(options):
             print("==> Test", options['loss'])
             results = test(net, criterion, testloader, outloader, epoch=epoch, **options)
             # print("Acc (%): {:.3f}\t AUROC (%): {:.3f}\t OSCR (%): {:.3f}\t".format(results['ACC'], results['AUROC'], results['OSCR']))
-            print(f"Unified Evaluation: F-1: {results['eval'].f1_measure} "
-                  f"| Macro-F1: {results['eval'].f1_macro} | AUROC: {results['eval'].area_under_roc}")
+
             save_networks(net, model_path, file_name, criterion=criterion)
-        
+
+        statis_path = 'Log_' + options['dataset']+'-' + options['loss']+'-' +str(options['thres']) +'.txt'
+        if not os.path.exists(statis_path):
+            os.system(r"touch {}".format(statis_path))
+        f = open(statis_path, 'w')
+        statis_str = "Epoch: "+str(epoch+1) + " | "
+        statis_str += "F-1: " + str(results['eval'].f1_measure) + " | "
+        statis_str += "Macro-F1: " + str(results['eval'].f1_macro) + " | "
+        statis_str += "AUROC: " + str(results['eval'].area_under_roc) + " | "
+        statis_str +="\n"
+        f.write(statis_str)
+        f.close()
+
+
         if options['stepsize'] > 0: scheduler.step()
 
     elapsed = round(time.time() - start_time)
