@@ -119,3 +119,13 @@ work_dirs/
 *.pth
 *.py~
 *.sh~
+
+*.xlsx
+
+*.pptx
+
+*.pptx
+
+*.xlsx
+
+Ablation/plot_openness/openness.xlsx
