@@ -69,7 +69,7 @@ parser.add_argument('--mode', default='A',choices=['A','B',"C","D"],type=str, he
 
 args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-args.checkpoint = './checkpoints/cifar10/%s_%s_%s_dim%s_gamma%s-MODE-%s' % (
+args.checkpoint = './checkpoints/supp_cifar10/%s_%s_%s_dim%s_gamma%s-MODE-%s' % (
 args.train_class_num, args.test_class_num, args.arch, args.embed_dim, args.gamma, args.mode)
 if not os.path.isdir(args.checkpoint):
     mkdir_p(args.checkpoint)
