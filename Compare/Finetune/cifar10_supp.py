@@ -132,7 +132,7 @@ def main_stage1():
     elif args.mode == "C":
         t_k = (mid_dict["mid_known"]+mid_dict["max_known"])*0.5
         t_u = (mid_dict["mid_unknown"]+mid_dict["min_unknown"]) *0.5
-    elif args.mode == "C":
+    elif args.mode == "D":
         t_k = mid_dict["mid_known"]
         t_u = mid_dict["mid_known"]
 
