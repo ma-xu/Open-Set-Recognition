@@ -137,6 +137,7 @@ def main():
                          plot_class_num=args.train_class_num, maximum=args.plot_max, plot_quality=args.plot_quality)
             test(epoch, net, trainloader, testloader, criterion, device)
 
+    test(99999, net, trainloader, testloader, criterion, device)
     plot_feature(net, testloader, device, args.plotfolder, epoch="test",
                  plot_class_num=args.train_class_num+1, maximum=args.plot_max, plot_quality=args.plot_quality)
     logger.close()
