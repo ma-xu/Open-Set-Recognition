@@ -71,7 +71,7 @@ class Network(nn.Module):
         return y,fea, feature_maps, x
 
 
-def demo():
+if __name__ == '__main__':
     # this demo didn't test metaembedding, should works if defined the centroids.
     # x = torch.rand([1, 3, 32, 32])
     # net = Network('ResNet18', 2, 50, use_fc=False, attmodule=True)
@@ -79,9 +79,7 @@ def demo():
     # print(y.shape)
 
     x = torch.rand([1, 1, 28, 28])
-    net = Network('LeNetPlus', 2, 50, use_fc=False, attmodule=False,classifier='metaembedding')
+    net = Network('LeNetPlus', 2, 50, use_fc=False, attmodule=True,classifier='metaembedding', data_shape=1)
     y, fea, feature_maps,x = net(x)
     print(y.shape)
 
-
-# demo()
